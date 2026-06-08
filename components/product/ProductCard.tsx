@@ -1,0 +1,69 @@
+import Image from "next/image";
+import Link from "next/link";
+import type { Product } from "@/types/product";
+import { RoxButton } from "@/components/ui/RoxButton";
+import { buildWhatsAppMessage } from "@/lib/whatsapp/buildWhatsAppMessage";
+import { buildWhatsAppUrl, hasConfiguredWhatsAppNumber } from "@/lib/whatsapp/buildWhatsAppUrl";
+
+export function ProductCard({ product }: { product: Product }) {
+  const message = buildWhatsAppMessage(product, {
+    color: "NEG",
+    size: "M",
+    productUrl: `/producto/${product.slug}`
+  });
+
+  return (
+    <article className="group overflow-hidden border border-bone/12 bg-ink shadow-gold-soft">
+      <Link href={`/producto/${product.slug}`} className="relative block aspect-[16/10] overflow-hidden bg-charcoal">
+        <Image
+          src={product.image}
+          alt={product.name}
+          fill
+          sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+          className="object-cover object-center transition duration-700 group-hover:scale-105"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-ink/82 via-transparent to-transparent" />
+        <span className="absolute left-4 top-4 border border-roxgold/40 bg-ink/70 px-3 py-2 text-[10px] font-bold uppercase tracking-rox text-roxgold">
+          {product.modelCode}
+        </span>
+      </Link>
+      <div className="p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-rox text-steel">{product.garmentLabel}</p>
+            <h3 className="headline mt-2 text-3xl leading-none text-bone">{product.name}</h3>
+          </div>
+          <div className="flex gap-1.5 pt-1">
+            {product.colors.map((color) => (
+              <span
+                key={color.code}
+                className="h-4 w-4 border border-bone/30"
+                style={{ backgroundColor: color.hex }}
+                title={color.label}
+              />
+            ))}
+          </div>
+        </div>
+        <p className="mt-4 text-sm leading-6 text-bone/62">{product.story}</p>
+        <div className="mt-5 flex flex-wrap gap-2">
+          {product.sizes.map((size) => (
+            <span key={size} className="border border-bone/12 px-2 py-1 text-[10px] font-bold text-bone/70">
+              {size}
+            </span>
+          ))}
+        </div>
+        <div className="mt-6 grid gap-3 sm:grid-cols-2">
+          <RoxButton href={`/producto/${product.slug}`} className="px-3">
+            Ver modelo
+          </RoxButton>
+          <RoxButton href={buildWhatsAppUrl(message)} variant="bone" className="px-3" target="_blank" rel="noreferrer">
+            Consultar
+          </RoxButton>
+        </div>
+        {!hasConfiguredWhatsAppNumber() ? (
+          <p className="mt-3 text-[10px] uppercase tracking-rox text-roxgold/70">WhatsApp demo</p>
+        ) : null}
+      </div>
+    </article>
+  );
+}
