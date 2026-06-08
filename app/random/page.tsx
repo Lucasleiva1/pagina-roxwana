@@ -7,7 +7,7 @@ export default async function RandomPage() {
   const products = await getActiveProducts();
 
   return (
-    <div className="bg-ink pt-24">
+    <div className="theme-shop bg-ink pt-24">
       <RandomPrintTeaser compact products={products} />
     </div>
   );

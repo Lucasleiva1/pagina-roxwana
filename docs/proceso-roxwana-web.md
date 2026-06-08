@@ -1815,3 +1815,936 @@ No se implemento:
 - carrito;
 - checkout;
 - registro publico de admins.
+
+## 40. Ajuste posterior - modo oscuro y modo claro
+
+Fecha de implementacion: 2026-06-08
+
+Despues de la Fase 2 se pidio agregar un modo claro sin perder el modo oscuro.
+
+La necesidad fue concreta:
+
+- mantener el modo oscuro para trabajar y conservar identidad ROXWANA;
+- agregar modo claro para que la parte de prendas se vea blanca, limpia y pulcra;
+- no convertir el Command Center en un panel blanco;
+- no romper la estetica oscura de marca en hero, login y admin.
+
+## 41. Implementacion del sistema de tema
+
+Se agrego:
+
+- `components/layout/ThemeToggle.tsx`
+
+Se modificaron:
+
+- `app/layout.tsx`
+- `app/globals.css`
+- `components/layout/Header.tsx`
+- `components/layout/MobileMenu.tsx`
+- `components/home/FeaturedProducts.tsx`
+- `components/home/RandomPrintTeaser.tsx`
+- `components/product/ProductDetail.tsx`
+- `app/productos/page.tsx`
+- `app/hombre/page.tsx`
+- `app/mujer/page.tsx`
+- `app/random/page.tsx`
+
+### Decisiones tomadas
+
+El tema por defecto quedo como:
+
+```html
+data-theme="dark"
+```
+
+El boton de cambio de tema:
+
+- usa iconos de `lucide-react`;
+- muestra sol cuando se puede activar modo claro;
+- muestra luna cuando se puede volver al modo oscuro;
+- guarda preferencia en `localStorage`;
+- actualiza `document.documentElement.dataset.theme`;
+- actualiza `colorScheme` para que los controles nativos acompañen el tema.
+
+La implementacion uso `useSyncExternalStore` en vez de `setState` directo dentro del efecto inicial.
+
+Motivo:
+
+- `eslint` marco error con `react-hooks/set-state-in-effect`;
+- React no queria `setState` sincronico dentro del efecto de montaje;
+- `useSyncExternalStore` dejo el estado del tema mas estable y compatible con la regla de lint.
+
+## 42. Piel clara aplicada solo a tienda
+
+No se cambio el color global de toda la app.
+
+Se creo una clase de alcance:
+
+```css
+.theme-shop
+```
+
+La regla fue:
+
+- las zonas de catalogo/prendas responden al modo claro;
+- el Command Center sigue oscuro;
+- login sigue oscuro;
+- heroes principales pueden conservar presencia oscura de marca;
+- solo la experiencia de ver ropa queda blanca y limpia.
+
+Se aplico `theme-shop` en:
+
+- seccion de productos destacados;
+- seccion random print;
+- pagina `/productos`;
+- zona de grilla de `/hombre`;
+- zona de grilla de `/mujer`;
+- pagina `/random`;
+- detalle de producto.
+
+En modo claro se sobrescriben dentro de `.theme-shop`:
+
+- fondos `bg-ink`;
+- superficies `bg-charcoal`;
+- textos `text-bone`;
+- bordes `border-bone`;
+- inputs;
+- selects;
+- placeholders;
+- textura de panel.
+
+No se hizo una reescritura total de componentes. Se uso una capa CSS controlada para no romper el sistema visual ya existente.
+
+## 43. Problemas encontrados en el modo claro
+
+### 43.1 Lint fallo por `setState` en efecto
+
+El primer `ThemeToggle` leia `localStorage` dentro de `useEffect` y luego hacia:
+
+```ts
+setTheme(nextTheme);
+```
+
+`eslint` fallo con:
+
+```text
+Calling setState synchronously within an effect can trigger cascading renders
+```
+
+Solucion:
+
+- reemplazar el patron por `useSyncExternalStore`;
+- mantener listeners internos;
+- aplicar el tema al documento cuando cambia el snapshot.
+
+### 43.2 TypeScript infirio `theme` como string
+
+Despues del cambio a `useSyncExternalStore`, build fallo porque `theme` se infirio como `string` y `applyTheme` esperaba `"dark" | "light"`.
+
+Solucion:
+
+```ts
+const theme = useSyncExternalStore<Theme>(subscribe, getSnapshot, () => "dark");
+```
+
+### 43.3 Menu mobile quedaba demasiado traslucido
+
+En desktop el modo claro se veia bien.
+
+En mobile, al abrir menu en modo claro, el overlay oscuro con blur quedaba demasiado traslucido sobre el catalogo claro.
+
+Problema visual:
+
+- los textos del menu se lavaban;
+- el fondo claro se mezclaba con el overlay;
+- la navegacion mobile perdia legibilidad.
+
+Solucion:
+
+- cambiar el menu mobile a fondo oscuro solido:
+
+```tsx
+bg-ink
+```
+
+Asi el menu mobile conserva identidad oscura y legibilidad, aunque el catalogo este en modo claro.
+
+### 43.4 Playwright mobile clickeaba el toggle desktop oculto
+
+La primera prueba mobile intento clickear:
+
+```css
+button[aria-label='Activar modo claro']
+```
+
+Playwright encontro primero el boton desktop oculto, no el del menu mobile.
+
+Solucion:
+
+- abrir menu mobile;
+- clickear el toggle visible dentro de `nav`;
+- cerrar menu;
+- capturar el catalogo ya en modo claro.
+
+## 44. Verificacion del modo claro
+
+Se ejecuto:
+
+```bash
+npm.cmd run lint
+npm.cmd run build
+```
+
+Resultado:
+
+- lint paso;
+- build paso.
+
+Tambien se probo con servidor local en:
+
+```text
+http://127.0.0.1:3000/productos
+```
+
+Playwright desktop:
+
+- captura en modo oscuro;
+- click en `Activar modo claro`;
+- captura en modo claro.
+
+Resultado visual:
+
+- header claro;
+- fondo de catalogo claro;
+- tarjetas blancas;
+- filtros claros;
+- prendas mas limpias;
+- sin romper la marca.
+
+Playwright mobile:
+
+- captura en modo oscuro;
+- abrir menu;
+- activar modo claro desde menu;
+- cerrar menu;
+- captura del catalogo mobile claro.
+
+Resultado:
+
+- filtros apilados correctamente;
+- fondo claro;
+- sin overflow horizontal visible;
+- menu mobile legible.
+
+Las capturas temporales creadas para esta prueba fueron borradas al final.
+
+Las capturas viejas sin trackear se dejaron intactas:
+
+- `live-verify-hero.png`
+- `live-verify-products.png`
+
+## 45. Inicio de conexion guiada con Supabase real
+
+Despues se pidio actuar como programador full-stack senior especializado en:
+
+- Next.js;
+- Supabase;
+- seguridad.
+
+Objetivo:
+
+- conectar Supabase de forma guiada;
+- revisar el repo;
+- detectar que faltaba;
+- no inventar valores;
+- no hardcodear secretos;
+- no exponer `SUPABASE_SERVICE_ROLE_KEY` en cliente;
+- no afirmar conexion si no estaba verificada.
+
+Se uso la skill de seguridad porque el pedido incluia:
+
+- RLS;
+- Auth;
+- Storage;
+- claves privadas;
+- separacion cliente/servidor;
+- Command Center protegido.
+
+Se leyeron referencias de seguridad para:
+
+- Next.js backend/server;
+- React frontend;
+- Supabase SSR/Auth desde documentacion oficial consultada por la integracion.
+
+Reglas importantes aplicadas:
+
+- `NEXT_PUBLIC_*` es publico y visible en browser;
+- service role o secret key solo servidor;
+- `server-only` para cliente admin;
+- no subir `.env.local`;
+- auth y permisos se validan server-side;
+- RLS es obligatorio;
+- uploads con allowlist y limite de tamano.
+
+## 46. Deteccion inicial de proyectos Supabase
+
+Primero se consulto si la integracion tenia acceso a Supabase.
+
+Resultado:
+
+- la herramienta Supabase estaba disponible;
+- podia listar proyectos;
+- podia leer migraciones;
+- podia ejecutar SQL;
+- podia aplicar migraciones;
+- podia generar tipos.
+
+Primer listado de proyectos:
+
+- se encontro un proyecto existente llamado `Lucasleiva1's Project`;
+- project ref: `nwleqiawcxlojxxmftjd`;
+- region: `us-west-2`;
+- estado: `ACTIVE_HEALTHY`;
+- estaba vacio;
+- no se aplico nada ahi porque no era seguro asumir que era ROXWANA.
+
+Se pidio confirmacion.
+
+Luego se indico crear un proyecto nuevo llamado:
+
+```text
+roxwana-store
+```
+
+El usuario lo creo manualmente desde Supabase y envio captura.
+
+Despues se volvio a listar proyectos.
+
+Proyecto correcto detectado:
+
+- nombre: `roxwana-store`;
+- project ref: `amdrfbppefqbdrxuolje`;
+- URL: `https://amdrfbppefqbdrxuolje.supabase.co`;
+- region: `us-east-1`;
+- estado: `ACTIVE_HEALTHY`;
+- compute: Nano;
+- sin migraciones previas.
+
+A partir de ese punto se decidio no tocar el proyecto viejo.
+
+## 47. Estado del proyecto Supabase antes de aplicar cambios
+
+Se verifico el proyecto `roxwana-store` antes de escribir:
+
+Migraciones:
+
+```text
+[]
+```
+
+Tablas publicas:
+
+```text
+[]
+```
+
+Buckets Storage:
+
+```text
+[]
+```
+
+Conclusion:
+
+- el proyecto estaba limpio;
+- era seguro aplicar la primera migracion;
+- no habia datos previos que pudieran pisarse.
+
+## 48. Archivos locales preparados para Supabase real
+
+Se agregaron o actualizaron:
+
+- `supabase/config.toml`
+- `supabase/migrations/20260608210706_initial_roxwana_store.sql`
+- `.env.local.example`
+- `README_SUPABASE.md`
+- `.env.example`
+- `supabase/schema.sql`
+
+### `supabase/config.toml`
+
+Se configuro con:
+
+- `project_id = "amdrfbppefqbdrxuolje"`;
+- API local habilitada;
+- DB local con Postgres major version 17;
+- Auth habilitado;
+- signup publico deshabilitado;
+- redirect URLs locales y Netlify;
+- Storage habilitado con limite `3MiB`.
+
+Esto deja el proyecto preparado para uso futuro con Supabase CLI.
+
+### `.env.local.example`
+
+Se creo como plantilla local.
+
+Incluye:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=https://amdrfbppefqbdrxuolje.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+NEXT_PUBLIC_SITE_URL=http://127.0.0.1:3000
+NEXT_PUBLIC_WHATSAPP_NUMBER=
+SUPABASE_PROJECT_REF=amdrfbppefqbdrxuolje
+SUPABASE_DB_PASSWORD=
+```
+
+No contiene secrets reales.
+
+### `.env.example`
+
+Se actualizo con:
+
+- URL del proyecto real;
+- placeholders vacios para keys;
+- project ref;
+- database password vacia.
+
+Regla:
+
+- `.env.example` puede subirse a GitHub porque no contiene secretos.
+
+### `.env.local`
+
+Se creo despues de recibir la publishable key.
+
+Contiene:
+
+- URL real;
+- publishable key publica;
+- `SUPABASE_SERVICE_ROLE_KEY=` vacia;
+- `NEXT_PUBLIC_SITE_URL`;
+- project ref.
+
+Importante:
+
+- `.env.local` esta ignorado por `.gitignore`;
+- no debe subirse a GitHub;
+- no se documento la key completa en el archivo publico de proceso.
+
+### `README_SUPABASE.md`
+
+Se creo como guia operativa separada.
+
+Documenta:
+
+- proyecto Supabase confirmado;
+- que variables son publicas;
+- que variables son privadas;
+- donde encontrar keys;
+- que cargar en Netlify;
+- migracion y seed;
+- como crear primer admin;
+- como probar;
+- configuracion esperada de Storage.
+
+## 49. Ajuste de seguridad en Storage
+
+Antes de aplicar la migracion se ajusto `supabase/schema.sql`.
+
+Originalmente el bucket se creaba publico, pero sin limitar por SQL:
+
+- tamano maximo;
+- MIME types permitidos.
+
+Se mejoro el bucket:
+
+```sql
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('product-images', 'product-images', true, 3145728, array['image/jpeg', 'image/png', 'image/webp'])
+on conflict (id) do update
+set public = true,
+    file_size_limit = excluded.file_size_limit,
+    allowed_mime_types = excluded.allowed_mime_types;
+```
+
+Motivo:
+
+- la app ya validaba imagenes en `lib/products/mutations.ts`;
+- pero Storage tambien debe tener defensa propia;
+- asi se evita aceptar archivos grandes o tipos no permitidos si una llamada llega directo a Supabase.
+
+## 50. Migracion aplicada en Supabase remoto
+
+Se aplico migracion al proyecto:
+
+```text
+amdrfbppefqbdrxuolje
+```
+
+Nombre:
+
+```text
+initial_roxwana_store
+```
+
+Resultado:
+
+```json
+{ "success": true }
+```
+
+Supabase registro la migracion remota con version:
+
+```text
+20260608210706
+```
+
+Por eso el archivo local se renombro a:
+
+```text
+supabase/migrations/20260608210706_initial_roxwana_store.sql
+```
+
+Esto evita confusion futura entre historial remoto y archivo local.
+
+### Tablas creadas
+
+Se crearon:
+
+- `profiles`
+- `garment_types`
+- `colors`
+- `sizes`
+- `products`
+- `product_colors`
+- `product_sizes`
+- `product_images`
+- `site_settings`
+- `whatsapp_orders`
+
+### Indices creados
+
+Se crearon indices para:
+
+- `products.slug`;
+- `products.status`;
+- `products.featured`;
+- `products.gender`;
+- `product_images(product_id, sort_order)`;
+- `whatsapp_orders(created_at desc)`.
+
+### Funciones y triggers
+
+Se creo:
+
+- `public.set_updated_at()`;
+- `public.is_admin()`.
+
+Se crearon triggers:
+
+- `products_set_updated_at`;
+- `site_settings_set_updated_at`.
+
+### RLS
+
+Se habilito RLS en todas las tablas publicas de la tienda.
+
+Politicas principales:
+
+- publico lee `garment_types`;
+- publico lee `colors`;
+- publico lee `sizes`;
+- publico lee solo productos `active`;
+- publico lee relaciones e imagenes solo de productos activos;
+- publico inserta `whatsapp_orders`;
+- admin gestiona productos;
+- admin gestiona relaciones;
+- admin gestiona imagenes;
+- admin gestiona settings;
+- admin lee y actualiza consultas;
+- admin se define por `profiles.role = 'admin'`.
+
+### Storage
+
+Se creo bucket:
+
+- nombre: `product-images`;
+- publico: `true`;
+- limite: `3145728` bytes;
+- MIME permitidos:
+  - `image/jpeg`;
+  - `image/png`;
+  - `image/webp`.
+
+Policies Storage:
+
+- publico lee objetos del bucket;
+- admin inserta objetos;
+- admin actualiza objetos;
+- admin borra objetos.
+
+## 51. Seed aplicado en Supabase remoto
+
+Se ejecuto `supabase/seed.sql` en el proyecto real.
+
+Datos insertados:
+
+### Prendas
+
+- `REM` - Remera
+- `BUZ` - Buzo
+- `MUS` - Musculosa
+
+### Colores
+
+- `NEG` - Negro
+- `BLA` - Blanco Hueso
+- `ROJ` - Rojo
+- `AZU` - Azul
+
+### Talles
+
+- `S`
+- `M`
+- `L`
+- `XL`
+- `XXL`
+
+### Settings
+
+Se creo una fila inicial de `site_settings` con:
+
+- WhatsApp label: `WhatsApp ROXWANA`;
+- WhatsApp enabled: `true`;
+- numero nulo por ahora;
+- fallback por Instagram;
+- Instagram y TikTok genericos temporales.
+
+### Productos base
+
+Se insertaron 6 productos:
+
+- `RXW-REM-ROCK001` - active
+- `RXW-REM-DRAGON002` - active
+- `RXW-REM-MOTO003` - active
+- `RXW-REM-STREET004` - active
+- `RXW-REM-SKULL005` - draft
+- `RXW-BUZ-HEAVY001` - draft
+
+Tambien se insertaron:
+
+- colores `NEG` y `BLA` para cada producto;
+- talles `S`, `M`, `L`, `XL`, `XXL`;
+- 6 imagenes primarias usando rutas locales existentes de `public/images/products`.
+
+## 52. Verificaciones remotas realizadas
+
+Despues de aplicar migracion y seed se hicieron verificaciones SQL.
+
+### Migraciones
+
+Resultado:
+
+```text
+20260608210706 initial_roxwana_store
+```
+
+### Conteo de filas
+
+Resultados:
+
+- `colors`: 4
+- `garment_types`: 3
+- `sizes`: 5
+- `products`: 6
+- `product_images`: 6
+- `site_settings`: 1
+- `whatsapp_orders`: 0
+
+### Productos por estado
+
+Resultados:
+
+- `active`: 4
+- `draft`: 2
+
+### RLS habilitado
+
+Se verifico `rowsecurity = true` en:
+
+- `colors`
+- `garment_types`
+- `product_colors`
+- `product_images`
+- `product_sizes`
+- `products`
+- `profiles`
+- `site_settings`
+- `sizes`
+- `whatsapp_orders`
+
+### Policies
+
+Se verifico que existen 25 policies entre `public` y `storage`.
+
+Incluyen:
+
+- lectura publica de datos permitidos;
+- lectura publica solo de productos activos;
+- insercion publica de consultas WhatsApp;
+- administracion solo por admin;
+- lectura publica del bucket;
+- escritura de Storage solo por admin.
+
+### Bucket
+
+Se verifico:
+
+```json
+{
+  "id": "product-images",
+  "public": true,
+  "file_size_limit": 3145728,
+  "allowed_mime_types": ["image/jpeg", "image/png", "image/webp"]
+}
+```
+
+### Prueba de RLS como anon
+
+Se ejecuto una lectura simulando rol `anon`.
+
+Resultado:
+
+- productos visibles: 4;
+- drafts visibles: 0;
+- hidden visibles: 0.
+
+Esto confirma que el publico no ve borradores.
+
+### Prueba de insert anon en consultas
+
+Se ejecuto una transaccion con:
+
+- `set local role anon`;
+- insert en `whatsapp_orders`;
+- select de filas de prueba;
+- rollback.
+
+Resultado:
+
+- el insert no fallo;
+- el select como anon no pudo ver la fila, por eso devolvio 0;
+- se hizo rollback para no dejar datos de prueba.
+
+Interpretacion:
+
+- publico puede insertar consultas;
+- publico no puede leer consultas;
+- comportamiento correcto.
+
+## 53. Tipos TypeScript desde Supabase real
+
+Se uso la integracion para generar tipos TypeScript desde el proyecto real.
+
+Resultado:
+
+- Supabase devolvio tipos completos con relaciones;
+- se comparo conceptualmente con `types/supabase.ts`;
+- no se reemplazo el archivo local en ese momento porque el tipo manual conserva unions utiles de la app:
+  - `ProductGender`;
+  - `ProductStatus`.
+
+Decision:
+
+- mantener `types/supabase.ts` actual por compatibilidad;
+- usar la generacion como verificacion de que la estructura remota coincide.
+
+## 54. Validacion local despues de Supabase real
+
+Se ejecuto:
+
+```bash
+npm.cmd run lint
+npm.cmd run build
+```
+
+Resultado:
+
+- lint paso;
+- build paso;
+- `typecheck` no existe como script en `package.json`.
+
+El build se ejecuto inicialmente sin `.env.local` real y despues con `.env.local` creado.
+
+Ambos escenarios pasaron.
+
+## 55. Publishable key recibida y conexion publica verificada
+
+El usuario envio la publishable key de Supabase.
+
+Regla aplicada:
+
+- no se pego la key completa en esta documentacion publica;
+- se guardo solo en `.env.local`;
+- `.env.local` esta ignorado por Git;
+- la key es publica, pero igual no hace falta exponerla en la documentacion del repo.
+
+Se creo `.env.local` con:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=https://amdrfbppefqbdrxuolje.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+SUPABASE_SERVICE_ROLE_KEY=
+NEXT_PUBLIC_SITE_URL=http://127.0.0.1:3000
+NEXT_PUBLIC_WHATSAPP_NUMBER=
+SUPABASE_PROJECT_REF=amdrfbppefqbdrxuolje
+SUPABASE_DB_PASSWORD=
+```
+
+### Prueba publica desde Node
+
+Primer intento:
+
+- fallo con `TypeError: fetch failed`.
+
+Causa probable:
+
+- la sandbox local no tenia salida de red para Node.
+
+Solucion:
+
+- se repitio la prueba con permisos de red/escalados.
+
+Resultado final:
+
+```json
+{
+  "count": 4,
+  "statuses": ["active", "active", "active", "active"]
+}
+```
+
+Interpretacion:
+
+- URL Supabase correcta;
+- publishable key correcta;
+- la API publica responde;
+- RLS publico funciona;
+- solo se ven productos activos.
+
+## 56. Validacion Next.js con `.env.local`
+
+Con `.env.local` ya creado se ejecuto:
+
+```bash
+npm.cmd run lint
+npm.cmd run build
+```
+
+Resultado:
+
+- lint paso;
+- build paso;
+- Next detecto `.env.local`;
+- todas las rutas principales compilaron.
+
+Esto confirma que la app no rompe al pasar de fallback mock a configuracion Supabase publica.
+
+## 57. Datos que todavia faltan
+
+Todavia falta recibir:
+
+```bash
+SUPABASE_SERVICE_ROLE_KEY
+```
+
+o la nueva:
+
+```bash
+Secret key
+```
+
+Ese valor es privado.
+
+Uso:
+
+- acciones admin;
+- crear/editar/duplicar productos;
+- subir imagenes;
+- editar settings;
+- administrar consultas;
+- operaciones server-side que requieren permisos elevados.
+
+Reglas:
+
+- nunca va en cliente;
+- nunca va con prefijo `NEXT_PUBLIC_`;
+- nunca se sube a GitHub;
+- se guarda en `.env.local`;
+- se carga en Netlify como variable secreta.
+
+Tambien falta confirmar o cargar:
+
+- numero real de WhatsApp;
+- `NEXT_PUBLIC_SITE_URL` definitivo de Netlify cuando exista el deploy;
+- primer usuario admin en Supabase Auth;
+- fila `profiles` con `role = 'admin'`.
+
+## 58. Estado actual despues de la conexion guiada
+
+Estado remoto Supabase:
+
+- proyecto `roxwana-store` creado;
+- migracion aplicada;
+- seed aplicado;
+- RLS verificado;
+- Storage creado y verificado;
+- conexion publica verificada con publishable key.
+
+Estado local:
+
+- `.env.local` creado con URL y publishable key;
+- service role todavia vacia;
+- README Supabase creado;
+- config y migraciones creadas;
+- lint y build pasan.
+
+Estado Git:
+
+- hay cambios locales sin commitear;
+- los screenshots viejos siguen sin trackear;
+- `.env.local` no aparece en Git porque esta ignorado.
+
+No se debe decir todavia que el Command Center admin esta totalmente operativo contra Supabase real hasta recibir y probar la service role y crear el primer admin.
+
+## 59. Proximo paso operativo
+
+El siguiente dato necesario es:
+
+```bash
+SUPABASE_SERVICE_ROLE_KEY
+```
+
+Donde encontrarlo:
+
+1. Supabase.
+2. Proyecto `roxwana-store`.
+3. `Project Settings`.
+4. `API Keys`.
+5. Copiar `Secret key` o `service_role key`.
+
+Despues de recibirla se debe:
+
+1. guardarla en `.env.local`;
+2. probar que `createSupabaseAdminClient()` conecta;
+3. crear usuario admin manual desde Supabase Auth;
+4. insertar o actualizar profile admin;
+5. probar `/login`;
+6. probar `/command`;
+7. probar editar settings;
+8. probar crear/editar producto;
+9. probar subir imagen al bucket;
+10. correr `lint`, `build` y, si corresponde, `audit`.

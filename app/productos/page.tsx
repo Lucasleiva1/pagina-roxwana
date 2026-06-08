@@ -27,7 +27,7 @@ export default async function ProductosPage({ searchParams }: ProductosPageProps
   const [products, options] = await Promise.all([searchProducts(filters), getProductOptions()]);
 
   return (
-    <section className="bg-ink pb-20 pt-32">
+      <section className="theme-shop bg-ink pb-20 pt-32">
       <div className="rox-container">
         <SectionHeader
           eyebrow="Shop"

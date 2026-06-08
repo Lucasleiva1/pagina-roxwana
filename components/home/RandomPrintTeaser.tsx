@@ -39,7 +39,7 @@ export function RandomPrintTeaser({ compact = false, products }: { compact?: boo
   }
 
   return (
-    <section className={`bg-ink ${compact ? "py-8" : "py-20"}`}>
+    <section className={`theme-shop bg-ink ${compact ? "py-8" : "py-20"}`}>
       <div className="rox-container grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
         <SectionHeader
           eyebrow="Random print"

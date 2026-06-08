@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Menu, Search, ShoppingBag, User } from "lucide-react";
 import { useState } from "react";
 import { MobileMenu } from "@/components/layout/MobileMenu";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
 
 const navItems = [
   { label: "Shop", href: "/productos" },
@@ -17,7 +18,7 @@ export function Header() {
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-40 border-b border-bone/10 bg-ink/35 backdrop-blur-md">
+      <header className="site-header fixed inset-x-0 top-0 z-40 border-b border-bone/10 bg-ink/35 backdrop-blur-md">
         <div className="mx-auto flex h-20 w-[min(1220px,calc(100vw-28px))] items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
             <span className="grid h-10 w-10 place-items-center border border-roxgold/50 bg-charcoal text-lg font-black text-bone shadow-gold-soft">
@@ -37,6 +38,7 @@ export function Header() {
             ))}
           </nav>
           <div className="hidden items-center gap-2 md:flex">
+            <ThemeToggle />
             {[
               { label: "Buscar", icon: Search },
               { label: "Usuario", icon: User },

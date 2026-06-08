@@ -5,7 +5,7 @@ import { ProductSelector } from "@/components/product/ProductSelector";
 
 export function ProductDetail({ product, settings }: { product: Product; settings: SiteSettings }) {
   return (
-    <section className="bg-ink pb-20 pt-32">
+    <section className="theme-shop bg-ink pb-20 pt-32">
       <div className="rox-container grid gap-10 lg:grid-cols-[0.95fr_1fr]">
         <ProductGallery product={product} />
         <div className="lg:pt-8">

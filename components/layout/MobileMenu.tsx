@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { X } from "lucide-react";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { RoxButton } from "@/components/ui/RoxButton";
 
 const navItems = [
@@ -17,7 +18,7 @@ export function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () =
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-ink/96 backdrop-blur-xl md:hidden">
+    <div className="fixed inset-0 z-50 bg-ink md:hidden">
       <div className="flex h-20 items-center justify-between px-5">
         <Link href="/" onClick={onClose} className="headline text-3xl text-bone">
           RXW
@@ -47,6 +48,9 @@ export function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () =
         <RoxButton href="/productos" variant="bone" className="mt-10 w-full" onClick={onClose}>
           Ver coleccion
         </RoxButton>
+        <div className="mt-4">
+          <ThemeToggle compact />
+        </div>
       </nav>
     </div>
   );

@@ -21,7 +21,7 @@ export default async function HombrePage() {
           />
         </div>
       </section>
-      <section className="bg-ink py-20">
+      <section className="theme-shop bg-ink py-20">
         <div className="rox-container">
           <ProductGrid products={products} />
         </div>
