@@ -1,9 +1,13 @@
 import Image from "next/image";
 import { ProductGrid } from "@/components/product/ProductGrid";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { mockProducts } from "@/data/mockProducts";
+import { searchProducts } from "@/lib/products/queries";
 
-export default function HombrePage() {
+export const dynamic = "force-dynamic";
+
+export default async function HombrePage() {
+  const products = await searchProducts({ gender: "hombre" });
+
   return (
     <>
       <section className="relative min-h-[62svh] overflow-hidden bg-ink pt-32">
@@ -19,7 +23,7 @@ export default function HombrePage() {
       </section>
       <section className="bg-ink py-20">
         <div className="rox-container">
-          <ProductGrid products={mockProducts} />
+          <ProductGrid products={products} />
         </div>
       </section>
     </>

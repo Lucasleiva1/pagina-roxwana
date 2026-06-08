@@ -3,28 +3,26 @@
 import Image from "next/image";
 import { Shuffle } from "lucide-react";
 import { useEffect, useState } from "react";
-import { mockProducts } from "@/data/mockProducts";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { RoxButton } from "@/components/ui/RoxButton";
-import { buildWhatsAppMessage } from "@/lib/whatsapp/buildWhatsAppMessage";
-import { buildWhatsAppUrl } from "@/lib/whatsapp/buildWhatsAppUrl";
+import type { Product } from "@/types/product";
 
-export function RandomPrintTeaser({ compact = false }: { compact?: boolean }) {
+export function RandomPrintTeaser({ compact = false, products }: { compact?: boolean; products: Product[] }) {
   const [index, setIndex] = useState(0);
   const [stopped, setStopped] = useState(false);
-  const product = mockProducts[index];
+  const product = products[index] || products[0];
 
   useEffect(() => {
-    if (stopped) {
+    if (stopped || products.length === 0) {
       return;
     }
 
     const id = window.setInterval(() => {
-      setIndex((value) => (value + 1) % mockProducts.length);
+      setIndex((value) => (value + 1) % products.length);
     }, 760);
 
     return () => window.clearInterval(id);
-  }, [stopped]);
+  }, [products.length, stopped]);
 
   const stopPrint = () => {
     if (stopped) {
@@ -32,15 +30,13 @@ export function RandomPrintTeaser({ compact = false }: { compact?: boolean }) {
       return;
     }
 
-    setIndex(Math.floor(Math.random() * mockProducts.length));
+    setIndex(Math.floor(Math.random() * products.length));
     setStopped(true);
   };
 
-  const message = buildWhatsAppMessage(product, {
-    color: "NEG",
-    size: "M",
-    productUrl: `/producto/${product.slug}`
-  });
+  if (!product) {
+    return null;
+  }
 
   return (
     <section className={`bg-ink ${compact ? "py-8" : "py-20"}`}>
@@ -48,7 +44,7 @@ export function RandomPrintTeaser({ compact = false }: { compact?: boolean }) {
         <SectionHeader
           eyebrow="Random print"
           title="FRENA LA ESTAMPA"
-          description="Un gesto simple y comercial: rota modelos mock, frena uno y consulta directo por WhatsApp."
+          description="Un gesto simple y comercial: rota modelos reales, frena uno y entra al detalle para elegir talle/color."
         />
         <div className="grid gap-5 md:grid-cols-[1fr_0.75fr]">
           <div className="relative min-h-[430px] overflow-hidden border border-roxgold/24 bg-charcoal shadow-hard-red">
@@ -84,8 +80,8 @@ export function RandomPrintTeaser({ compact = false }: { compact?: boolean }) {
               >
                 {stopped ? "Volver a girar" : "Frenar estampa"}
               </button>
-              <RoxButton href={buildWhatsAppUrl(message)} variant="bone" target="_blank" rel="noreferrer">
-                Consultar este modelo
+              <RoxButton href={`/producto/${product.slug}`} variant="bone">
+                Elegir este modelo
               </RoxButton>
             </div>
           </div>

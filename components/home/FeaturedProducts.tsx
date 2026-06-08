@@ -1,8 +1,8 @@
-import { mockProducts } from "@/data/mockProducts";
 import { ProductGrid } from "@/components/product/ProductGrid";
 import { SectionHeader } from "@/components/ui/SectionHeader";
+import type { Product } from "@/types/product";
 
-export function FeaturedProducts() {
+export function FeaturedProducts({ products }: { products: Product[] }) {
   return (
     <section id="drop-01" className="scroll-mt-24 bg-ink py-20">
       <div className="rox-container">
@@ -10,10 +10,10 @@ export function FeaturedProducts() {
           <SectionHeader
             eyebrow="Drop 01"
             title="MODELOS CON CODIGO"
-            description="Mock de producto listo para conectar a catalogo real mas adelante. Hoy vende presencia y consulta directa."
+            description="Catalogo real conectado a ROXWANA Command Center, con codigos visibles y consulta directa."
           />
         </div>
-        <ProductGrid products={mockProducts} />
+        <ProductGrid products={products} />
       </div>
     </section>
   );

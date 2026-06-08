@@ -1,7 +1,13 @@
 import Link from "next/link";
-import { hasConfiguredWhatsAppNumber } from "@/lib/whatsapp/buildWhatsAppUrl";
+import { buildWhatsAppUrl } from "@/lib/whatsapp/buildWhatsAppUrl";
+import { getSiteSettings } from "@/lib/settings/getSiteSettings";
 
-export function Footer() {
+export async function Footer() {
+  const settings = await getSiteSettings();
+  const whatsappUrl = buildWhatsAppUrl({
+    phone: settings.whatsappNumber,
+    message: "Hola ROXWANA, quiero hacer una consulta."
+  });
   const links = [
     { label: "Productos", href: "/productos" },
     { label: "Hombre", href: "/hombre" },
@@ -17,9 +23,9 @@ export function Footer() {
           <p className="mt-3 max-w-xl text-sm uppercase tracking-rox text-bone/62">
             ROXWANA - ESTILO URBANO, HECHO PARA LA CALLE.
           </p>
-          {!hasConfiguredWhatsAppNumber() ? (
+          {!settings.whatsappNumber ? (
             <p className="mt-4 text-xs uppercase tracking-rox text-roxgold/80">
-              WhatsApp en modo demo: configurar NEXT_PUBLIC_WHATSAPP_NUMBER para produccion.
+              WhatsApp pendiente: configurar site_settings o fallback temporal.
             </p>
           ) : null}
         </div>
@@ -32,13 +38,13 @@ export function Footer() {
             ))}
           </div>
           <div className="grid gap-3">
-            <a href="https://instagram.com" target="_blank" rel="noreferrer" className="transition hover:text-bone">
+            <a href={settings.instagramUrl || "https://instagram.com"} target="_blank" rel="noreferrer" className="transition hover:text-bone">
               Instagram
             </a>
-            <a href="https://tiktok.com" target="_blank" rel="noreferrer" className="transition hover:text-bone">
+            <a href={settings.tiktokUrl || "https://tiktok.com"} target="_blank" rel="noreferrer" className="transition hover:text-bone">
               TikTok
             </a>
-            <a href="https://wa.me/" target="_blank" rel="noreferrer" className="transition hover:text-bone">
+            <a href={whatsappUrl || "/productos"} target={whatsappUrl ? "_blank" : undefined} rel={whatsappUrl ? "noreferrer" : undefined} className="transition hover:text-bone">
               WhatsApp
             </a>
           </div>

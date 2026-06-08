@@ -4,15 +4,20 @@ import { HeroCarousel } from "@/components/home/HeroCarousel";
 import { HowToOrder } from "@/components/home/HowToOrder";
 import { KineticPrintWall } from "@/components/home/KineticPrintWall";
 import { RandomPrintTeaser } from "@/components/home/RandomPrintTeaser";
+import { getActiveProducts, getFeaturedProducts } from "@/lib/products/queries";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  const [featuredProducts, randomProducts] = await Promise.all([getFeaturedProducts(), getActiveProducts()]);
+
   return (
     <>
       <HeroCarousel />
       <GenderGateway />
-      <FeaturedProducts />
+      <FeaturedProducts products={featuredProducts} />
       <KineticPrintWall />
-      <RandomPrintTeaser />
+      <RandomPrintTeaser products={randomProducts} />
       <HowToOrder />
     </>
   );

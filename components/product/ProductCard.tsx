@@ -2,16 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Product } from "@/types/product";
 import { RoxButton } from "@/components/ui/RoxButton";
-import { buildWhatsAppMessage } from "@/lib/whatsapp/buildWhatsAppMessage";
-import { buildWhatsAppUrl, hasConfiguredWhatsAppNumber } from "@/lib/whatsapp/buildWhatsAppUrl";
 
 export function ProductCard({ product }: { product: Product }) {
-  const message = buildWhatsAppMessage(product, {
-    color: "NEG",
-    size: "M",
-    productUrl: `/producto/${product.slug}`
-  });
-
   return (
     <article className="group overflow-hidden border border-bone/12 bg-ink shadow-gold-soft">
       <Link href={`/producto/${product.slug}`} className="relative block aspect-[16/10] overflow-hidden bg-charcoal">
@@ -38,7 +30,7 @@ export function ProductCard({ product }: { product: Product }) {
               <span
                 key={color.code}
                 className="h-4 w-4 border border-bone/30"
-                style={{ backgroundColor: color.hex }}
+                style={{ backgroundColor: color.hex || "#111111" }}
                 title={color.label}
               />
             ))}
@@ -56,13 +48,10 @@ export function ProductCard({ product }: { product: Product }) {
           <RoxButton href={`/producto/${product.slug}`} className="px-3">
             Ver modelo
           </RoxButton>
-          <RoxButton href={buildWhatsAppUrl(message)} variant="bone" className="px-3" target="_blank" rel="noreferrer">
-            Consultar
+          <RoxButton href={`/producto/${product.slug}`} variant="bone" className="px-3">
+            Elegir talle
           </RoxButton>
         </div>
-        {!hasConfiguredWhatsAppNumber() ? (
-          <p className="mt-3 text-[10px] uppercase tracking-rox text-roxgold/70">WhatsApp demo</p>
-        ) : null}
       </div>
     </article>
   );

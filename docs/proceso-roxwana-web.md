@@ -598,7 +598,7 @@ git status -sb
 
 ## 16. Pendientes posibles
 
-No se implemento todavia:
+Al cierre de la Fase 1 no se habia implementado todavia:
 
 - Supabase;
 - login;
@@ -636,3 +636,1182 @@ Para decir que la pagina funciona hay que verificar:
 - que las interacciones clave funcionan.
 
 Ese criterio queda como regla para las siguientes etapas de esta pagina.
+
+## 18. Fase 2 - Pedido y objetivo
+
+Fecha de implementacion: 2026-06-08
+
+El nuevo pedido fue implementar la Fase 2 de ROXWANA Web Store.
+
+El objetivo fue pasar de una primera version visual con productos mock a una tienda conectable a Supabase, con:
+
+- catalogo real;
+- productos configurables;
+- imagenes desde storage;
+- numero de WhatsApp configurable;
+- registro de consultas;
+- login;
+- Command Center privado;
+- SQL completo para base, seed, RLS y storage.
+
+La condicion principal fue conservar la estetica ROXWANA ya lograda en la Fase 1. No se debia reemplazar la home por una plantilla ecommerce generica, ni agregar pagos online, stock complejo, carrito ni checkout.
+
+## 19. Plan de Fase 2 implementado
+
+Antes de editar se definio un plan con estas decisiones:
+
+- agregar dependencias minimas para Supabase;
+- separar cliente Supabase de browser, server y admin;
+- mantener `SUPABASE_SERVICE_ROLE_KEY` solo del lado servidor;
+- usar `server-only` para reforzar la frontera de codigo privado;
+- crear SQL en archivos locales, sin intentar tocar una base real porque aun no habia credenciales;
+- migrar catalogo publico a queries reales con fallback mock solo en desarrollo;
+- mantener fallback mock para que el proyecto compile y funcione localmente sin Supabase configurado;
+- proteger `/command` con sesion Supabase y chequeo server-side de `profiles.role = admin`;
+- crear login oscuro alineado a ROXWANA;
+- crear Command Center con estetica de marca, no admin blanco generico;
+- registrar consultas de WhatsApp antes de abrir `wa.me`;
+- validar con lint, build, audit, rutas HTTP y Playwright desktop/mobile.
+
+## 20. Dependencias agregadas
+
+Se instalaron:
+
+- `@supabase/supabase-js`
+- `@supabase/ssr`
+- `server-only`
+
+Comando usado:
+
+```bash
+npm.cmd install @supabase/supabase-js @supabase/ssr server-only
+```
+
+La instalacion se ejecuto con permisos elevados porque necesitaba descargar paquetes desde npm.
+
+Resultado:
+
+- paquetes instalados correctamente;
+- `package.json` actualizado;
+- `package-lock.json` actualizado;
+- `npm audit` posterior siguio reportando `found 0 vulnerabilities`.
+
+## 21. Variables de entorno actualizadas
+
+Se actualizo `.env.example` con:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+NEXT_PUBLIC_SITE_URL=http://127.0.0.1:3000
+NEXT_PUBLIC_WHATSAPP_NUMBER=5491100000000
+```
+
+Reglas documentadas:
+
+- `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY` son publicas y pueden ir al cliente;
+- `SUPABASE_SERVICE_ROLE_KEY` es privada y solo debe usarse en servidor;
+- `NEXT_PUBLIC_WHATSAPP_NUMBER` queda como fallback temporal;
+- el numero real de WhatsApp debe leerse desde `site_settings`;
+- `.env`, `.env.local` y `.env.production` no deben subirse al repo.
+
+Tambien se actualizo `.gitignore` para ignorar:
+
+- `.env`
+- `.env.production`
+- `.env*.local`
+
+## 22. Clientes Supabase creados
+
+Se creo esta estructura:
+
+- `lib/supabase/config.ts`
+- `lib/supabase/client.ts`
+- `lib/supabase/server.ts`
+- `lib/supabase/admin.ts`
+
+### `config.ts`
+
+Centraliza:
+
+- lectura de `NEXT_PUBLIC_SUPABASE_URL`;
+- lectura de `NEXT_PUBLIC_SUPABASE_ANON_KEY`;
+- deteccion de Supabase configurado;
+- fallback de `NEXT_PUBLIC_SITE_URL`.
+
+Esto permite que el proyecto no rompa si todavia no existe `.env.local`.
+
+### `client.ts`
+
+Cliente de browser con `createBrowserClient`.
+
+Regla:
+
+- no contiene secretos;
+- si faltan variables publicas, devuelve `null`;
+- se usa para login desde el cliente.
+
+### `server.ts`
+
+Cliente server con `createServerClient`.
+
+Regla:
+
+- usa cookies de Next;
+- sirve para lecturas publicas y auth server-side;
+- soporta refresh de sesion con cookies.
+
+### `admin.ts`
+
+Cliente admin con service role.
+
+Reglas:
+
+- importa `server-only`;
+- nunca debe importarse en componentes cliente;
+- usa `SUPABASE_SERVICE_ROLE_KEY`;
+- se usa para acciones privadas de Command Center y operaciones de storage.
+
+## 23. Tipos creados y actualizados
+
+Se actualizo:
+
+- `types/product.ts`
+
+Se crearon:
+
+- `types/settings.ts`
+- `types/supabase.ts`
+
+### Cambios en `Product`
+
+El producto dejo de ser solamente mock y paso a soportar:
+
+- `id`;
+- `modelCode`;
+- `model`;
+- `garmentType`;
+- `garmentTypeId`;
+- `garmentLabel`;
+- `gender`;
+- `status`;
+- `featured`;
+- `colors`;
+- `sizes`;
+- `image`;
+- `images`;
+- `slug`;
+- `story`;
+- `description`;
+- fechas opcionales.
+
+Tambien se agregaron:
+
+- `ProductStatus`;
+- `ProductGender`;
+- `ProductImage`;
+- `ProductOption`;
+- `ProductFilters`.
+
+### `types/settings.ts`
+
+Define:
+
+- `SiteSettings`;
+- `WhatsAppOrder`;
+- `WhatsAppOrderStatus`.
+
+### `types/supabase.ts`
+
+Define un tipo manual de base Supabase para las tablas de Fase 2.
+
+Problema encontrado:
+
+- al principio faltaba la propiedad `Relationships` por tabla;
+- eso hizo que `supabase-js` infiriera algunas operaciones como `never`;
+- se agrego `Relationships: []` en cada tabla para destrabar inserts/updates tipados.
+
+## 24. SQL Supabase creado
+
+Se creo:
+
+- `supabase/schema.sql`
+- `supabase/seed.sql`
+
+### `schema.sql`
+
+Incluye:
+
+- extension `pgcrypto`;
+- tablas;
+- constraints;
+- indices;
+- triggers de `updated_at`;
+- funcion `public.is_admin()`;
+- Row Level Security;
+- politicas RLS;
+- bucket `product-images`;
+- politicas de storage.
+
+Tablas creadas:
+
+- `profiles`
+- `garment_types`
+- `colors`
+- `sizes`
+- `products`
+- `product_colors`
+- `product_sizes`
+- `product_images`
+- `site_settings`
+- `whatsapp_orders`
+
+Indices principales:
+
+- `products_slug_idx`;
+- `products_status_idx`;
+- `products_featured_idx`;
+- `products_gender_idx`;
+- `product_images_product_idx`;
+- `whatsapp_orders_created_idx`.
+
+### RLS
+
+Reglas implementadas:
+
+- publico puede leer productos `active`;
+- admin puede leer y gestionar `draft`, `hidden` y `active`;
+- publico puede leer `garment_types`, `colors` y `sizes`;
+- publico puede leer `site_settings`;
+- publico puede insertar `whatsapp_orders`;
+- solo admin puede leer/actualizar consultas;
+- solo admin puede crear/editar productos, relaciones, imagenes y settings.
+
+### Storage
+
+Bucket:
+
+- `product-images`
+
+Reglas:
+
+- lectura publica;
+- insert/update/delete solo admin;
+- el uploader genera paths con `crypto.randomUUID()`;
+- no se usan nombres de usuario como path.
+
+### `seed.sql`
+
+Incluye:
+
+- `REM / Remera`;
+- `BUZ / Buzo`;
+- `MUS / Musculosa`;
+- colores iniciales `NEG`, `BLA`, `ROJ`, `AZU`;
+- talles `S`, `M`, `L`, `XL`, `XXL`;
+- `site_settings` inicial;
+- 6 productos equivalentes al mock;
+- al menos 4 productos `active`;
+- imagen primaria para cada producto usando rutas locales de `public/images/products`.
+
+Productos seed:
+
+- `RXW-REM-ROCK001` - Remera Rock 001
+- `RXW-REM-DRAGON002` - Remera Dragon 002
+- `RXW-REM-MOTO003` - Remera Moto 003
+- `RXW-REM-STREET004` - Remera Street 004
+- `RXW-REM-SKULL005` - Remera Skull 005
+- `RXW-BUZ-HEAVY001` - Buzo Heavy 001
+
+## 25. Capa de productos
+
+Se crearon:
+
+- `lib/products/normalizeProduct.ts`
+- `lib/products/queries.ts`
+- `lib/products/mutations.ts`
+
+Se actualizo:
+
+- `lib/products/buildSku.ts`
+
+### Normalizacion
+
+`normalizeProduct.ts` convierte la forma Supabase a la forma UI camelCase.
+
+Hace:
+
+- toma `garment_types`;
+- toma `product_colors`;
+- toma `product_sizes`;
+- toma `product_images`;
+- ordena talles por `sort_order`;
+- ordena imagenes por `sort_order`;
+- elige imagen primaria;
+- deriva `model` desde `model_code`.
+
+Ejemplo:
+
+`RXW-REM-ROCK001` con prenda `REM` produce `model = ROCK001`.
+
+### Queries
+
+Funciones creadas:
+
+- `getActiveProducts()`
+- `getFeaturedProducts()`
+- `getProductBySlug(slug)`
+- `getProductById(id)`
+- `getProductsForCommand()`
+- `getProductOptions()`
+- `searchProducts(filters)`
+
+Regla importante:
+
+- si Supabase no esta configurado y `NODE_ENV !== "production"`, usa `data/mockProducts.ts`;
+- en produccion no usa mock si Supabase falta;
+- si Supabase responde sin productos en desarrollo, tambien permite fallback para poder probar visualmente.
+
+### Mutations
+
+Server Actions creadas:
+
+- `createProductAction`
+- `updateProductAction`
+- `changeProductStatusAction`
+- `duplicateProductAction`
+
+Validaciones:
+
+- `model_code` requerido;
+- `name` requerido;
+- `slug` requerido;
+- `garment_type_id` requerido;
+- `status` requerido;
+- productos no draft necesitan al menos color y talle;
+- imagenes permitidas: jpg, jpeg, png, webp;
+- limite recomendado: 3 MB por imagen.
+
+Tambien se implemento:
+
+- reemplazo de relaciones producto-color;
+- reemplazo de relaciones producto-talle;
+- subida de imagenes a storage;
+- borrado de filas `product_images`;
+- intento de borrado del objeto real en storage si la URL pertenece al bucket `product-images`;
+- revalidacion de rutas publicas y privadas.
+
+### SKU
+
+`buildSku.ts` mantiene el formato:
+
+```text
+RXW-{PRENDA}-{MODELO}-{COLOR}-{TALLE}
+```
+
+Si falta color o talle, devuelve SKU parcial.
+
+Ejemplo:
+
+```text
+RXW-REM-ROCK001-NEG-M
+```
+
+## 26. Catalogo publico migrado
+
+Se actualizaron:
+
+- `app/page.tsx`
+- `app/productos/page.tsx`
+- `app/producto/[slug]/page.tsx`
+- `app/hombre/page.tsx`
+- `app/mujer/page.tsx`
+- `app/random/page.tsx`
+- `components/home/FeaturedProducts.tsx`
+- `components/home/RandomPrintTeaser.tsx`
+- `components/product/ProductCard.tsx`
+- `components/product/ProductGrid.tsx`
+- `components/product/ProductGallery.tsx`
+
+Se crearon:
+
+- `components/product/ProductFilters.tsx`
+- `components/product/ProductDetail.tsx`
+- `components/product/ProductSelector.tsx`
+
+Se elimino:
+
+- `components/product/ProductDetailMock.tsx`
+
+### Home
+
+Antes:
+
+- importaba productos mock desde `FeaturedProducts` y `RandomPrintTeaser`.
+
+Ahora:
+
+- `app/page.tsx` carga productos con `getFeaturedProducts()` y `getActiveProducts()`;
+- los pasa como props a los componentes;
+- mantiene `HeroCarousel`, `GenderGateway`, `KineticPrintWall` y `HowToOrder`.
+
+### `/productos`
+
+Ahora usa:
+
+- `searchProducts(filters)`;
+- `getProductOptions()`;
+- `ProductFilters`;
+- `ProductGrid`.
+
+Filtros implementados por query string:
+
+- `q`;
+- `gender`;
+- `garmentType`;
+- `color`;
+- `size`.
+
+### `/producto/[slug]`
+
+Antes:
+
+- usaba `mockProducts.find`.
+
+Ahora:
+
+- usa `getProductBySlug(slug)`;
+- carga `getSiteSettings()`;
+- renderiza `ProductDetail`;
+- si no hay producto, usa `notFound()`.
+
+### `/hombre` y `/mujer`
+
+Ahora usan:
+
+- `searchProducts({ gender: "hombre" })`;
+- `searchProducts({ gender: "mujer" })`.
+
+Como regla comercial, `unisex` tambien aparece en filtros de genero.
+
+### `/random`
+
+Ahora usa productos reales/fallback desde `getActiveProducts()`.
+
+### Cards de producto
+
+Antes:
+
+- tenian link directo a WhatsApp con talle/color fijos.
+
+Ahora:
+
+- llevan al detalle para elegir color, talle y cantidad;
+- no generan consulta sin seleccion real.
+
+## 27. WhatsApp configurado y consultas
+
+Se reemplazaron/crearon:
+
+- `lib/whatsapp/buildWhatsAppMessage.ts`
+- `lib/whatsapp/buildWhatsAppUrl.ts`
+- `lib/whatsapp/createWhatsAppOrder.ts`
+- `lib/whatsapp/orders.ts`
+
+### Mensaje
+
+Incluye:
+
+- producto;
+- codigo de modelo;
+- SKU;
+- color;
+- talle;
+- cantidad;
+- link del producto;
+- pregunta por precio final, disponibilidad y forma de pago.
+
+### URL
+
+`buildWhatsAppUrl` normaliza el telefono y devuelve `null` si no hay numero valido.
+
+### Registro de consulta
+
+`createWhatsAppOrder`:
+
+- vuelve a leer el producto en servidor;
+- valida que exista;
+- valida que color y talle pertenezcan al producto;
+- limita cantidad entre 1 y 20;
+- lee `site_settings`;
+- genera SKU;
+- genera mensaje;
+- inserta `whatsapp_orders` si Supabase esta configurado;
+- devuelve URL `wa.me` si WhatsApp esta habilitado y hay numero;
+- devuelve fallback controlado si WhatsApp esta desactivado o no hay numero.
+
+Esto evita confiar solamente en el cliente.
+
+### Consultas admin
+
+`orders.ts` agrega:
+
+- `getWhatsAppOrders(limit)`;
+- `updateWhatsAppOrderStatusAction`.
+
+Estados:
+
+- `new`;
+- `read`;
+- `done`.
+
+## 28. Settings
+
+Se crearon:
+
+- `lib/settings/getSiteSettings.ts`
+- `lib/settings/updateSiteSettings.ts`
+
+### Lectura
+
+`getSiteSettings()`:
+
+- lee `site_settings`;
+- si no hay Supabase, usa fallback local;
+- no rompe build/dev si faltan credenciales.
+
+### Escritura
+
+`updateSiteSettingsAction()`:
+
+- requiere admin;
+- valida formato basico de WhatsApp;
+- acepta solo URLs `https:` para Instagram y TikTok;
+- actualiza o inserta settings;
+- revalida home y `/command/settings`.
+
+## 29. Auth y proteccion de Command Center
+
+Se crearon:
+
+- `lib/auth/requireAdmin.ts`
+- `proxy.ts`
+- `app/login/page.tsx`
+- `app/login/LoginForm.tsx`
+
+### `requireAdmin`
+
+Hace:
+
+- lee usuario con Supabase server client;
+- busca profile con `user_id`;
+- exige `role = admin`;
+- si no hay admin, redirige a `/login`.
+
+### `proxy.ts`
+
+Hace:
+
+- refresh de sesion Supabase;
+- redireccion de `/command` a `/login` si no hay usuario;
+- evita ejecutar sobre assets estaticos.
+
+### Login
+
+`/login`:
+
+- mantiene estetica oscura ROXWANA;
+- usa email/password;
+- muestra error claro si Supabase no esta configurado;
+- redirige a `/command` si login funciona.
+
+No se implemento registro publico de admins.
+
+El primer admin debe crearse manualmente en Supabase.
+
+## 30. Command Center creado
+
+Se crearon rutas:
+
+- `app/command/layout.tsx`
+- `app/command/page.tsx`
+- `app/command/productos/page.tsx`
+- `app/command/productos/nuevo/page.tsx`
+- `app/command/productos/[id]/editar/page.tsx`
+- `app/command/settings/page.tsx`
+- `app/command/consultas/page.tsx`
+
+Se crearon componentes:
+
+- `components/command/CommandShell.tsx`
+- `components/command/CommandHeader.tsx`
+- `components/command/CommandStat.tsx`
+- `components/command/ProductForm.tsx`
+- `components/command/ProductTable.tsx`
+- `components/command/ImageUploader.tsx`
+- `components/command/SettingsForm.tsx`
+- `components/command/WhatsAppOrdersTable.tsx`
+- `components/command/StatusBadge.tsx`
+
+### Dashboard `/command`
+
+Muestra:
+
+- total de productos;
+- productos activos;
+- borradores;
+- ocultos;
+- ultimas consultas;
+- acceso rapido a nuevo producto;
+- acceso rapido a settings;
+- tabla corta de productos.
+
+### Productos `/command/productos`
+
+Incluye:
+
+- busqueda por nombre/modelo;
+- filtro por status;
+- acciones editar, activar, ocultar y duplicar.
+
+### Nuevo producto
+
+Campos:
+
+- codigo modelo;
+- nombre;
+- slug automatico editable;
+- prenda;
+- genero;
+- estado;
+- descripcion;
+- destacado;
+- colores;
+- talles;
+- imagenes.
+
+### Editar producto
+
+Permite:
+
+- editar campos principales;
+- editar relaciones;
+- subir imagenes nuevas;
+- marcar imagenes existentes para borrar;
+- cambiar estado.
+
+### Settings
+
+Permite editar:
+
+- `whatsapp_number`;
+- `whatsapp_label`;
+- `whatsapp_enabled`;
+- `fallback_contact`;
+- `instagram_url`;
+- `tiktok_url`.
+
+### Consultas
+
+Permite:
+
+- ver consultas WhatsApp;
+- ver producto;
+- ver SKU;
+- ver color/talle/cantidad;
+- ver fecha;
+- cambiar estado `new/read/done`.
+
+## 31. Diseno conservado
+
+La Fase 2 mantuvo la direccion visual de Fase 1:
+
+- fondo negro/carbon;
+- hueso para texto;
+- rojo como golpe visual;
+- dorado en bordes/detalles;
+- grillas editoriales;
+- botones rectangulares;
+- textura y sombra ya existentes;
+- tipografia condensada del sistema;
+- nada de panel admin blanco generico.
+
+El Command Center se hizo oscuro, con paneles carbon, bordes finos, badges y tablas responsive.
+
+## 32. Archivos principales creados
+
+Nuevos archivos importantes:
+
+- `app/login/page.tsx`
+- `app/login/LoginForm.tsx`
+- `app/command/layout.tsx`
+- `app/command/page.tsx`
+- `app/command/productos/page.tsx`
+- `app/command/productos/nuevo/page.tsx`
+- `app/command/productos/[id]/editar/page.tsx`
+- `app/command/settings/page.tsx`
+- `app/command/consultas/page.tsx`
+- `components/command/*`
+- `components/product/ProductDetail.tsx`
+- `components/product/ProductFilters.tsx`
+- `components/product/ProductSelector.tsx`
+- `lib/auth/requireAdmin.ts`
+- `lib/products/normalizeProduct.ts`
+- `lib/products/queries.ts`
+- `lib/products/mutations.ts`
+- `lib/settings/getSiteSettings.ts`
+- `lib/settings/updateSiteSettings.ts`
+- `lib/supabase/*`
+- `lib/whatsapp/createWhatsAppOrder.ts`
+- `lib/whatsapp/orders.ts`
+- `proxy.ts`
+- `supabase/schema.sql`
+- `supabase/seed.sql`
+- `types/settings.ts`
+- `types/supabase.ts`
+
+Archivo eliminado:
+
+- `components/product/ProductDetailMock.tsx`
+
+## 33. Archivos modificados principales
+
+Se modificaron:
+
+- `.env.example`
+- `.gitignore`
+- `README.md`
+- `package.json`
+- `package-lock.json`
+- `next.config.mjs`
+- `app/layout.tsx`
+- `app/page.tsx`
+- `app/productos/page.tsx`
+- `app/producto/[slug]/page.tsx`
+- `app/hombre/page.tsx`
+- `app/mujer/page.tsx`
+- `app/random/page.tsx`
+- `components/home/FeaturedProducts.tsx`
+- `components/home/RandomPrintTeaser.tsx`
+- `components/layout/Footer.tsx`
+- `components/product/ProductCard.tsx`
+- `components/product/ProductGallery.tsx`
+- `components/product/ProductGrid.tsx`
+- `data/mockProducts.ts`
+- `lib/products/buildSku.ts`
+- `lib/whatsapp/buildWhatsAppMessage.ts`
+- `lib/whatsapp/buildWhatsAppUrl.ts`
+- `types/product.ts`
+
+Tambien cambio `next-env.d.ts` de:
+
+```ts
+import "./.next/dev/types/routes.d.ts";
+```
+
+a:
+
+```ts
+import "./.next/types/routes.d.ts";
+```
+
+Ese archivo lo actualiza Next automaticamente durante build.
+
+## 34. Problemas encontrados durante Fase 2
+
+### 34.1 Instalacion de dependencias requirio red
+
+Para instalar Supabase se necesito red.
+
+El comando se ejecuto con permisos elevados:
+
+```bash
+npm.cmd install @supabase/supabase-js @supabase/ssr server-only
+```
+
+Resultado:
+
+- instalacion correcta;
+- audit limpio.
+
+### 34.2 Reemplazo accidental de `buildSku.ts` durante patch
+
+Durante un patch grande se intento reemplazar `lib/products/buildSku.ts`.
+
+Problema:
+
+- el patch lo marco como add/delete en la misma operacion;
+- temporalmente el archivo quedo faltante.
+
+Solucion:
+
+- se verifico con `Test-Path`;
+- se recreo inmediatamente `lib/products/buildSku.ts`;
+- se continuo con la version correcta.
+
+### 34.3 Reemplazo de helpers WhatsApp con add/delete
+
+Ocurrio algo similar al reemplazar:
+
+- `lib/whatsapp/buildWhatsAppMessage.ts`
+- `lib/whatsapp/buildWhatsAppUrl.ts`
+
+Problema:
+
+- el patch mostro add/delete en la misma operacion.
+
+Solucion:
+
+- se verifico que ambos archivos existieran;
+- se confirmo su contenido;
+- no hizo falta recrearlos porque quedaron correctamente presentes.
+
+### 34.4 TypeScript fallo por `color.hex` nullable
+
+El nuevo tipo `ProductColor.hex` permite `null`.
+
+Build fallo en:
+
+```ts
+style={{ backgroundColor: color.hex }}
+```
+
+Solucion:
+
+```ts
+style={{ backgroundColor: color.hex || "#111111" }}
+```
+
+### 34.5 TypeScript infirio `profiles` como `never`
+
+Build fallo en `lib/auth/requireAdmin.ts`.
+
+Problema:
+
+- Supabase no estaba infiriendo bien el tipo de respuesta;
+- `data` aparecia como `never`.
+
+Solucion:
+
+- se agrego tipo local `AdminProfileRow`;
+- se castea la fila en ese borde controlado.
+
+### 34.6 `supabase-js` infirio inserts como `never`
+
+Build fallo en `lib/products/mutations.ts` al insertar `product_images`.
+
+Causa:
+
+- `types/supabase.ts` no tenia `Relationships` en las tablas;
+- `supabase-js` necesita esa estructura para inferir correctamente.
+
+Solucion:
+
+- se agrego `Relationships: []` en cada tabla.
+
+### 34.7 Supabase embed select no conocia relaciones
+
+Build fallo en `lib/products/queries.ts`.
+
+Problema:
+
+- el tipo manual de Supabase no describe relaciones embebidas como `garment_types(...)`;
+- TypeScript devolvia `SelectQueryError`.
+
+Solucion:
+
+- se hizo cast explicito `as unknown as ProductRecord[]` en el borde de normalizacion;
+- el resto de la app sigue usando tipos UI seguros.
+
+### 34.8 `maybeSingle()` estaba antes de terminar la query
+
+Build fallo porque se hacia:
+
+```ts
+supabase.from("products").select(...).eq("slug", slug).maybeSingle()
+```
+
+y despues se intentaba aplicar:
+
+```ts
+query.eq("status", "active")
+```
+
+Problema:
+
+- `maybeSingle()` cierra la cadena.
+
+Solucion:
+
+- mover `maybeSingle()` al final.
+
+### 34.9 Rutas prerenderizadas cuando debian ser dinamicas
+
+Build paso, pero el output mostro algunas rutas como estaticas.
+
+Riesgo:
+
+- con Supabase sin env durante build, las paginas podian quedar congeladas con fallback;
+- catalogo/settings/admin necesitan datos runtime.
+
+Solucion:
+
+- agregar `export const dynamic = "force-dynamic"` en:
+  - `app/layout.tsx`;
+  - `app/page.tsx`;
+  - `app/productos/page.tsx`;
+  - `app/producto/[slug]/page.tsx`;
+  - `app/hombre/page.tsx`;
+  - `app/mujer/page.tsx`;
+  - `app/random/page.tsx`;
+  - `app/command/layout.tsx`.
+
+### 34.10 `Start-Process` volvio a fallar por `Path/PATH`
+
+Al levantar servidor con PowerShell:
+
+```powershell
+Start-Process -FilePath npm.cmd ...
+```
+
+fallo con:
+
+```text
+Ya se ha agregado el elemento. Clave en el diccionario: 'Path'  Clave agregada: 'PATH'
+```
+
+Se intento tambien con `node.exe` directo, pero dentro del sandbox seguia el mismo choque.
+
+Solucion:
+
+- se ejecuto el arranque fuera del sandbox con permisos elevados;
+- se verifico la URL con `Invoke-WebRequest`;
+- el servidor quedo vivo en `http://127.0.0.1:3000`.
+
+### 34.11 Playwright desktop detecto warning de Next
+
+Playwright mostro:
+
+```text
+Detected scroll-behavior: smooth on the <html> element.
+```
+
+Solucion:
+
+- se agrego en `app/layout.tsx`:
+
+```tsx
+<html lang="es" data-scroll-behavior="smooth">
+```
+
+Despues se repitio Playwright y no hubo mensajes.
+
+### 34.12 Playwright mobile clickeaba el link desktop oculto
+
+La primera prueba mobile fallaba al clickear `Shop`.
+
+Causa:
+
+- el selector por texto elegia primero el link desktop oculto;
+- ese link no era visible en viewport mobile.
+
+Solucion:
+
+- se cambio la accion a un selector especifico del overlay mobile:
+
+```css
+div.fixed.inset-0 nav a[href='/productos']
+```
+
+Despues la prueba mobile paso.
+
+## 35. Validaciones de Fase 2
+
+Se ejecutaron:
+
+```bash
+npm.cmd run lint
+npm.cmd run build
+npm.cmd audit --omit=dev
+```
+
+Resultados:
+
+- lint paso;
+- build paso;
+- audit reporto `found 0 vulnerabilities`.
+
+Build final:
+
+- Next `16.2.7`;
+- todas las rutas de app quedaron dinamicas excepto `/icon.svg`;
+- Proxy/Middleware activo.
+
+Rutas verificadas con servidor local:
+
+- `/` -> `200`
+- `/productos` -> `200`
+- `/producto/remera-rock-001` -> `200`
+- `/hombre` -> `200`
+- `/mujer` -> `200`
+- `/random` -> `200`
+- `/login` -> `200`
+- `/command` -> `307 /login`
+
+Esto confirma que sin sesion el Command Center no queda abierto.
+
+## 36. Verificacion con navegador
+
+Se uso la skill de Playwright real.
+
+Servidor:
+
+```text
+http://127.0.0.1:3000
+```
+
+### Desktop
+
+Acciones:
+
+- abrir home;
+- screenshot home;
+- click en `Shop`;
+- screenshot productos;
+- contar cards `article`;
+- click en `Ver modelo`;
+- screenshot detalle;
+- contar botones.
+
+Resultado:
+
+- consola sin mensajes;
+- `productArticles = 6`;
+- navegacion al detalle correcta;
+- `buttons = 15`.
+
+Capturas guardadas:
+
+- `.codex-checks/phase2-home.png`
+- `.codex-checks/phase2-products.png`
+- `.codex-checks/phase2-product-detail.png`
+
+### Mobile
+
+Acciones:
+
+- abrir home mobile;
+- screenshot home;
+- abrir menu;
+- click en Shop dentro del menu mobile;
+- screenshot productos;
+- contar productos.
+
+Resultado:
+
+- consola sin mensajes;
+- menu mobile abre;
+- navegacion a Shop funciona;
+- `mobileProductArticles = 6`.
+
+Capturas guardadas:
+
+- `.codex-checks/phase2-mobile-home.png`
+- `.codex-checks/phase2-mobile-products.png`
+
+## 37. Estado actual despues de Fase 2
+
+La app ya tiene implementado:
+
+- Supabase clients;
+- SQL de base;
+- seed;
+- RLS;
+- storage;
+- catalogo real conectable;
+- fallback mock de desarrollo;
+- filtros publicos;
+- detalle con selector;
+- SKU en vivo;
+- WhatsApp configurable;
+- registro de consultas;
+- login;
+- Command Center protegido;
+- creacion/edicion/duplicacion/activacion/ocultamiento de productos;
+- subida/borrado de imagenes;
+- settings;
+- listado de consultas.
+
+Todavia no se pudo probar con una base Supabase real porque no hay credenciales `.env.local` cargadas.
+
+## 38. Pasos para activar Supabase real
+
+1. Crear proyecto Supabase.
+2. Copiar variables a `.env.local`:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+NEXT_PUBLIC_SITE_URL=http://127.0.0.1:3000
+NEXT_PUBLIC_WHATSAPP_NUMBER=
+```
+
+3. Ejecutar `supabase/schema.sql` en SQL Editor.
+4. Ejecutar `supabase/seed.sql`.
+5. Crear usuario admin desde Supabase Auth.
+6. Copiar el `user.id`.
+7. Insertar profile admin:
+
+```sql
+insert into public.profiles (user_id, name, role)
+values ('USER_ID_DEL_AUTH_USER', 'Admin ROXWANA', 'admin');
+```
+
+8. Iniciar dev server:
+
+```bash
+npm.cmd run dev -- --hostname 127.0.0.1 --port 3000
+```
+
+9. Entrar a:
+
+```text
+http://127.0.0.1:3000/login
+```
+
+10. Acceder a `/command`.
+
+## 39. Pendientes recomendados para Fase 3
+
+Pendientes tecnicos:
+
+- probar todo contra Supabase real;
+- confirmar politicas RLS desde usuarios anon y admin;
+- revisar subida real de imagenes al bucket;
+- decidir si se agregan previews/reordenamiento mas fino de imagenes;
+- mejorar manejo de errores de Server Actions en formularios admin;
+- agregar confirmacion visual antes de borrar imagenes;
+- agregar paginacion si crece el catalogo;
+- agregar busqueda mas avanzada si se cargan muchos productos;
+- agregar metadata SEO por producto;
+- preparar deploy Netlify con variables reales;
+- documentar procedure de backup/export de productos.
+
+Pendientes comerciales:
+
+- cargar numero real de WhatsApp desde `site_settings`;
+- cargar redes reales;
+- cargar imagenes definitivas de producto;
+- revisar textos de producto;
+- decidir si `unisex` debe aparecer siempre en hombre/mujer o tener filtro separado;
+- definir flujo de consultas cuando WhatsApp esta desactivado.
+
+No se implemento:
+
+- pago online;
+- stock complejo;
+- carrito;
+- checkout;
+- registro publico de admins.

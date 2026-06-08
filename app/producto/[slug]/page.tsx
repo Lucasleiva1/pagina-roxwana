@@ -1,6 +1,10 @@
 import { notFound } from "next/navigation";
-import { ProductDetailMock } from "@/components/product/ProductDetailMock";
+import { ProductDetail } from "@/components/product/ProductDetail";
 import { mockProducts } from "@/data/mockProducts";
+import { getProductBySlug } from "@/lib/products/queries";
+import { getSiteSettings } from "@/lib/settings/getSiteSettings";
+
+export const dynamic = "force-dynamic";
 
 type ProductPageProps = {
   params: Promise<{
@@ -16,11 +20,11 @@ export function generateStaticParams() {
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
-  const product = mockProducts.find((item) => item.slug === slug);
+  const [product, settings] = await Promise.all([getProductBySlug(slug), getSiteSettings()]);
 
   if (!product) {
     notFound();
   }
 
-  return <ProductDetailMock product={product} />;
+  return <ProductDetail product={product} settings={settings} />;
 }

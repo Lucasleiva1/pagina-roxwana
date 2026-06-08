@@ -1,0 +1,200 @@
+import { mockProducts, roxColors, roxSizes } from "@/data/mockProducts";
+import type { Product, ProductFilters, ProductOption, ProductStatus } from "@/types/product";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { normalizeProducts, type ProductRecord } from "@/lib/products/normalizeProduct";
+
+const PRODUCT_SELECT = `
+  id,
+  model_code,
+  name,
+  slug,
+  garment_type_id,
+  gender,
+  description,
+  status,
+  featured,
+  created_at,
+  updated_at,
+  garment_types(id, code, name, created_at),
+  product_colors(colors(id, code, name, hex, created_at)),
+  product_sizes(sizes(id, code, name, sort_order)),
+  product_images(id, url, alt, sort_order, is_primary, created_at)
+`;
+
+export type ProductOptions = {
+  garmentTypes: ProductOption[];
+  colors: ProductOption[];
+  sizes: ProductOption[];
+};
+
+function canUseMockFallback() {
+  return process.env.NODE_ENV !== "production";
+}
+
+function fallbackProducts(products: Product[]) {
+  if (products.length > 0 || !canUseMockFallback()) {
+    return products;
+  }
+
+  return mockProducts;
+}
+
+function filterProducts(products: Product[], filters: ProductFilters = {}) {
+  const q = filters.q?.trim().toLowerCase();
+
+  return products.filter((product) => {
+    const matchesGender = !filters.gender || filters.gender === "all" || product.gender === filters.gender || product.gender === "unisex";
+    const matchesGarment = !filters.garmentType || product.garmentType === filters.garmentType;
+    const matchesColor = !filters.color || product.colors.some((color) => color.code === filters.color);
+    const matchesSize = !filters.size || product.sizes.includes(filters.size);
+    const matchesStatus = !filters.status || filters.status === "all" || product.status === filters.status;
+    const matchesQuery =
+      !q ||
+      product.name.toLowerCase().includes(q) ||
+      product.modelCode.toLowerCase().includes(q) ||
+      product.model.toLowerCase().includes(q);
+
+    return matchesGender && matchesGarment && matchesColor && matchesSize && matchesStatus && matchesQuery;
+  });
+}
+
+async function getProductsFromSupabase(status?: ProductStatus) {
+  if (!isSupabaseConfigured()) {
+    return [];
+  }
+
+  const supabase = await createSupabaseServerClient();
+
+  if (!supabase) {
+    return [];
+  }
+
+  let query = supabase.from("products").select(PRODUCT_SELECT).order("created_at", { ascending: false });
+
+  if (status) {
+    query = query.eq("status", status);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    return [];
+  }
+
+  return normalizeProducts(data as unknown as ProductRecord[]);
+}
+
+export async function getActiveProducts() {
+  return fallbackProducts(await getProductsFromSupabase("active"));
+}
+
+export async function getFeaturedProducts() {
+  const products = fallbackProducts(await getProductsFromSupabase("active"));
+  const featured = products.filter((product) => product.featured);
+  return featured.length > 0 ? featured : products.slice(0, 6);
+}
+
+export async function getProductBySlug(slug: string, includeHidden = false) {
+  if (isSupabaseConfigured()) {
+    const supabase = await createSupabaseServerClient();
+
+    if (supabase) {
+      let query = supabase.from("products").select(PRODUCT_SELECT).eq("slug", slug);
+
+      if (!includeHidden) {
+        query = query.eq("status", "active");
+      }
+
+      const { data, error } = await query.maybeSingle();
+
+      if (!error && data) {
+        return normalizeProducts([data as unknown as ProductRecord])[0] || null;
+      }
+    }
+  }
+
+  if (canUseMockFallback()) {
+    return mockProducts.find((product) => product.slug === slug) || null;
+  }
+
+  return null;
+}
+
+export async function getProductById(id: string) {
+  if (isSupabaseConfigured()) {
+    const supabase = await createSupabaseServerClient();
+
+    if (supabase) {
+      const { data, error } = await supabase.from("products").select(PRODUCT_SELECT).eq("id", id).eq("status", "active").maybeSingle();
+
+      if (!error && data) {
+        return normalizeProducts([data as unknown as ProductRecord])[0] || null;
+      }
+    }
+  }
+
+  if (canUseMockFallback()) {
+    return mockProducts.find((product) => product.id === id) || null;
+  }
+
+  return null;
+}
+
+export async function getProductsForCommand() {
+  if (!isSupabaseConfigured()) {
+    return canUseMockFallback() ? mockProducts : [];
+  }
+
+  const products = await getProductsFromSupabase();
+  return canUseMockFallback() && products.length === 0 ? mockProducts : products;
+}
+
+export async function searchProducts(filters: ProductFilters = {}) {
+  const products = await getActiveProducts();
+  return filterProducts(products, filters);
+}
+
+export async function getProductOptions(): Promise<ProductOptions> {
+  if (isSupabaseConfigured()) {
+    const supabase = await createSupabaseServerClient();
+
+    if (supabase) {
+      const [garments, colors, sizes] = await Promise.all([
+        supabase.from("garment_types").select("id, code, name").order("name"),
+        supabase.from("colors").select("id, code, name, hex").order("name"),
+        supabase.from("sizes").select("id, code, name, sort_order").order("sort_order")
+      ]);
+
+      if (!garments.error && !colors.error && !sizes.error) {
+        return {
+          garmentTypes: (garments.data || []).map((item) => ({ id: item.id, code: item.code, name: item.name })),
+          colors: (colors.data || []).map((item) => ({ id: item.id, code: item.code, name: item.name, hex: item.hex })),
+          sizes: (sizes.data || []).map((item) => ({ id: item.id, code: item.code, name: item.name, sortOrder: item.sort_order }))
+        };
+      }
+    }
+  }
+
+  if (!canUseMockFallback()) {
+    return {
+      garmentTypes: [],
+      colors: [],
+      sizes: []
+    };
+  }
+
+  return {
+    garmentTypes: [
+      { id: "mock-rem", code: "REM", name: "Remera" },
+      { id: "mock-buz", code: "BUZ", name: "Buzo" },
+      { id: "mock-mus", code: "MUS", name: "Musculosa" }
+    ],
+    colors: roxColors.map((color) => ({ id: `mock-${color.code}`, code: color.code, name: color.label, hex: color.hex })),
+    sizes: roxSizes.map((size, index) => ({ id: `mock-${size}`, code: size, name: size, sortOrder: index + 1 }))
+  };
+}
+
+export function getMockFallbackEnabled() {
+  return canUseMockFallback();
+}

@@ -1,21 +1,23 @@
-import type { Product, ProductColor, ProductSize } from "@/types/product";
-import { buildSku } from "@/lib/products/buildSku";
+import type { Product } from "@/types/product";
 
 type MessageOptions = {
-  color?: ProductColor["code"];
-  size?: ProductSize;
+  product: Product;
+  selectedColor?: string;
+  selectedSize?: string;
+  quantity?: number;
+  sku?: string;
   productUrl?: string;
 };
 
-export function buildWhatsAppMessage(product: Product, options: MessageOptions = {}) {
-  const sku = options.color && options.size ? buildSku(product, options.color, options.size) : undefined;
-  const productLine = options.productUrl ? `Link: ${options.productUrl}` : `Link: /producto/${product.slug}`;
-
+export function buildWhatsAppMessage({ product, selectedColor, selectedSize, quantity = 1, sku, productUrl }: MessageOptions) {
   return [
     `Hola ROXWANA, quiero consultar por ${product.name}.`,
     `Codigo de modelo: ${product.modelCode}`,
     sku ? `SKU: ${sku}` : undefined,
-    productLine,
+    selectedColor ? `Color: ${selectedColor}` : undefined,
+    selectedSize ? `Talle: ${selectedSize}` : undefined,
+    `Cantidad: ${quantity}`,
+    productUrl ? `Link: ${productUrl}` : `Link: /producto/${product.slug}`,
     "Me pasas precio final, disponibilidad y forma de pago?"
   ]
     .filter(Boolean)
