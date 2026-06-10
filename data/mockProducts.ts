@@ -121,5 +121,78 @@ export const mockProducts: Product[] = [
     slug: "buzo-heavy-001",
     story: "Buzo pesado con identidad ROXWANA, pensado para la calle fria.",
     description: "Buzo pesado con identidad ROXWANA, pensado para la calle fria."
+  },
+  {
+    id: "mock-boyband-001",
+    modelCode: "RXW-REM-NEG001",
+    model: "NEG001",
+    name: "Remera Boy Band Style 001",
+    garmentType: "REM",
+    garmentTypeId: "mock-rem",
+    garmentLabel: "Remera",
+    gender: "hombre",
+    status: "active",
+    featured: true,
+    colors: [{ code: "NEG", label: "Negro", hex: "#080808" }],
+    sizes: [...roxSizes],
+    image: "/images/products/product-boyband-001-shirt.png",
+    images: [
+      { url: "/images/products/product-boyband-001-shirt.png", alt: "Remera Boy Band Style 001 vista producto", sortOrder: 1, isPrimary: true },
+      { url: "/images/products/product-boyband-001-street.png", alt: "Remera Boy Band Style 001 en pared urbana", sortOrder: 2, isPrimary: false },
+      { url: "/images/products/product-boyband-001-front.png", alt: "Remera Boy Band Style 001 vista frontal hombre", sortOrder: 3, isPrimary: false },
+      { url: "/images/products/product-boyband-001-back.png", alt: "Remera Boy Band Style 001 vista espalda hombre", sortOrder: 4, isPrimary: false },
+      { url: "/images/products/product-boyband-001-side.png", alt: "Remera Boy Band Style 001 vista lateral hombre", sortOrder: 5, isPrimary: false }
+    ],
+    slug: "remera-boy-band-style-001",
+    story: "Remera negra de hombre con grafica ROXWANA Boy Band Style, corte urbano y presencia fuerte.",
+    description: "Remera negra de hombre con grafica ROXWANA Boy Band Style, pensada para una primera prueba real de producto, color negro y galeria completa."
+  },
+  {
+    id: "mock-flame-fearless-001",
+    modelCode: "RXW-REM-FLM001",
+    model: "FLM001",
+    name: "Remera Flame Fearless 001",
+    garmentType: "REM",
+    garmentTypeId: "mock-rem",
+    garmentLabel: "Remera",
+    gender: "mujer",
+    status: "active",
+    featured: true,
+    colors: [{ code: "BLA", label: "Blanco / Hueso", hex: "#F6F3EE" }],
+    sizes: [...roxSizes],
+    image: "/images/products/product-flame-fearless-001-shirt-desktop.webp",
+    images: [
+      { url: "/images/products/product-flame-fearless-001-shirt-desktop.webp", alt: "Remera Flame Fearless 001 vista producto", sortOrder: 1, isPrimary: true },
+      { url: "/images/products/product-flame-fearless-001-front-model-desktop.webp", alt: "Remera Flame Fearless 001 vista frontal con modelo", sortOrder: 2, isPrimary: false },
+      { url: "/images/products/product-flame-fearless-001-back-model-desktop.webp", alt: "Remera Flame Fearless 001 vista espalda con modelo", sortOrder: 3, isPrimary: false }
+    ],
+    slug: "remera-flame-fearless-001",
+    story: "Remera blanca de mujer con grafica ROXWANA flame rosa, calce al cuerpo y actitud fearless.",
+    description: "Remera blanca de mujer con grafica ROXWANA flame rosa y negro, galeria con vista producto, frente con modelo y espalda."
+  },
+  {
+    id: "mock-street-rock-001",
+    modelCode: "RXW-REM-SRK001",
+    model: "SRK001",
+    name: "Remera Street Rock 001",
+    garmentType: "REM",
+    garmentTypeId: "mock-rem",
+    garmentLabel: "Remera",
+    gender: "hombre",
+    status: "active",
+    featured: true,
+    colors: [{ code: "NEG", label: "Negro", hex: "#080808" }],
+    sizes: [...roxSizes],
+    image: "/images/products/product-street-rock-001-shirt-desktop.webp",
+    images: [
+      { url: "/images/products/product-street-rock-001-shirt-desktop.webp", alt: "Remera Street Rock 001 vista producto", sortOrder: 1, isPrimary: true },
+      { url: "/images/products/product-street-rock-001-street-desktop.webp", alt: "Remera Street Rock 001 en calle urbana", sortOrder: 2, isPrimary: false },
+      { url: "/images/products/product-street-rock-001-front-model-desktop.webp", alt: "Remera Street Rock 001 vista frontal con modelo", sortOrder: 3, isPrimary: false },
+      { url: "/images/products/product-street-rock-001-back-model-desktop.webp", alt: "Remera Street Rock 001 vista espalda con modelo", sortOrder: 4, isPrimary: false },
+      { url: "/images/products/product-street-rock-001-side-model-desktop.webp", alt: "Remera Street Rock 001 vista lateral con modelo", sortOrder: 5, isPrimary: false }
+    ],
+    slug: "remera-street-rock-001",
+    story: "Remera negra de hombre con grafica ROXWANA Street Rock, energia urbana y presencia de escenario.",
+    description: "Remera negra de hombre con grafica ROXWANA Street Rock, galeria completa con producto, calle, frente, espalda y lateral."
   }
 ];

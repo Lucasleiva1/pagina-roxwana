@@ -35,7 +35,10 @@ values
   ('RXW-REM-MOTO003', 'Remera Moto 003', 'remera-moto-003', (select id from rem), 'hombre', 'Actitud de ruta, metal y asfalto en una composicion grafica premium.', 'active', true),
   ('RXW-REM-STREET004', 'Remera Street 004', 'remera-street-004', (select id from rem), 'mujer', 'Pared de posters, textura rota y presencia de marca para uso diario.', 'active', false),
   ('RXW-REM-SKULL005', 'Remera Skull 005', 'remera-skull-005', (select id from rem), 'unisex', 'Drop oscuro con filo rockero, rojo medido y detalle dorado.', 'draft', false),
-  ('RXW-BUZ-HEAVY001', 'Buzo Heavy 001', 'buzo-heavy-001', (select id from buz), 'unisex', 'Buzo pesado con identidad ROXWANA, pensado para la calle fria.', 'draft', false)
+  ('RXW-BUZ-HEAVY001', 'Buzo Heavy 001', 'buzo-heavy-001', (select id from buz), 'unisex', 'Buzo pesado con identidad ROXWANA, pensado para la calle fria.', 'draft', false),
+  ('RXW-REM-NEG001', 'Remera Boy Band Style 001', 'remera-boy-band-style-001', (select id from rem), 'hombre', 'Remera negra de hombre con grafica ROXWANA Boy Band Style, pensada para una primera prueba real de producto, color negro y galeria completa.', 'active', true),
+  ('RXW-REM-FLM001', 'Remera Flame Fearless 001', 'remera-flame-fearless-001', (select id from rem), 'mujer', 'Remera blanca de mujer con grafica ROXWANA flame rosa y negro, galeria con vista producto, frente con modelo y espalda.', 'active', true),
+  ('RXW-REM-SRK001', 'Remera Street Rock 001', 'remera-street-rock-001', (select id from rem), 'hombre', 'Remera negra de hombre con grafica ROXWANA Street Rock, galeria completa con producto, calle, frente, espalda y lateral.', 'active', true)
 on conflict (model_code) do update set
   name = excluded.name,
   slug = excluded.slug,
@@ -52,11 +55,32 @@ join public.colors c on c.code in ('NEG', 'BLA')
 where p.model_code in ('RXW-REM-ROCK001', 'RXW-REM-DRAGON002', 'RXW-REM-MOTO003', 'RXW-REM-STREET004', 'RXW-REM-SKULL005', 'RXW-BUZ-HEAVY001')
 on conflict do nothing;
 
+insert into public.product_colors (product_id, color_id)
+select p.id, c.id
+from public.products p
+join public.colors c on c.code = 'NEG'
+where p.model_code = 'RXW-REM-NEG001'
+on conflict do nothing;
+
+insert into public.product_colors (product_id, color_id)
+select p.id, c.id
+from public.products p
+join public.colors c on c.code = 'BLA'
+where p.model_code = 'RXW-REM-FLM001'
+on conflict do nothing;
+
+insert into public.product_colors (product_id, color_id)
+select p.id, c.id
+from public.products p
+join public.colors c on c.code = 'NEG'
+where p.model_code = 'RXW-REM-SRK001'
+on conflict do nothing;
+
 insert into public.product_sizes (product_id, size_id)
 select p.id, s.id
 from public.products p
 join public.sizes s on s.code in ('S', 'M', 'L', 'XL', 'XXL')
-where p.model_code in ('RXW-REM-ROCK001', 'RXW-REM-DRAGON002', 'RXW-REM-MOTO003', 'RXW-REM-STREET004', 'RXW-REM-SKULL005', 'RXW-BUZ-HEAVY001')
+where p.model_code in ('RXW-REM-ROCK001', 'RXW-REM-DRAGON002', 'RXW-REM-MOTO003', 'RXW-REM-STREET004', 'RXW-REM-SKULL005', 'RXW-BUZ-HEAVY001', 'RXW-REM-NEG001', 'RXW-REM-FLM001', 'RXW-REM-SRK001')
 on conflict do nothing;
 
 insert into public.product_images (product_id, url, alt, sort_order, is_primary)
@@ -69,7 +93,10 @@ join (
     ('RXW-REM-MOTO003', '/images/products/product-03.png', 3),
     ('RXW-REM-STREET004', '/images/products/product-04.png', 4),
     ('RXW-REM-SKULL005', '/images/products/product-05.png', 5),
-    ('RXW-BUZ-HEAVY001', '/images/products/product-06.png', 6)
+    ('RXW-BUZ-HEAVY001', '/images/products/product-06.png', 6),
+    ('RXW-REM-NEG001', '/images/products/product-boyband-001-shirt.png', 1),
+    ('RXW-REM-FLM001', '/images/products/product-flame-fearless-001-shirt-desktop.webp', 1),
+    ('RXW-REM-SRK001', '/images/products/product-street-rock-001-shirt-desktop.webp', 1)
 ) as image(model_code, url, sort_order) on image.model_code = p.model_code
 where not exists (
   select 1
@@ -77,3 +104,55 @@ where not exists (
   where existing.product_id = p.id
     and existing.url = image.url
 );
+
+insert into public.product_images (product_id, url, alt, sort_order, is_primary)
+select p.id, image.url, image.alt, image.sort_order, false
+from public.products p
+join (
+  values
+    ('/images/products/product-boyband-001-street.png', 'Remera Boy Band Style 001 en pared urbana', 2),
+    ('/images/products/product-boyband-001-front.png', 'Remera Boy Band Style 001 vista frontal hombre', 3),
+    ('/images/products/product-boyband-001-back.png', 'Remera Boy Band Style 001 vista espalda hombre', 4),
+    ('/images/products/product-boyband-001-side.png', 'Remera Boy Band Style 001 vista lateral hombre', 5)
+) as image(url, alt, sort_order) on true
+where p.model_code = 'RXW-REM-NEG001'
+  and not exists (
+    select 1
+    from public.product_images existing
+    where existing.product_id = p.id
+      and existing.url = image.url
+  );
+
+insert into public.product_images (product_id, url, alt, sort_order, is_primary)
+select p.id, image.url, image.alt, image.sort_order, false
+from public.products p
+join (
+  values
+    ('/images/products/product-flame-fearless-001-front-model-desktop.webp', 'Remera Flame Fearless 001 vista frontal con modelo', 2),
+    ('/images/products/product-flame-fearless-001-back-model-desktop.webp', 'Remera Flame Fearless 001 vista espalda con modelo', 3)
+) as image(url, alt, sort_order) on true
+where p.model_code = 'RXW-REM-FLM001'
+  and not exists (
+    select 1
+    from public.product_images existing
+    where existing.product_id = p.id
+      and existing.url = image.url
+  );
+
+insert into public.product_images (product_id, url, alt, sort_order, is_primary)
+select p.id, image.url, image.alt, image.sort_order, false
+from public.products p
+join (
+  values
+    ('/images/products/product-street-rock-001-street-desktop.webp', 'Remera Street Rock 001 en calle urbana', 2),
+    ('/images/products/product-street-rock-001-front-model-desktop.webp', 'Remera Street Rock 001 vista frontal con modelo', 3),
+    ('/images/products/product-street-rock-001-back-model-desktop.webp', 'Remera Street Rock 001 vista espalda con modelo', 4),
+    ('/images/products/product-street-rock-001-side-model-desktop.webp', 'Remera Street Rock 001 vista lateral con modelo', 5)
+) as image(url, alt, sort_order) on true
+where p.model_code = 'RXW-REM-SRK001'
+  and not exists (
+    select 1
+    from public.product_images existing
+    where existing.product_id = p.id
+      and existing.url = image.url
+  );

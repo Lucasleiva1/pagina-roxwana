@@ -62,10 +62,11 @@ No agregar `SUPABASE_DB_PASSWORD` en Netlify para esta app.
 
 ## Migraciones Y Seed
 
-La migracion local esta en:
+Las migraciones locales estan en:
 
 ```bash
 supabase/migrations/20260608210706_initial_roxwana_store.sql
+supabase/migrations/20260609180000_phase3_customer_auth_cart_orders.sql
 ```
 
 El seed esta en:
@@ -76,7 +77,9 @@ supabase/seed.sql
 
 ## Primer Admin Manual
 
-No hay registro publico de admins. Crear el usuario desde Supabase Dashboard:
+No hay registro publico de admins. Los clientes usan `/login`; el admin usa `/admin-login`.
+
+Crear el usuario admin desde Supabase Dashboard:
 
 1. Entrar a **Authentication**.
 2. Entrar a **Users**.
@@ -107,9 +110,33 @@ Pruebas:
 
 - `/productos` debe mostrar productos desde Supabase.
 - `/producto/remera-rock-001` debe abrir producto real.
-- `/login` permite entrar con el usuario admin.
+- `/login` permite entrar o registrarse como cliente, con Google como accion principal.
+- `/admin-login` permite entrar al Command Center solo si `profiles.role = 'admin'`.
 - `/command` bloquea usuarios sin profile admin.
-- Una consulta WhatsApp debe guardarse en `whatsapp_orders` antes de abrir `wa.me`.
+- Agregar al carrito sin sesion redirige a `/login?returnUrl=...`.
+- `/carrito` guarda pedido, items y eventos antes de abrir WhatsApp.
+- `/command/consultas` queda como historico legacy de `whatsapp_orders`.
+
+## Auth Cliente
+
+En Supabase Auth:
+
+1. Habilitar signup.
+2. Desactivar confirmacion de email si se quiere que el registro manual entre directo.
+3. Habilitar Google provider desde Supabase/Google.
+4. Agregar redirect URL local:
+
+```text
+http://127.0.0.1:3000/auth/callback
+```
+
+Cuando exista el dominio final, agregar tambien:
+
+```text
+https://TU-SITIO.netlify.app/auth/callback
+```
+
+El Google Client Secret queda solo en Supabase/Google, nunca en el repo.
 
 ## Storage
 

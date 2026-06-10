@@ -48,6 +48,14 @@ export function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () =
         <RoxButton href="/productos" variant="bone" className="mt-10 w-full" onClick={onClose}>
           Ver coleccion
         </RoxButton>
+        <div className="mt-4 grid grid-cols-2 gap-3">
+          <RoxButton href="/login" variant="ghost" className="w-full" onClick={onClose}>
+            Cuenta
+          </RoxButton>
+          <RoxButton href="/carrito" variant="ghost" className="w-full" onClick={onClose}>
+            Carrito
+          </RoxButton>
+        </div>
         <div className="mt-4">
           <ThemeToggle compact />
         </div>

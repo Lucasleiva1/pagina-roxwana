@@ -40,21 +40,21 @@ export function Header() {
           <div className="hidden items-center gap-2 md:flex">
             <ThemeToggle />
             {[
-              { label: "Buscar", icon: Search },
-              { label: "Usuario", icon: User },
-              { label: "Bolsa", icon: ShoppingBag }
+              { label: "Buscar", icon: Search, href: "/productos" },
+              { label: "Usuario", icon: User, href: "/login" },
+              { label: "Bolsa", icon: ShoppingBag, href: "/carrito" }
             ].map((item) => {
               const Icon = item.icon;
               return (
-                <button
+                <Link
                   key={item.label}
-                  type="button"
+                  href={item.href}
                   className="grid h-10 w-10 place-items-center border border-bone/12 text-bone/78 transition hover:border-roxred hover:text-bone"
                   aria-label={item.label}
                   title={item.label}
                 >
                   <Icon size={18} />
-                </button>
+                </Link>
               );
             })}
           </div>

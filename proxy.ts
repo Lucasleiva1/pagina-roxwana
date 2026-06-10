@@ -10,7 +10,9 @@ export async function proxy(request: NextRequest) {
 
   if (!config) {
     if (request.nextUrl.pathname.startsWith("/command")) {
-      return NextResponse.redirect(new URL("/login", request.url));
+      const redirectUrl = new URL("/admin-login", request.url);
+      redirectUrl.searchParams.set("returnUrl", request.nextUrl.pathname + request.nextUrl.search);
+      return NextResponse.redirect(redirectUrl);
     }
 
     return response;
@@ -34,7 +36,9 @@ export async function proxy(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (request.nextUrl.pathname.startsWith("/command") && !user) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    const redirectUrl = new URL("/admin-login", request.url);
+    redirectUrl.searchParams.set("returnUrl", request.nextUrl.pathname + request.nextUrl.search);
+    return NextResponse.redirect(redirectUrl);
   }
 
   return response;

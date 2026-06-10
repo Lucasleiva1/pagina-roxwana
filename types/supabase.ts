@@ -9,10 +9,14 @@ export type Database = {
         Row: {
           id: string;
           user_id: string;
+          email: string | null;
           name: string | null;
           phone: string | null;
+          avatar_url: string | null;
+          marketing_consent: boolean;
           role: "customer" | "admin";
           created_at: string;
+          updated_at: string;
         };
         Insert: Partial<Database["public"]["Tables"]["profiles"]["Row"]> & { user_id: string };
         Update: Partial<Database["public"]["Tables"]["profiles"]["Row"]>;
@@ -135,6 +139,168 @@ export type Database = {
         };
         Insert: Partial<Database["public"]["Tables"]["whatsapp_orders"]["Row"]>;
         Update: Partial<Database["public"]["Tables"]["whatsapp_orders"]["Row"]>;
+        Relationships: [];
+      };
+      carts: {
+        Row: {
+          id: string;
+          user_id: string;
+          status: "active" | "converted" | "abandoned";
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["carts"]["Row"]> & { user_id: string };
+        Update: Partial<Database["public"]["Tables"]["carts"]["Row"]>;
+        Relationships: [];
+      };
+      cart_items: {
+        Row: {
+          id: string;
+          cart_id: string;
+          product_id: string | null;
+          product_name_snapshot: string;
+          model_code_snapshot: string;
+          selected_color: string;
+          selected_size: string;
+          quantity: number;
+          sku: string;
+          price_snapshot: number | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          cart_id: string;
+          product_id?: string | null;
+          product_name_snapshot: string;
+          model_code_snapshot: string;
+          selected_color: string;
+          selected_size: string;
+          quantity?: number;
+          sku: string;
+          price_snapshot?: number | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["cart_items"]["Row"]>;
+        Relationships: [];
+      };
+      customer_addresses: {
+        Row: {
+          id: string;
+          user_id: string;
+          full_name: string;
+          phone: string;
+          street: string;
+          street_number: string;
+          apartment: string | null;
+          city: string;
+          province: string;
+          postal_code: string;
+          delivery_notes: string | null;
+          is_default: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          full_name: string;
+          phone: string;
+          street: string;
+          street_number: string;
+          apartment?: string | null;
+          city: string;
+          province: string;
+          postal_code: string;
+          delivery_notes?: string | null;
+          is_default?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["customer_addresses"]["Row"]>;
+        Relationships: [];
+      };
+      orders: {
+        Row: {
+          id: string;
+          user_id: string;
+          address_id: string | null;
+          status: "new" | "contacted" | "payment_sent" | "paid" | "shipped" | "cancelled";
+          customer_name_snapshot: string;
+          customer_email_snapshot: string | null;
+          customer_phone_snapshot: string;
+          shipping_address_snapshot: Json;
+          whatsapp_message: string | null;
+          source_url: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          address_id?: string | null;
+          status?: "new" | "contacted" | "payment_sent" | "paid" | "shipped" | "cancelled";
+          customer_name_snapshot: string;
+          customer_email_snapshot?: string | null;
+          customer_phone_snapshot: string;
+          shipping_address_snapshot: Json;
+          whatsapp_message?: string | null;
+          source_url?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["orders"]["Row"]>;
+        Relationships: [];
+      };
+      order_items: {
+        Row: {
+          id: string;
+          order_id: string;
+          product_id: string | null;
+          product_name_snapshot: string;
+          model_code_snapshot: string;
+          selected_color: string;
+          selected_size: string;
+          quantity: number;
+          sku: string;
+          price_snapshot: number | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          order_id: string;
+          product_id?: string | null;
+          product_name_snapshot: string;
+          model_code_snapshot: string;
+          selected_color: string;
+          selected_size: string;
+          quantity: number;
+          sku: string;
+          price_snapshot?: number | null;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["order_items"]["Row"]>;
+        Relationships: [];
+      };
+      order_events: {
+        Row: {
+          id: string;
+          order_id: string;
+          type: "order_created" | "whatsapp_generated" | "admin_contacted" | "payment_link_sent" | "paid" | "shipped" | "cancelled" | "admin_note";
+          note: string | null;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          order_id: string;
+          type: Database["public"]["Tables"]["order_events"]["Row"]["type"];
+          note?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["order_events"]["Row"]>;
         Relationships: [];
       };
     };

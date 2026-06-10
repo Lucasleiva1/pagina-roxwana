@@ -1,47 +1,48 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import type { Product } from "@/types/product";
 import type { SiteSettings } from "@/types/settings";
 import { buildSku } from "@/lib/products/buildSku";
-import { createWhatsAppOrder } from "@/lib/whatsapp/createWhatsAppOrder";
+import { addToCartAction } from "@/lib/cart/actions";
 
-export function ProductSelector({ product, settings }: { product: Product; settings: SiteSettings }) {
+export function ProductSelector({ product }: { product: Product; settings: SiteSettings }) {
+  const router = useRouter();
   const [color, setColor] = useState("");
   const [size, setSize] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [message, setMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const sku = useMemo(() => (color && size ? buildSku(product, color, size) : null), [color, product, size]);
-  const canConsult = Boolean(color && size && product.id);
+  const canAdd = Boolean(color && size && product.id);
 
-  const consult = () => {
-    if (!canConsult || !product.id) {
-      setMessage("Selecciona color y talle antes de consultar.");
+  const addToCart = () => {
+    if (!canAdd || !product.id) {
+      setMessage("Selecciona color y talle antes de agregar al carrito.");
       return;
     }
 
     startTransition(async () => {
-      const result = await createWhatsAppOrder({
+      const result = await addToCartAction({
         productId: product.id || "",
         selectedColor: color,
         selectedSize: size,
-        quantity,
-        sourceUrl: window.location.href
+        quantity
       });
 
       if (!result.ok) {
-        setMessage(result.error || "No se pudo generar la consulta.");
+        if (result.needsLogin) {
+          router.push(`/login?returnUrl=${encodeURIComponent(window.location.pathname)}`);
+          return;
+        }
+
+        setMessage(result.error || "No se pudo agregar al carrito.");
         return;
       }
 
-      if (result.url) {
-        window.open(result.url, "_blank", "noopener,noreferrer");
-        setMessage("Consulta guardada. Se abrio WhatsApp en una nueva pestana.");
-        return;
-      }
-
-      setMessage(result.fallbackContact || "Consulta guardada. WhatsApp no esta disponible en este momento.");
+      setMessage("Producto agregado. Tu carrito quedo guardado.");
+      router.refresh();
     });
   };
 
@@ -101,14 +102,14 @@ export function ProductSelector({ product, settings }: { product: Product; setti
       <div className="mt-8 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-start">
         <button
           type="button"
-          onClick={consult}
-          disabled={!canConsult || isPending}
+          onClick={addToCart}
+          disabled={!canAdd || isPending}
           className="min-h-11 border border-bone bg-bone px-5 py-3 text-xs font-bold uppercase tracking-rox text-charcoal transition disabled:cursor-not-allowed disabled:border-bone/20 disabled:bg-bone/20 disabled:text-bone/40"
         >
-          {isPending ? "Guardando consulta..." : settings.whatsappEnabled ? "Consultar por WhatsApp" : "Guardar consulta"}
+          {isPending ? "Agregando..." : "Agregar al carrito"}
         </button>
-        <a href="/productos" className="inline-flex min-h-11 items-center justify-center border border-bone/45 px-5 py-3 text-xs font-bold uppercase tracking-rox text-bone">
-          Volver al shop
+        <a href="/carrito" className="inline-flex min-h-11 items-center justify-center border border-bone/45 px-5 py-3 text-xs font-bold uppercase tracking-rox text-bone">
+          Ver carrito
         </a>
       </div>
 

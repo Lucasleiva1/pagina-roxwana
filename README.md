@@ -1,6 +1,6 @@
 # ROXWANA Web
 
-Web Store ROXWANA con frontend visual premium y Fase 2 preparada para Supabase.
+Web Store ROXWANA con frontend visual premium, Supabase Auth/Database/Storage, carrito persistente y Command Center.
 
 ## Stack
 
@@ -47,7 +47,7 @@ NEXT_PUBLIC_WHATSAPP_NUMBER=5491100000000
 ## Supabase
 
 1. Crear proyecto Supabase.
-2. Ejecutar `supabase/schema.sql` en el SQL Editor.
+2. Ejecutar las migraciones de `supabase/migrations` en orden en el SQL Editor si no se usa Supabase CLI.
 3. Ejecutar `supabase/seed.sql`.
 4. Crear un usuario admin desde Supabase Auth.
 5. Insertar el profile admin manualmente:
@@ -59,10 +59,12 @@ values ('USER_ID_DEL_AUTH_USER', 'Admin ROXWANA', 'admin');
 
 El bucket `product-images` se crea desde `schema.sql`. Las imagenes son publicas para lectura y solo admins pueden subir/editar/borrar.
 
-## Fase 2
+## Fase 3
 
 - Catalogo publico desde Supabase con fallback mock solo en desarrollo.
 - `/productos` con filtros por genero, prenda, color, talle y busqueda.
-- `/producto/[slug]` con selector de color/talle/cantidad, SKU y consulta WhatsApp registrada.
-- `/login` y `/command` protegidos por sesion + profile admin.
-- Command Center para productos, settings y consultas.
+- `/producto/[slug]` con selector de color/talle/cantidad, SKU y agregado al carrito con login requerido.
+- `/login` para clientes con Google principal y registro manual minimo.
+- `/admin-login` para admins; `/command` requiere `profiles.role = 'admin'`.
+- `/carrito` persistente, checkout con direccion y pedido enviado por WhatsApp.
+- Command Center para productos, clientes, pedidos, carritos, settings y consultas legacy.

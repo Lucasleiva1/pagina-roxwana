@@ -1,24 +1,41 @@
 import type { ProductStatus } from "@/types/product";
 import type { WhatsAppOrderStatus } from "@/types/settings";
+import type { CartStatus, OrderStatus } from "@/types/customer";
 
-const labels: Record<ProductStatus | WhatsAppOrderStatus, string> = {
+type BadgeStatus = ProductStatus | WhatsAppOrderStatus | CartStatus | OrderStatus;
+
+const labels: Record<BadgeStatus, string> = {
   active: "Activo",
   draft: "Borrador",
   hidden: "Oculto",
   new: "Nuevo",
   read: "Leido",
-  done: "Cerrado"
+  done: "Cerrado",
+  converted: "Convertido",
+  abandoned: "Abandonado",
+  contacted: "Contactado",
+  payment_sent: "Pago enviado",
+  paid: "Pagado",
+  shipped: "Enviado",
+  cancelled: "Cancelado"
 };
 
-const styles: Record<ProductStatus | WhatsAppOrderStatus, string> = {
+const styles: Record<BadgeStatus, string> = {
   active: "border-roxgold/50 text-roxgold",
   draft: "border-bone/20 text-bone/62",
   hidden: "border-roxred/50 text-roxred",
   new: "border-roxred/50 text-roxred",
   read: "border-roxgold/50 text-roxgold",
-  done: "border-bone/20 text-bone/62"
+  done: "border-bone/20 text-bone/62",
+  converted: "border-bone/20 text-bone/62",
+  abandoned: "border-bone/20 text-bone/44",
+  contacted: "border-roxgold/50 text-roxgold",
+  payment_sent: "border-roxgold/50 text-roxgold",
+  paid: "border-emerald-400/50 text-emerald-300",
+  shipped: "border-bone/50 text-bone",
+  cancelled: "border-roxred/50 text-roxred"
 };
 
-export function StatusBadge({ status }: { status: ProductStatus | WhatsAppOrderStatus }) {
+export function StatusBadge({ status }: { status: BadgeStatus }) {
   return <span className={`inline-flex border px-2.5 py-1 text-[10px] font-bold uppercase tracking-rox ${styles[status]}`}>{labels[status]}</span>;
 }

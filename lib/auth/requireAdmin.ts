@@ -3,6 +3,7 @@ import "server-only";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { getSafeReturnPath } from "@/lib/auth/redirects";
 
 export type AdminProfile = {
   id: string;
@@ -62,7 +63,7 @@ export async function requireAdmin() {
   const profile = await getAdminProfile();
 
   if (!profile) {
-    redirect("/login");
+    redirect(`/admin-login?returnUrl=${encodeURIComponent(getSafeReturnPath("/command", "/command"))}`);
   }
 
   return profile;

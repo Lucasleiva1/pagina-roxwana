@@ -1,19 +1,28 @@
-import Image from "next/image";
 import Link from "next/link";
 import type { Product } from "@/types/product";
+import { ProductResponsiveImage } from "@/components/product/ProductResponsiveImage";
 import { RoxButton } from "@/components/ui/RoxButton";
 
 export function ProductCard({ product }: { product: Product }) {
+  const hoverImage = product.images.find((image) => !image.isPrimary)?.url;
+
   return (
     <article className="group overflow-hidden border border-bone/12 bg-ink shadow-gold-soft">
       <Link href={`/producto/${product.slug}`} className="relative block aspect-[16/10] overflow-hidden bg-charcoal">
-        <Image
+        <ProductResponsiveImage
           src={product.image}
           alt={product.name}
-          fill
           sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-          className="object-cover object-center transition duration-700 group-hover:scale-105"
+          className={`object-center transition duration-700 group-hover:scale-105 ${hoverImage ? "object-contain p-2 group-hover:opacity-0" : "object-cover"}`}
         />
+        {hoverImage ? (
+          <ProductResponsiveImage
+            src={hoverImage}
+            alt={`${product.name} en uso`}
+            sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+            className="object-cover object-center opacity-0 transition duration-700 group-hover:scale-105 group-hover:opacity-100"
+          />
+        ) : null}
         <div className="absolute inset-0 bg-gradient-to-t from-ink/82 via-transparent to-transparent" />
         <span className="absolute left-4 top-4 border border-roxgold/40 bg-ink/70 px-3 py-2 text-[10px] font-bold uppercase tracking-rox text-roxgold">
           {product.modelCode}
