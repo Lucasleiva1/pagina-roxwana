@@ -111,6 +111,47 @@ a {
   scrollbar-width: none;
 }
 
+@keyframes random-print-selection-pop {
+  0% {
+    transform: scale(0.98);
+    box-shadow: 0 0 0 rgba(200, 164, 106, 0);
+  }
+
+  48% {
+    transform: scale(1.018);
+    box-shadow: 0 0 42px rgba(200, 164, 106, 0.28);
+  }
+
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 rgba(200, 164, 106, 0);
+  }
+}
+
+@keyframes random-print-confetti {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(0.55);
+  }
+
+  12% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--confetti-x, 0), var(--confetti-y, 120px), 0) rotate(var(--confetti-rotate, 240deg)) scale(1);
+  }
+}
+
+.random-print-selection-pop {
+  animation: random-print-selection-pop 720ms ease-out;
+}
+
+.random-print-confetti-piece {
+  animation: random-print-confetti 920ms ease-out forwards;
+}
+
 html[data-theme="light"] .site-header {
   border-color: rgba(17, 17, 17, 0.10);
   background: rgba(246, 243, 238, 0.86);
