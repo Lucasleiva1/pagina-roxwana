@@ -12,7 +12,7 @@ const navItems = [
   { label: "Nosotros", href: "/#ordenar" }
 ];
 
-export function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+export function MobileMenu({ isOpen, onClose, cartCount }: { isOpen: boolean; onClose: () => void; cartCount: number }) {
   if (!isOpen) {
     return null;
   }
@@ -54,6 +54,11 @@ export function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () =
           </RoxButton>
           <RoxButton href="/carrito" variant="ghost" className="w-full" onClick={onClose}>
             Carrito
+            {cartCount > 0 ? (
+              <span className="ml-2 inline-grid min-h-5 min-w-5 place-items-center bg-roxred px-1 text-[10px] font-black leading-none text-bone">
+                {cartCount > 99 ? "99+" : cartCount}
+              </span>
+            ) : null}
           </RoxButton>
         </div>
         <div className="mt-4">

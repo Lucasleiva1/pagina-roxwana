@@ -22,12 +22,12 @@ export function DropWall({ products }: { products: Product[] }) {
             <h2 className="headline mt-3 max-w-4xl text-5xl leading-none text-bone md:text-8xl">MODELOS CON CODIGO</h2>
           </div>
           <div className="border-y border-roxgold/45 py-3 text-xs font-bold uppercase tracking-rox text-bone/70 md:max-w-xs">
-            Grilla clara para comparar modelos, codigos, talles y entrar a comprar sin distracciones.
+            Grilla clara para mirar modelos, recorrer imagenes y entrar al detalle sin distracciones.
           </div>
         </div>
 
-        <div className="mt-12 grid items-stretch gap-5 sm:grid-cols-2 xl:grid-cols-3">
-          {products.slice(0, 6).map((product) => (
+        <div className="mt-10 grid items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {products.slice(0, 8).map((product) => (
             <ProductPosterCard key={product.modelCode} product={product} />
           ))}
         </div>

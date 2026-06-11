@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { CartCountSync } from "@/components/cart/CartCountSync";
 import { CartCheckout } from "@/components/cart/CartCheckout";
+import { CartWhatsAppNotice } from "@/components/cart/CartWhatsAppNotice";
 import { CommandHeader } from "@/components/command/CommandHeader";
 import { removeCartItemAction, updateCartItemQuantityAction } from "@/lib/cart/actions";
 import { getCustomerCartPageData } from "@/lib/cart/queries";
@@ -7,14 +9,17 @@ import { getCustomerCartPageData } from "@/lib/cart/queries";
 export const dynamic = "force-dynamic";
 
 export default async function CartPage() {
-  const { cart, profile, latestAddress } = await getCustomerCartPageData("/carrito");
+  const { cart, profile, latestAddress, latestWhatsAppNotice } = await getCustomerCartPageData("/carrito");
   const items = cart?.items || [];
+  const cartCount = items.reduce((total, item) => total + item.quantity, 0);
 
   return (
     <section className="min-h-screen bg-ink pb-20 pt-28">
+      <CartCountSync count={cartCount} />
       <div className="rox-container grid gap-8 lg:grid-cols-[1fr_420px] lg:items-start">
         <div className="grid gap-6">
           <CommandHeader eyebrow="Carrito" title="TU BOLSA" description="Los productos quedan guardados en tu cuenta hasta que envies el pedido." />
+          <CartWhatsAppNotice initialNotice={latestWhatsAppNotice} />
           {items.length > 0 ? (
             <div className="grid gap-3">
               {items.map((item) => (

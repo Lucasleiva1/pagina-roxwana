@@ -1,9 +1,12 @@
 import "server-only";
 
+import { cookies } from "next/headers";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Cart, CartItem, CustomerAddress, CustomerProfile } from "@/types/customer";
 import type { Database } from "@/types/supabase";
 import { requireCustomer, getCurrentProfile } from "@/lib/auth/session";
+import { getSiteSettings } from "@/lib/settings/getSiteSettings";
+import { buildWhatsAppUrl } from "@/lib/whatsapp/buildWhatsAppUrl";
 
 type CartRow = Database["public"]["Tables"]["carts"]["Row"];
 type CartItemRow = Database["public"]["Tables"]["cart_items"]["Row"];
@@ -106,17 +109,43 @@ export async function getCustomerCartPageData(returnPath = "/carrito"): Promise<
   cart: Cart | null;
   profile: CustomerProfile | null;
   latestAddress: CustomerAddress | null;
+  latestWhatsAppNotice: { url: string; message: string } | null;
 }> {
   const { supabase, user } = await requireCustomer(returnPath);
+  const cookieStore = await cookies();
+  const lastOrderId = cookieStore.get("roxwana_last_whatsapp_order")?.value;
   const [cart, profile, addressResult] = await Promise.all([
     getActiveCartForUser(supabase, user.id),
     getCurrentProfile(),
     supabase.from("customer_addresses").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1).maybeSingle()
   ]);
+  let latestWhatsAppNotice: { url: string; message: string } | null = null;
+
+  if (lastOrderId) {
+    const { data: order } = await supabase
+      .from("orders")
+      .select("whatsapp_message")
+      .eq("id", lastOrderId)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (order?.whatsapp_message) {
+      const settings = await getSiteSettings();
+      const url = buildWhatsAppUrl({ phone: settings.whatsappNumber, message: order.whatsapp_message });
+
+      if (url) {
+        latestWhatsAppNotice = {
+          url,
+          message: "Pedido guardado. Se genero el mensaje de WhatsApp para terminar la compra."
+        };
+      }
+    }
+  }
 
   return {
     cart,
     profile,
-    latestAddress: addressResult.error || !addressResult.data ? null : mapAddress(addressResult.data)
+    latestAddress: addressResult.error || !addressResult.data ? null : mapAddress(addressResult.data),
+    latestWhatsAppNotice
   };
 }

@@ -2748,3 +2748,469 @@ Despues de recibirla se debe:
 8. probar crear/editar producto;
 9. probar subir imagen al bucket;
 10. correr `lint`, `build` y, si corresponde, `audit`.
+
+## 60. Rediseño Home Campaign Commerce y version estable
+
+Se rediseño visualmente la Home de ROXWANA para que deje de sentirse como una grilla tecnica oscura y pase a una experiencia de ecommerce streetwear mas editorial.
+
+Objetivo visual:
+
+- mantener identidad negra, rockera, urbana y premium;
+- usar dorado arena como color de marca para acciones y hover;
+- mantener botones, carrito, rutas, Supabase, WhatsApp y flujo de compra;
+- hacer la Home mas parecida a una campaña/drop de ropa;
+- dejar clara la zona de compra para no marear al cliente.
+
+Cambios principales:
+
+- se creo `HeroCampaign` con collage visual, ROXWANA grande, "SIN PEDIR PERMISO" y CTA a drop/WhatsApp;
+- se creo `CategorySplit` para "Hombre" y "Mujer" como entradas visuales grandes;
+- se creo `DropWall` para "Modelos con codigo";
+- se creo `ProductPosterCard` para las cards de producto de la Home;
+- se creo `PrintWallMarquee` como pared horizontal de posters;
+- se creo `OrderTimeline` para reemplazar cajas iguales por pasos tipo etiqueta;
+- se rediseño `Footer` como manifiesto ROXWANA;
+- se mantuvo `RandomPrintTeaser` funcional, pero con estilo mas ticket/backstage.
+
+Archivos principales:
+
+- `app/page.tsx`;
+- `components/home/HeroCampaign.tsx`;
+- `components/home/CategorySplit.tsx`;
+- `components/home/DropWall.tsx`;
+- `components/home/ProductPosterCard.tsx`;
+- `components/home/PrintWallMarquee.tsx`;
+- `components/home/OrderTimeline.tsx`;
+- `components/home/RandomPrintTeaser.tsx`;
+- `components/layout/Footer.tsx`;
+- `components/ui/RoxButton.tsx`;
+- `app/globals.css`.
+
+## 61. Cambio de botones: rojo a dorado arena
+
+Se cambio la intencion visual de los botones.
+
+Problema detectado:
+
+- el hover rojo transmitia peligro o alerta;
+- no coincidia con la sensacion premium que se queria para la marca;
+- el rojo queda mejor como acento grafico o error, no como feedback principal de compra.
+
+Solucion:
+
+- se uso `roxgold` (`#C8A46A`) como color principal de hover, seleccion y CTA;
+- se cambio `RoxButton` para que el relleno animado sea dorado;
+- se ajustaron botones sueltos en carrito, login, filtros, galeria, producto y command/admin;
+- se mantuvo rojo solo donde funciona como error, estado critico o acento grafico.
+
+Validacion:
+
+- busqueda de `hover:*roxred` y `group-hover:*roxred` sin resultados relevantes;
+- captura visual `gold-button-hover-check.png`;
+- `npm.cmd run lint`;
+- `npm.cmd run build`.
+
+## 62. Modelos con codigo: claridad de compra
+
+Primera version del rediseño:
+
+- `Modelos con codigo` quedo muy editorial;
+- habia cards de distintos tamaños;
+- el primer producto dominaba demasiado;
+- para una zona de compra, eso podia marear al cliente.
+
+Correccion aplicada:
+
+- todas las cards pasaron a tener el mismo tamaño;
+- se normalizo la grilla;
+- se normalizaron las imagenes con `object-contain`;
+- se mantuvieron codigo, nombre, descripcion y boton de entrada al modelo.
+
+Segunda correccion aplicada:
+
+- se quitaron los talles visibles de la card;
+- se elimino el boton secundario "Talles";
+- se redujo la altura de la card;
+- se dio mas protagonismo a la imagen;
+- se agregaron flechas dentro de cada card para recorrer las imagenes del producto sin entrar al detalle;
+- se dejo un unico CTA: "Ver modelo";
+- se amplio la grilla hasta 4 columnas en desktop para que entren mas modelos en una vista.
+
+Motivo:
+
+- esta seccion no debe ser experimental;
+- es la zona donde el cliente compara y decide compra;
+- debe verse ordenada, directa y facil de escanear.
+
+Validacion visual:
+
+- `drop-wall-uniform-check.png`;
+- `drop-wall-uniform-mobile-check.png`;
+- `drop-wall-compact-gallery-before.png`;
+- `drop-wall-compact-gallery-after.png`;
+- `drop-wall-compact-gallery-mobile.png`.
+
+## 63. Entrar por actitud: tarjetas alineadas
+
+Problema:
+
+- la tarjeta de "Mujer" estaba desplazada hacia abajo para dar composicion editorial;
+- visualmente quedaba de distinto tamaño/altura percibida que "Hombre";
+- el usuario pidio que ambas queden iguales.
+
+Solucion:
+
+- se elimino el margen vertical extra de la segunda tarjeta;
+- "Hombre" y "Mujer" quedan alineadas y con el mismo tamaño;
+- se mantuvo el estilo visual original de la seccion.
+
+Archivo:
+
+- `components/home/CategorySplit.tsx`.
+
+## 64. Problemas encontrados durante esta etapa
+
+1. Arranque de servidor local.
+
+   En esta maquina, `next dev` funcionaba en primer plano, pero los intentos de dejarlo oculto con `Start-Process`, `cmd /c`, `Start-Job` o `node.exe` se cerraban antes de escuchar en `127.0.0.1:3000`.
+
+   Solucion usada:
+
+   - abrir una terminal visible con `.codex-checks/run-dev.cmd`;
+   - verificar siempre con `Invoke-WebRequest http://127.0.0.1:3000`;
+   - registrar una nota global para no repetir intentos ocultos innecesarios.
+
+2. Seccion de productos demasiado editorial.
+
+   La primera direccion visual era correcta para campaña, pero no para comparacion de compra.
+
+   Solucion:
+
+   - dejar la energia editorial en hero, categorias, print wall, ruleta y footer;
+   - hacer `Modelos con codigo` mas clara, uniforme y comercial.
+
+3. Hover rojo.
+
+   El rojo se leia como peligro.
+
+   Solucion:
+
+   - usar dorado arena como feedback principal;
+   - reservar rojo para acento o error.
+
+4. Tarjeta de Mujer desalineada.
+
+   El desplazamiento editorial generaba diferencia visual.
+
+   Solucion:
+
+   - alinear ambas tarjetas de categoria.
+
+5. Capturas de verificacion.
+
+   Durante las pruebas se generaron PNG locales:
+
+   - `campaign-*`;
+   - `drop-wall-*`;
+   - `gold-button-hover-check.png`;
+   - `random-*`;
+   - `roxwana-full-page-current.png`.
+
+   Decision:
+
+   - se usan como evidencia local;
+   - no se suben a GitHub salvo pedido explicito.
+
+## 65. Estado estable antes de seguir
+
+Estado funcional:
+
+- Home rediseñada como Campaign Commerce;
+- productos de compra en cards claras y uniformes;
+- cada card permite recorrer imagenes con flechas;
+- talles ocultos en Home, visibles en detalle de producto;
+- botones y hover pasan a dorado arena;
+- ruleta sigue funcionando;
+- Footer queda como manifiesto;
+- Home desktop y mobile revisadas visualmente;
+- no se tocaron schema, migraciones ni Supabase.
+
+Validaciones ejecutadas:
+
+```bash
+npm.cmd run lint
+npm.cmd run build
+```
+
+Resultado:
+
+- lint paso;
+- build paso;
+- TypeScript paso;
+- rutas principales compilaron.
+
+Versiones estables guardadas:
+
+- `f20eb86` / `roxwana-muy-estable-2026-06-11`: ruleta estable;
+- `4db8c30` / `roxwana-home-campaign-grid-estable-2026-06-11`: Home campaign con grilla clara inicial.
+
+La version siguiente debe guardar tambien:
+
+- cards compactas con galeria interna;
+- categoria Hombre/Mujer alineada;
+- este resumen de proceso.
+
+## 66. Cierre de Home Campaign Commerce
+
+Esta etapa venia de una conversacion anterior que se corto antes de dejar documentado el cierre.
+
+Cambios funcionales y visuales que quedaron listos:
+
+- Home rediseñada hacia una lectura de campaña comercial;
+- hero, secciones de campaña y entrada por genero mantenidas como piezas de marca;
+- grilla de productos ordenada para compra, no solo editorial;
+- cards de productos compactas, con imagen mas protagonista;
+- galeria interna por card con flechas;
+- un solo CTA principal por producto;
+- tarjetas Hombre/Mujer alineadas;
+- hover de botones llevado a dorado arena para no leer el rojo como error.
+
+Errores/problemas encontrados:
+
+- la primera version visual priorizaba demasiado el impacto editorial y complicaba comparar productos;
+- algunas cards quedaban de alturas diferentes;
+- el rojo como hover parecia peligro o error;
+- la tarjeta de Mujer tenia offset editorial y se leia despareja.
+
+Decision:
+
+- mantener la energia de marca en hero/campaña;
+- hacer la zona de modelos mas clara, uniforme y comprable.
+
+## 67. Login manual y abandono temporal de Google
+
+El usuario decidio dejar Google OAuth para mas adelante porque la configuracion era demasiado pesada para esta etapa.
+
+Objetivo nuevo:
+
+- poder registrarse o entrar con email y password;
+- no requerir confirmacion de email para probar carrito;
+- poder probar el flujo de compra real.
+
+Problema inicial:
+
+- el formulario usaba `supabase.auth.signUp` desde el browser;
+- si Supabase remoto tenia confirmacion de email activa, el usuario quedaba creado pero sin sesion;
+- la UI podia terminar mostrando "Email o password incorrecto", aunque el problema real fuera confirmacion o una contraseña distinta guardada en Auth.
+
+Errores de diagnostico:
+
+- al principio se interpreto como tema de confirmacion de email solamente;
+- luego se verifico en Supabase que el usuario estaba confirmado, pero `last_sign_in_at` seguia vacio;
+- la causa real para el usuario principal fue que Auth tenia una contraseña guardada distinta a la que el usuario estaba usando.
+
+Correcciones aplicadas:
+
+- se creo `app/api/auth/manual-register/route.ts`;
+- se creo `app/api/auth/manual-login/route.ts`;
+- el formulario de `/login` dejo de llamar directo a Supabase desde el browser;
+- el login manual ahora pasa por API local server-side;
+- Google se quito del flujo visible principal;
+- el mensaje de error diferencia mejor entre email no confirmado, red/Supabase y credenciales incorrectas;
+- se confirmo el usuario existente en Supabase y se sincronizo la identidad de email;
+- se reseteo la contraseña del usuario a una clave temporal conocida por el usuario, sin dejar ese valor como requisito de producto.
+
+Validaciones:
+
+- Supabase real devolvio sesion para el usuario;
+- `/api/auth/manual-login` devolvio `{"ok":true}`;
+- Playwright entro por `/login` y redirigio a `/productos`.
+
+## 68. Carrito visible y contador
+
+Pedido del usuario:
+
+- que el icono sea claramente un carrito;
+- que al agregar productos aparezca cantidad visible;
+- que el contador sea rojo;
+- que funcione en desktop y mobile.
+
+Problema:
+
+- el header usaba `ShoppingBag`, que se leia como bolsa y no carrito;
+- no habia contador de items;
+- el header no tenia forma de saber la cantidad real del carrito activo.
+
+Correcciones aplicadas:
+
+- se cambio el icono a `ShoppingCart`;
+- se creo `app/api/cart/count/route.ts`;
+- se creo `components/cart/CartCountSync.tsx`;
+- `Header.tsx` consulta `/api/cart/count`;
+- `ProductSelector.tsx` dispara evento `roxwana-cart-updated` al agregar un producto;
+- `/carrito` sincroniza el contador real cuando se renderiza la pagina;
+- `MobileMenu.tsx` muestra tambien el contador rojo en el boton Carrito.
+
+Validaciones:
+
+- Playwright verifico `aria-label="Carrito: 1 productos"`;
+- desktop mostro badge rojo `1`;
+- mobile mostro `Carrito 1` dentro del menu.
+
+## 69. Checkout del carrito y campos desalineados
+
+Problema visual:
+
+- el checkout estaba en una columna de `420px`;
+- adentro habia una grilla de tres columnas para Ciudad, Provincia y CP;
+- eso dejaba campos apretados/corridos y se veia poco profesional.
+
+Correcciones aplicadas:
+
+- inputs y textarea pasaron a `w-full`;
+- se agrego `min-w-0` donde correspondia;
+- Calle/Numero quedo en `minmax(0,1fr)_112px`;
+- Ciudad/Provincia quedaron en dos columnas;
+- CP ocupa ancho completo dentro de la grilla;
+- el formulario mantiene el look ROXWANA oscuro pero queda mas estable.
+
+Validacion visual:
+
+- screenshot local `cart-badge-layout-after.png`;
+- screenshot local `cart-badge-mobile-menu.png`.
+
+## 70. WhatsApp temporal y mensaje de pedido
+
+Objetivo:
+
+- usar temporalmente el numero del usuario para recibir pedidos;
+- dejarlo cambiable para reemplazarlo por el numero definitivo mas adelante;
+- enviar o preparar un mensaje con el detalle completo del carrito y los datos del checkout.
+
+Configuracion aplicada:
+
+- Supabase `site_settings.whatsapp_number` se actualizo al numero temporal del usuario en formato internacional;
+- `site_settings.whatsapp_label` quedo como `WhatsApp ROXWANA temporal`;
+- `site_settings.whatsapp_enabled` quedo activo;
+- `.env.example` se mantuvo con placeholder `NEXT_PUBLIC_WHATSAPP_NUMBER=549XXXXXXXXXX`;
+- `.env.local` tambien se actualizo localmente, aunque no se sube por `.gitignore`.
+
+Mensaje generado:
+
+- `Pedido ROXWANA`;
+- ID de orden;
+- cliente;
+- email;
+- telefono;
+- direccion;
+- notas;
+- productos con nombre, modelo, SKU, color, talle y cantidad;
+- cierre: `Me pasas precio final, disponibilidad y link de pago?`.
+
+Errores encontrados:
+
+- habia caracteres rotos en la frase final del mensaje por encoding;
+- se corrigio a texto ASCII;
+- el primer intento de checkout con Playwright clickeo el submit de "Actualizar" item en vez del boton de checkout;
+- se ajustaron las pruebas para apuntar al texto exacto `Enviar pedido por WhatsApp`.
+
+## 71. Limitacion de WhatsApp auto-send
+
+El usuario pidio que el mensaje se envie automaticamente por WhatsApp sin que el cliente toque enviar.
+
+Resultado del analisis:
+
+- con `wa.me` no se puede forzar el envio automatico desde el WhatsApp del cliente;
+- WhatsApp permite abrir el chat con el texto precargado, pero el cliente debe tocar Enviar;
+- esto es una restriccion de WhatsApp, no un bug de la app.
+
+Alternativa real:
+
+- usar WhatsApp Business Platform / Cloud API;
+- requeriria `WHATSAPP_CLOUD_ACCESS_TOKEN`, `WHATSAPP_CLOUD_PHONE_NUMBER_ID` y una configuracion de Meta;
+- para mensajes iniciados por negocio puede requerir plantillas aprobadas.
+
+Decision actual:
+
+- mantener `wa.me` como salida visible;
+- guardar siempre el pedido completo en Supabase aunque el cliente no envie el WhatsApp;
+- dejar la app preparada para una futura integracion Cloud API.
+
+## 72. Checkout via API para no perder el link de WhatsApp
+
+Problema:
+
+- el checkout era un server action usado directo desde el formulario;
+- Next refrescaba el arbol despues de completar la accion;
+- como el carrito se convertia y quedaba vacio, la UI ocultaba el formulario y tambien se perdia el link "Abrir WhatsApp".
+
+Intentos y aprendizajes:
+
+- quitar `revalidatePath("/carrito")` no alcanzo;
+- guardar temporalmente el link en `sessionStorage` no alcanzo por timing del refresh;
+- se probo guardar el ID de orden en cookie, pero el flujo seguia siendo menos directo que recibir la respuesta en cliente.
+
+Solucion aplicada:
+
+- se creo `app/api/orders/checkout/route.ts`;
+- `CartCheckout.tsx` ahora envia `FormData` con `fetch("/api/orders/checkout")`;
+- el cliente recibe el `url` de WhatsApp sin refresh automatico;
+- se muestra el mensaje `Pedido guardado. Se abrio WhatsApp para terminar la compra.`;
+- queda visible el boton `Abrir WhatsApp`;
+- se sigue guardando el pedido, items, direccion, eventos y mensaje en Supabase.
+
+Validacion final:
+
+- Playwright agrego producto al carrito;
+- completo datos de checkout;
+- envio el pedido por `/api/orders/checkout`;
+- la pagina mostro `ABRIR WHATSAPP`;
+- el link extraido apunto al numero temporal configurado en `wa.me`;
+- el texto codificado incluyo producto, modelo, SKU, color, talle, cantidad y direccion;
+- Supabase confirmo el ultimo `orders.whatsapp_message` guardado con el detalle completo.
+
+Checks ejecutados:
+
+```bash
+npm.cmd run lint
+npm.cmd run build
+```
+
+Resultado:
+
+- lint paso;
+- build paso;
+- TypeScript paso;
+- rutas nuevas compiladas:
+  - `/api/auth/manual-login`;
+  - `/api/auth/manual-register`;
+  - `/api/cart/count`;
+  - `/api/orders/checkout`.
+
+## 73. Estado estable para guardar en GitHub
+
+Estado funcional:
+
+- Home campaign/commercial estable;
+- login manual operativo;
+- usuario cliente puede entrar con email/password;
+- registro manual queda encaminado por API server-side;
+- carrito agrega productos y mantiene contador;
+- contador rojo visible en desktop/mobile;
+- checkout visualmente corregido;
+- pedido se guarda en Supabase;
+- carrito se convierte luego del pedido;
+- WhatsApp temporal configurado;
+- link de WhatsApp se genera con detalle completo del pedido;
+- link de WhatsApp queda visible en la pantalla luego de guardar.
+
+Pendientes conocidos:
+
+- WhatsApp no puede enviar automaticamente con `wa.me`; para eso se necesita Cloud API;
+- Google OAuth queda postergado;
+- numero temporal debe reemplazarse por el definitivo desde `/command/settings`;
+- `.env.local` no se sube a GitHub, por diseño.
+
+Version estable objetivo:
+
+- tag sugerido: `roxwana-auth-cart-whatsapp-estable-2026-06-11`.

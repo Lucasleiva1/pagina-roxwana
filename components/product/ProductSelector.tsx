@@ -42,6 +42,7 @@ export function ProductSelector({ product }: { product: Product; settings: SiteS
       }
 
       setMessage("Producto agregado. Tu carrito quedo guardado.");
+      window.dispatchEvent(new CustomEvent("roxwana-cart-updated"));
       router.refresh();
     });
   };

@@ -110,7 +110,7 @@ Pruebas:
 
 - `/productos` debe mostrar productos desde Supabase.
 - `/producto/remera-rock-001` debe abrir producto real.
-- `/login` permite entrar o registrarse como cliente, con Google como accion principal.
+- `/login` permite entrar o registrarse como cliente con email/password. Google queda postergado.
 - `/admin-login` permite entrar al Command Center solo si `profiles.role = 'admin'`.
 - `/command` bloquea usuarios sin profile admin.
 - Agregar al carrito sin sesion redirige a `/login?returnUrl=...`.
@@ -123,7 +123,7 @@ En Supabase Auth:
 
 1. Habilitar signup.
 2. Desactivar confirmacion de email si se quiere que el registro manual entre directo.
-3. Habilitar Google provider desde Supabase/Google.
+3. Google provider queda postergado hasta configurar OAuth.
 4. Agregar redirect URL local:
 
 ```text

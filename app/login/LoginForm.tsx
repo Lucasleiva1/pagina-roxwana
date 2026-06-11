@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { getSafeReturnPath } from "@/lib/auth/redirects";
 
 type AuthMode = "login" | "register";
@@ -21,7 +20,6 @@ export function LoginForm({ returnUrl, error: initialError }: LoginFormProps) {
   const [marketingConsent, setMarketingConsent] = useState(false);
   const [message, setMessage] = useState<string | null>(initialError || null);
   const [isPending, startTransition] = useTransition();
-  const supabase = createSupabaseBrowserClient();
   const safeReturnUrl = getSafeReturnPath(returnUrl);
 
   const finish = () => {
@@ -29,37 +27,9 @@ export function LoginForm({ returnUrl, error: initialError }: LoginFormProps) {
     router.refresh();
   };
 
-  const continueWithGoogle = () => {
-    setMessage(null);
-
-    if (!supabase) {
-      setMessage("Supabase no esta configurado. Completa las variables de entorno primero.");
-      return;
-    }
-
-    startTransition(async () => {
-      const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(safeReturnUrl)}`;
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo
-        }
-      });
-
-      if (error) {
-        setMessage("No se pudo iniciar con Google. Revisa la configuracion OAuth.");
-      }
-    });
-  };
-
   const submit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setMessage(null);
-
-    if (!supabase) {
-      setMessage("Supabase no esta configurado. Completa las variables de entorno primero.");
-      return;
-    }
 
     const cleanName = name.trim();
     const cleanEmail = email.trim().toLowerCase();
@@ -76,24 +46,26 @@ export function LoginForm({ returnUrl, error: initialError }: LoginFormProps) {
 
     startTransition(async () => {
       if (mode === "register") {
-        const { data, error } = await supabase.auth.signUp({
-          email: cleanEmail,
-          password,
-          options: {
-            data: {
-              name: cleanName,
-              marketing_consent: marketingConsent
-            }
-          }
+        const response = await fetch("/api/auth/manual-register", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            name: cleanName,
+            email: cleanEmail,
+            password,
+            marketingConsent
+          })
         });
 
-        if (error) {
-          setMessage(error.message || "No se pudo crear la cuenta.");
-          return;
-        }
+        const result = (await response.json().catch(() => ({}))) as {
+          error?: string;
+          needsPublicSignup?: boolean;
+        };
 
-        if (!data.session) {
-          setMessage("Cuenta creada. Para entrar directo, desactiva la confirmacion de email en Supabase Auth.");
+        if (!response.ok) {
+          setMessage(result.error || "No se pudo crear la cuenta.");
           return;
         }
 
@@ -101,13 +73,23 @@ export function LoginForm({ returnUrl, error: initialError }: LoginFormProps) {
         return;
       }
 
-      const { error } = await supabase.auth.signInWithPassword({
-        email: cleanEmail,
-        password
+      const response = await fetch("/api/auth/manual-login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          email: cleanEmail,
+          password
+        })
       });
 
-      if (error) {
-        setMessage("Email o password incorrecto.");
+      const result = (await response.json().catch(() => ({}))) as {
+        error?: string;
+      };
+
+      if (!response.ok) {
+        setMessage(result.error || "No se pudo entrar.");
         return;
       }
 
@@ -117,17 +99,7 @@ export function LoginForm({ returnUrl, error: initialError }: LoginFormProps) {
 
   return (
     <div className="border border-roxgold/24 bg-charcoal p-5 shadow-gold-soft sm:p-6">
-      <button
-        type="button"
-        onClick={continueWithGoogle}
-        disabled={isPending}
-        className="flex min-h-12 w-full items-center justify-center gap-3 border border-bone bg-bone px-5 text-xs font-bold uppercase tracking-rox text-charcoal transition hover:bg-roxgold disabled:opacity-50"
-      >
-        <span className="grid h-5 w-5 place-items-center rounded-full bg-ink text-[11px] text-bone">G</span>
-        Continuar con Google
-      </button>
-
-      <div className="my-5 grid grid-cols-2 border border-bone/12">
+      <div className="grid grid-cols-2 border border-bone/12">
         {(["login", "register"] as const).map((item) => (
           <button
             key={item}

@@ -32,11 +32,11 @@ export function CategorySplit() {
         </div>
 
         <div className="grid gap-5 md:grid-cols-[1.05fr_0.95fr]">
-          {categories.map((item, index) => (
+          {categories.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className={`group relative min-h-[520px] overflow-hidden bg-ink ${index === 1 ? "md:mt-16" : ""}`}
+              className="group relative min-h-[520px] overflow-hidden bg-ink"
             >
               <Image
                 src={item.image}

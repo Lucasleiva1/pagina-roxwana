@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 import { getAuthenticatedUser, ensureCustomerProfile } from "@/lib/auth/session";
 import { getActiveCartForUser } from "@/lib/cart/queries";
 import { getSiteSettings } from "@/lib/settings/getSiteSettings";
@@ -178,7 +179,7 @@ export async function checkoutCartAction(formData: FormData) {
         `${index + 1}. ${item.productName} | Modelo: ${item.modelCode} | SKU: ${item.sku} | Color: ${item.selectedColor} | Talle: ${item.selectedSize} | Cantidad: ${item.quantity}`
     ),
     "",
-    "¿Me pasás precio final, disponibilidad y link de pago?"
+    "Me pasas precio final, disponibilidad y link de pago?"
   ]
     .filter(Boolean)
     .join("\n");
@@ -209,7 +210,15 @@ export async function checkoutCartAction(formData: FormData) {
   const settings = await getSiteSettings();
   const url = settings.whatsappEnabled ? buildWhatsAppUrl({ phone: settings.whatsappNumber, message }) : null;
 
-  revalidatePath("/carrito");
+  if (url) {
+    const cookieStore = await cookies();
+    cookieStore.set("roxwana_last_whatsapp_order", order.id, {
+      path: "/carrito",
+      maxAge: 600,
+      sameSite: "lax"
+    });
+  }
+
   revalidatePath("/command/pedidos");
   revalidatePath("/command/carritos");
 
