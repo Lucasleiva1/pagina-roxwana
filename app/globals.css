@@ -144,12 +144,40 @@ a {
   }
 }
 
+@keyframes rox-wall-marquee {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
 .random-print-selection-pop {
   animation: random-print-selection-pop 720ms ease-out;
 }
 
 .random-print-confetti-piece {
   animation: random-print-confetti 920ms ease-out forwards;
+}
+
+.rox-marquee-track {
+  animation: rox-wall-marquee 38s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rox-marquee-track,
+  .random-print-selection-pop,
+  .random-print-confetti-piece {
+    animation: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
 }
 
 html[data-theme="light"] .site-header {

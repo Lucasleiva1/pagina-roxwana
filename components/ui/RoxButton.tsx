@@ -9,18 +9,18 @@ type RoxButtonProps = AnchorHTMLAttributes<HTMLAnchorElement> & {
 
 export function RoxButton({ href, children, variant = "ghost", className = "", ...props }: RoxButtonProps) {
   const variants = {
-    bone: "border-bone bg-bone text-charcoal hover:text-bone",
-    ghost: "border-bone/45 bg-transparent text-bone hover:border-roxred",
-    red: "border-roxred bg-roxred text-bone hover:border-bone"
+    bone: "border-bone bg-bone text-charcoal",
+    ghost: "border-bone/45 bg-transparent text-bone hover:border-roxgold",
+    red: "border-roxgold bg-roxgold text-charcoal hover:border-bone"
   };
 
   const isExternal = href.startsWith("http");
   const classes = `group relative inline-flex min-h-11 items-center justify-center overflow-hidden border px-5 py-3 text-xs font-bold uppercase tracking-rox transition duration-300 ${variants[variant]} ${className}`;
   const content = (
     <>
-      <span className="absolute inset-y-0 left-0 w-1 bg-roxred transition-all duration-300 group-hover:w-full" />
-      <span className="relative z-10 flex items-center gap-3">
-        <span className="text-roxred transition group-hover:text-bone">/</span>
+      <span className="absolute inset-y-0 left-0 w-1 bg-roxgold transition-all duration-300 group-hover:w-full" />
+      <span className="relative z-10 flex items-center gap-3 transition group-hover:text-charcoal">
+        <span className="text-roxgold transition group-hover:text-charcoal">/</span>
         {children}
       </span>
     </>

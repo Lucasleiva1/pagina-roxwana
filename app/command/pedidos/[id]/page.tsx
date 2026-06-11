@@ -80,7 +80,7 @@ export default async function CommandOrderPage({ params }: CommandOrderPageProps
         <form action={addOrderNoteAction} className="grid gap-3 border border-bone/12 bg-charcoal p-4">
           <input type="hidden" name="orderId" value={detail.order.id} />
           <textarea name="note" rows={3} required className="border border-bone/12 bg-ink px-4 py-3 text-sm text-bone outline-none focus:border-roxgold" placeholder="Nota interna" />
-          <button type="submit" className="min-h-11 border border-roxred bg-roxred px-5 text-xs font-bold uppercase tracking-rox text-bone">
+          <button type="submit" className="min-h-11 border border-roxgold bg-roxgold px-5 text-xs font-bold uppercase tracking-rox text-charcoal transition hover:border-bone">
             Agregar nota
           </button>
         </form>

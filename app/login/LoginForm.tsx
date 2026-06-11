@@ -137,7 +137,7 @@ export function LoginForm({ returnUrl, error: initialError }: LoginFormProps) {
               setMessage(null);
             }}
             className={`min-h-11 text-xs font-bold uppercase tracking-rox transition ${
-              mode === item ? "bg-roxred text-bone" : "text-bone/62 hover:text-bone"
+              mode === item ? "bg-roxgold text-charcoal" : "text-bone/62 hover:text-bone"
             }`}
           >
             {item === "login" ? "Entrar" : "Registro"}
@@ -187,7 +187,7 @@ export function LoginForm({ returnUrl, error: initialError }: LoginFormProps) {
               type="checkbox"
               checked={marketingConsent}
               onChange={(event) => setMarketingConsent(event.target.checked)}
-              className="mt-1 h-4 w-4 accent-roxred"
+            className="mt-1 h-4 w-4 accent-roxgold"
             />
             Quiero recibir novedades de drops y disponibilidad ROXWANA.
           </label>
@@ -195,7 +195,7 @@ export function LoginForm({ returnUrl, error: initialError }: LoginFormProps) {
         <button
           type="submit"
           disabled={isPending}
-          className="min-h-12 border border-roxred bg-roxred px-5 text-xs font-bold uppercase tracking-rox text-bone transition hover:bg-roxred/86 disabled:opacity-50"
+          className="min-h-12 border border-roxgold bg-roxgold px-5 text-xs font-bold uppercase tracking-rox text-charcoal transition hover:border-bone disabled:opacity-50"
         >
           {isPending ? "Procesando..." : mode === "login" ? "Entrar" : "Crear cuenta"}
         </button>

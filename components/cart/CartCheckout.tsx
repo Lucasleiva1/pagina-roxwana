@@ -85,7 +85,7 @@ export function CartCheckout({ profile, latestAddress }: { profile: CustomerProf
         Notas
         <textarea name="deliveryNotes" defaultValue={latestAddress?.deliveryNotes || ""} rows={3} className="border border-bone/12 bg-ink px-4 py-3 text-sm normal-case tracking-normal text-bone outline-none focus:border-roxgold" />
       </label>
-      <button type="submit" disabled={isPending} className="min-h-12 border border-roxred bg-roxred px-5 text-xs font-bold uppercase tracking-rox text-bone transition disabled:opacity-50">
+      <button type="submit" disabled={isPending} className="min-h-12 border border-roxgold bg-roxgold px-5 text-xs font-bold uppercase tracking-rox text-charcoal transition hover:border-bone disabled:opacity-50">
         {isPending ? "Guardando..." : "Enviar pedido por WhatsApp"}
       </button>
       {message ? <p className="border border-roxgold/30 bg-roxgold/10 p-3 text-sm leading-6 text-bone/78">{message}</p> : null}

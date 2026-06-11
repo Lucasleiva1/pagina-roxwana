@@ -4,7 +4,6 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Shuffle, Sparkles } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, useTransition, type CSSProperties } from "react";
-import { SectionHeader } from "@/components/ui/SectionHeader";
 import { addToCartAction } from "@/lib/cart/actions";
 import type { Product } from "@/types/product";
 
@@ -171,14 +170,18 @@ export function RandomPrintTeaser({ compact = false, products }: { compact?: boo
   }
 
   return (
-    <section className={`theme-shop bg-ink ${compact ? "py-8" : "py-20"}`}>
-      <div className="rox-container grid gap-10 lg:grid-cols-[0.82fr_1.18fr] lg:items-start">
-        <div>
-          <SectionHeader
-            eyebrow="Random print"
-            title="RULETA ROXWANA"
-            description="Elegi categoria, gira la ruleta y deja que el sistema elija una estampa para llevar al carrito."
-          />
+    <section className={`theme-shop bg-ink ${compact ? "py-8" : "py-24"}`}>
+      <div className="rox-container">
+        <div className="paper-edge relative grid gap-8 overflow-hidden bg-charcoal/82 p-5 shadow-hard-red md:p-7 lg:grid-cols-[0.78fr_1.22fr] lg:items-start">
+          <div className="pointer-events-none absolute right-8 top-6 hidden rotate-[6deg] border border-roxred/60 px-4 py-2 text-xs font-bold uppercase tracking-rox text-roxred md:block">
+            Backstage pass
+          </div>
+          <div>
+            <p className="text-xs font-bold uppercase tracking-rox text-roxgold">Random print</p>
+            <h2 className="headline mt-3 text-5xl leading-none text-bone md:text-7xl">RULETA ROXWANA</h2>
+            <p className="mt-5 max-w-xl text-sm leading-7 text-bone/68">
+              Elegi categoria, gira la ruleta y deja que el sistema elija una estampa para llevar al carrito.
+            </p>
 
           <div className="mt-8 grid gap-3">
             <p className="text-xs font-bold uppercase tracking-rox text-steel">Categoria</p>
@@ -193,8 +196,8 @@ export function RandomPrintTeaser({ compact = false, products }: { compact?: boo
                     data-random-gender={option.value}
                     disabled={wheelLocked}
                     onClick={() => selectGender(option.value)}
-                    className={`min-h-[112px] border p-4 text-left transition disabled:cursor-not-allowed ${
-                      selected ? "border-roxgold bg-roxgold/10 text-bone" : "border-bone/12 bg-charcoal text-bone/64 hover:border-bone/40"
+                    className={`paper-edge min-h-[112px] border p-4 text-left transition disabled:cursor-not-allowed ${
+                      selected ? "border-roxgold bg-roxgold/12 text-bone shadow-gold-soft" : "border-bone/12 bg-ink/76 text-bone/64 hover:border-bone/40"
                     }`}
                   >
                     <span className="flex items-center gap-3 text-xs font-bold uppercase tracking-rox">
@@ -215,7 +218,7 @@ export function RandomPrintTeaser({ compact = false, products }: { compact?: boo
             data-random-spin
             onClick={startSpin}
             disabled={wheelLocked || !selectedGender || !hasCategoryProducts}
-            className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-3 border border-roxred bg-roxred px-5 py-3 text-xs font-bold uppercase tracking-rox text-bone transition hover:bg-roxred/82 disabled:cursor-not-allowed disabled:border-bone/16 disabled:bg-bone/10 disabled:text-bone/38"
+            className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-3 border border-roxgold bg-roxgold px-5 py-3 text-xs font-bold uppercase tracking-rox text-charcoal transition hover:border-bone disabled:cursor-not-allowed disabled:border-bone/16 disabled:bg-bone/10 disabled:text-bone/38"
           >
             <Shuffle size={18} />
             {wheelLocked ? "Girando..." : phase === "winner" ? "Girar de nuevo" : "Girar ruleta"}
@@ -224,7 +227,7 @@ export function RandomPrintTeaser({ compact = false, products }: { compact?: boo
           <p className="mt-4 min-h-12 border border-bone/12 bg-charcoal/80 p-4 text-sm leading-6 text-bone/68">{hint}</p>
         </div>
 
-        <div className={`overflow-hidden border border-roxgold/24 bg-charcoal shadow-hard-red ${phase === "winner" ? "random-print-selection-pop" : ""}`}>
+        <div className={`paper-edge overflow-hidden bg-ink shadow-gold-soft ${phase === "winner" ? "random-print-selection-pop" : ""}`}>
           <div className="relative min-h-[460px]">
             {displayProduct ? (
               <Image
@@ -279,6 +282,7 @@ export function RandomPrintTeaser({ compact = false, products }: { compact?: boo
             selectedGender={selectedGender}
           />
         </div>
+      </div>
       </div>
     </section>
   );
@@ -401,7 +405,7 @@ function PrizePanel({
                     data-prize-size={item}
                     onClick={() => setSize(item)}
                     className={`h-10 min-w-11 border px-3 text-sm font-bold transition ${
-                      size === item ? "border-roxred bg-roxred text-bone" : "border-bone/12 text-bone/70 hover:border-bone/40"
+                      size === item ? "border-roxgold bg-roxgold text-charcoal" : "border-bone/12 text-bone/70 hover:border-roxgold/70"
                     }`}
                   >
                     {item}
@@ -430,7 +434,7 @@ function PrizePanel({
               data-prize-add
               onClick={addPrizeToCart}
               disabled={!canAdd || isPending}
-              className="min-h-10 border border-bone bg-bone px-4 py-2 text-xs font-bold uppercase tracking-rox text-charcoal transition disabled:cursor-not-allowed disabled:border-bone/20 disabled:bg-bone/20 disabled:text-bone/40"
+              className="min-h-10 border border-roxgold bg-roxgold px-4 py-2 text-xs font-bold uppercase tracking-rox text-charcoal transition hover:border-bone disabled:cursor-not-allowed disabled:border-bone/20 disabled:bg-bone/20 disabled:text-bone/40"
             >
               {isPending ? "Agregando..." : "Agregar al carrito"}
             </button>

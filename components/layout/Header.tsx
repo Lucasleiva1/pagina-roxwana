@@ -49,7 +49,7 @@ export function Header() {
                 <Link
                   key={item.label}
                   href={item.href}
-                  className="grid h-10 w-10 place-items-center border border-bone/12 text-bone/78 transition hover:border-roxred hover:text-bone"
+                  className="grid h-10 w-10 place-items-center border border-bone/12 text-bone/78 transition hover:border-roxgold hover:text-bone"
                   aria-label={item.label}
                   title={item.label}
                 >

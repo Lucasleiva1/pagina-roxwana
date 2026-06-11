@@ -44,7 +44,7 @@ export default async function CartPage() {
                     </form>
                     <form action={removeCartItemAction} className="flex justify-end">
                       <input type="hidden" name="itemId" value={item.id} />
-                      <button type="submit" className="h-10 border border-roxred/40 px-3 text-[10px] font-bold uppercase tracking-rox text-roxred transition hover:border-roxred">
+                      <button type="submit" className="h-10 border border-roxgold/50 px-3 text-[10px] font-bold uppercase tracking-rox text-roxgold transition hover:border-roxgold hover:bg-roxgold hover:text-charcoal">
                         Quitar
                       </button>
                     </form>

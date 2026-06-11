@@ -31,7 +31,7 @@ export function SettingsForm({ settings }: { settings: SiteSettings }) {
           <input name="tiktok_url" defaultValue={settings.tiktokUrl || ""} className="min-h-11 border border-bone/12 bg-ink px-4 text-sm normal-case tracking-normal text-bone outline-none focus:border-roxgold" />
         </label>
       </div>
-      <button type="submit" className="min-h-12 border border-roxred bg-roxred px-5 text-xs font-bold uppercase tracking-rox text-bone transition hover:border-bone">
+      <button type="submit" className="min-h-12 border border-roxgold bg-roxgold px-5 text-xs font-bold uppercase tracking-rox text-charcoal transition hover:border-bone">
         Guardar settings
       </button>
     </form>

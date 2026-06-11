@@ -57,7 +57,7 @@ export function ThemeToggle({ compact = false }: { compact?: boolean }) {
     <button
       type="button"
       onClick={toggleTheme}
-      className={`theme-toggle border border-bone/12 text-bone/78 transition hover:border-roxred hover:text-bone ${
+      className={`theme-toggle border border-bone/12 text-bone/78 transition hover:border-roxgold hover:text-bone ${
         compact
           ? "flex h-11 w-full items-center justify-center gap-3 px-4 text-xs font-bold uppercase tracking-rox"
           : "grid h-10 w-10 place-items-center"

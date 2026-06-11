@@ -39,7 +39,7 @@ export function ProductTable({ products }: { products: Product[] }) {
                       <form action={changeProductStatusAction}>
                         <input type="hidden" name="id" value={product.id} />
                         <input type="hidden" name="status" value={product.status === "active" ? "hidden" : "active"} />
-                        <button type="submit" className="border border-bone/16 px-3 py-2 text-[10px] font-bold uppercase tracking-rox text-bone transition hover:border-roxred">
+                        <button type="submit" className="border border-bone/16 px-3 py-2 text-[10px] font-bold uppercase tracking-rox text-bone transition hover:border-roxgold">
                           {product.status === "active" ? "Ocultar" : "Activar"}
                         </button>
                       </form>

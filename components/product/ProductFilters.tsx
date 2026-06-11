@@ -46,7 +46,7 @@ export function ProductFilters({ filters, garmentTypes, colors, sizes }: Product
           </option>
         ))}
       </select>
-      <button type="submit" className="min-h-11 border border-roxred bg-roxred px-5 text-xs font-bold uppercase tracking-rox text-bone">
+      <button type="submit" className="min-h-11 border border-roxgold bg-roxgold px-5 text-xs font-bold uppercase tracking-rox text-charcoal transition hover:border-bone">
         Filtrar
       </button>
     </form>

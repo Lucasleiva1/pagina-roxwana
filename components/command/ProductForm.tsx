@@ -137,7 +137,7 @@ export function ProductForm({ product, options, action, submitLabel }: ProductFo
         <ImageUploader images={product?.images || []} />
       </fieldset>
 
-      <button type="submit" className="min-h-12 border border-roxred bg-roxred px-5 text-xs font-bold uppercase tracking-rox text-bone transition hover:border-bone">
+      <button type="submit" className="min-h-12 border border-roxgold bg-roxgold px-5 text-xs font-bold uppercase tracking-rox text-charcoal transition hover:border-bone">
         {submitLabel}
       </button>
     </form>

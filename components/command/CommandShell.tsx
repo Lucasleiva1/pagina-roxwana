@@ -21,7 +21,7 @@ export function CommandShell({ children }: { children: ReactNode }) {
           <p className="mt-1 text-[10px] uppercase tracking-rox text-roxgold">ROXWANA private</p>
           <nav className="mt-6 grid gap-2">
             {navItems.map((item) => (
-              <Link key={item.href} href={item.href} className="border border-bone/10 px-3 py-3 text-xs font-bold uppercase tracking-rox text-bone/68 transition hover:border-roxred hover:text-bone">
+              <Link key={item.href} href={item.href} className="border border-bone/10 px-3 py-3 text-xs font-bold uppercase tracking-rox text-bone/68 transition hover:border-roxgold hover:text-bone">
                 {item.label}
               </Link>
             ))}

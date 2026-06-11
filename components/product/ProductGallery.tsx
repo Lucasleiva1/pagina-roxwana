@@ -37,7 +37,7 @@ export function ProductGallery({ product }: { product: Product }) {
             <button
               type="button"
               onClick={showPrevious}
-              className="absolute left-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center border border-bone/30 bg-ink/72 text-bone transition hover:border-roxred hover:bg-roxred"
+              className="absolute left-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center border border-bone/30 bg-ink/72 text-bone transition hover:border-roxgold hover:bg-roxgold hover:text-charcoal"
               aria-label="Imagen anterior"
               title="Imagen anterior"
             >
@@ -46,7 +46,7 @@ export function ProductGallery({ product }: { product: Product }) {
             <button
               type="button"
               onClick={showNext}
-              className="absolute right-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center border border-bone/30 bg-ink/72 text-bone transition hover:border-roxred hover:bg-roxred"
+              className="absolute right-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center border border-bone/30 bg-ink/72 text-bone transition hover:border-roxgold hover:bg-roxgold hover:text-charcoal"
               aria-label="Imagen siguiente"
               title="Imagen siguiente"
             >
@@ -65,7 +65,7 @@ export function ProductGallery({ product }: { product: Product }) {
             type="button"
             onClick={() => setActiveIndex(index)}
             className={`relative aspect-[16/10] overflow-hidden border bg-ink transition ${
-              index === activeIndex ? "border-roxred" : "border-bone/12 hover:border-roxgold"
+              index === activeIndex ? "border-roxgold" : "border-bone/12 hover:border-roxgold"
             }`}
             aria-label={`Ver imagen ${index + 1} de ${product.name}`}
           >

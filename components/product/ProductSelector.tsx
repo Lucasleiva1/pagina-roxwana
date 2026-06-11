@@ -74,7 +74,7 @@ export function ProductSelector({ product }: { product: Product; settings: SiteS
               type="button"
               onClick={() => setSize(item)}
               className={`h-11 min-w-12 border px-4 text-sm font-bold transition ${
-                size === item ? "border-roxred bg-roxred text-bone" : "border-bone/12 text-bone/70 hover:border-bone/40"
+                size === item ? "border-roxgold bg-roxgold text-charcoal" : "border-bone/12 text-bone/70 hover:border-roxgold/70"
               }`}
             >
               {item}
@@ -104,7 +104,7 @@ export function ProductSelector({ product }: { product: Product; settings: SiteS
           type="button"
           onClick={addToCart}
           disabled={!canAdd || isPending}
-          className="min-h-11 border border-bone bg-bone px-5 py-3 text-xs font-bold uppercase tracking-rox text-charcoal transition disabled:cursor-not-allowed disabled:border-bone/20 disabled:bg-bone/20 disabled:text-bone/40"
+          className="min-h-11 border border-roxgold bg-roxgold px-5 py-3 text-xs font-bold uppercase tracking-rox text-charcoal transition hover:border-bone disabled:cursor-not-allowed disabled:border-bone/20 disabled:bg-bone/20 disabled:text-bone/40"
         >
           {isPending ? "Agregando..." : "Agregar al carrito"}
         </button>

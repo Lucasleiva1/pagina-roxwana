@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowUpRight } from "lucide-react";
 import { buildWhatsAppUrl } from "@/lib/whatsapp/buildWhatsAppUrl";
 import { getSiteSettings } from "@/lib/settings/getSiteSettings";
 
@@ -16,27 +17,31 @@ export async function Footer() {
   ];
 
   return (
-    <footer className="border-t border-bone/10 bg-ink py-12">
-      <div className="rox-container grid gap-10 md:grid-cols-[1fr_auto] md:items-end">
+    <footer className="relative overflow-hidden border-t border-roxgold/20 bg-ink py-16">
+      <div className="pointer-events-none absolute inset-0 opacity-25">
+        <div className="h-full w-full bg-[repeating-linear-gradient(135deg,rgba(246,243,238,0.05)_0_1px,transparent_1px_10px)]" />
+      </div>
+      <div className="rox-container relative z-10 grid gap-12 lg:grid-cols-[1fr_0.52fr] lg:items-end">
         <div>
-          <div className="headline text-5xl text-bone">ROXWANA</div>
-          <p className="mt-3 max-w-xl text-sm uppercase tracking-rox text-bone/62">
-            ROXWANA - ESTILO URBANO, HECHO PARA LA CALLE.
-          </p>
+          <p className="text-xs font-bold uppercase tracking-rox text-roxgold">Wear it loud</p>
+          <div className="headline mt-3 text-7xl leading-none text-bone md:text-9xl">ROXWANA</div>
+          <p className="headline mt-4 max-w-3xl text-3xl leading-none text-bone/90 md:text-5xl">SIN PEDIR PERMISO</p>
+          <p className="mt-5 max-w-xl text-sm uppercase tracking-rox text-bone/62">Street rock / graphic wear. Hecho para la calle.</p>
           {!settings.whatsappNumber ? (
             <p className="mt-4 text-xs uppercase tracking-rox text-roxgold/80">
               WhatsApp pendiente: configurar site_settings o fallback temporal.
             </p>
           ) : null}
         </div>
-        <div className="grid gap-6 text-xs font-bold uppercase tracking-rox text-bone/70 sm:grid-cols-2 md:text-right">
-          <div className="grid gap-3">
+
+        <div className="grid gap-7 text-xs font-bold uppercase tracking-rox text-bone/70 sm:grid-cols-2 lg:text-right">
+          <nav className="grid gap-3" aria-label="Footer principal">
             {links.map((link) => (
               <Link key={link.href} href={link.href} className="transition hover:text-bone">
                 {link.label}
               </Link>
             ))}
-          </div>
+          </nav>
           <div className="grid gap-3">
             <a href={settings.instagramUrl || "https://instagram.com"} target="_blank" rel="noreferrer" className="transition hover:text-bone">
               Instagram
@@ -45,7 +50,9 @@ export async function Footer() {
               TikTok
             </a>
             <a href={whatsappUrl || "/productos"} target={whatsappUrl ? "_blank" : undefined} rel={whatsappUrl ? "noreferrer" : undefined} className="transition hover:text-bone">
-              WhatsApp
+              <span className="inline-flex items-center gap-2">
+                WhatsApp <ArrowUpRight size={14} />
+              </span>
             </a>
           </div>
         </div>

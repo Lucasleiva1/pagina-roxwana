@@ -30,7 +30,7 @@ export default async function CommandPage() {
         <CommandStat label="Carritos" value={carts.length} />
       </div>
       <div className="flex flex-wrap gap-3">
-        <Link href="/command/productos/nuevo" className="border border-roxred bg-roxred px-5 py-3 text-xs font-bold uppercase tracking-rox text-bone">
+        <Link href="/command/productos/nuevo" className="border border-roxgold bg-roxgold px-5 py-3 text-xs font-bold uppercase tracking-rox text-charcoal transition hover:border-bone">
           Nuevo producto
         </Link>
         <Link href="/command/pedidos" className="border border-bone/20 px-5 py-3 text-xs font-bold uppercase tracking-rox text-bone">

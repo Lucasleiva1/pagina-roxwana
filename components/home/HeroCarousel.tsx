@@ -113,7 +113,7 @@ export function HeroCarousel() {
         <button
           type="button"
           onClick={controls.prev}
-          className="grid h-11 w-11 place-items-center border border-bone/20 bg-ink/45 text-bone transition hover:border-roxred"
+          className="grid h-11 w-11 place-items-center border border-bone/20 bg-ink/45 text-bone transition hover:border-roxgold"
           aria-label="Slide anterior"
         >
           <ChevronLeft size={20} />
@@ -121,7 +121,7 @@ export function HeroCarousel() {
         <button
           type="button"
           onClick={controls.next}
-          className="grid h-11 w-11 place-items-center border border-bone/20 bg-ink/45 text-bone transition hover:border-roxred"
+          className="grid h-11 w-11 place-items-center border border-bone/20 bg-ink/45 text-bone transition hover:border-roxgold"
           aria-label="Slide siguiente"
         >
           <ChevronRight size={20} />

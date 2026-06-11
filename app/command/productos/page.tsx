@@ -32,7 +32,7 @@ export default async function CommandProductosPage({ searchParams }: ProductosCo
           <option value="draft">Borradores</option>
           <option value="hidden">Ocultos</option>
         </select>
-        <button type="submit" className="min-h-11 border border-roxred bg-roxred px-5 text-xs font-bold uppercase tracking-rox text-bone">
+        <button type="submit" className="min-h-11 border border-roxgold bg-roxgold px-5 text-xs font-bold uppercase tracking-rox text-charcoal transition hover:border-bone">
           Buscar
         </button>
       </form>

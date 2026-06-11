@@ -1,24 +1,30 @@
-import { FeaturedProducts } from "@/components/home/FeaturedProducts";
-import { GenderGateway } from "@/components/home/GenderGateway";
-import { HeroCarousel } from "@/components/home/HeroCarousel";
-import { HowToOrder } from "@/components/home/HowToOrder";
-import { KineticPrintWall } from "@/components/home/KineticPrintWall";
+import { CategorySplit } from "@/components/home/CategorySplit";
+import { DropWall } from "@/components/home/DropWall";
+import { HeroCampaign } from "@/components/home/HeroCampaign";
+import { OrderTimeline } from "@/components/home/OrderTimeline";
+import { PrintWallMarquee } from "@/components/home/PrintWallMarquee";
 import { RandomPrintTeaser } from "@/components/home/RandomPrintTeaser";
 import { getActiveProducts, getFeaturedProducts } from "@/lib/products/queries";
+import { getSiteSettings } from "@/lib/settings/getSiteSettings";
+import { buildWhatsAppUrl } from "@/lib/whatsapp/buildWhatsAppUrl";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const [featuredProducts, randomProducts] = await Promise.all([getFeaturedProducts(), getActiveProducts()]);
+  const [featuredProducts, randomProducts, settings] = await Promise.all([getFeaturedProducts(), getActiveProducts(), getSiteSettings()]);
+  const whatsappUrl = buildWhatsAppUrl({
+    phone: settings.whatsappEnabled ? settings.whatsappNumber : null,
+    message: "Hola ROXWANA, quiero ver el drop y consultar disponibilidad."
+  });
 
   return (
     <>
-      <HeroCarousel />
-      <GenderGateway />
-      <FeaturedProducts products={featuredProducts} />
-      <KineticPrintWall />
+      <HeroCampaign whatsappUrl={whatsappUrl} />
+      <CategorySplit />
+      <DropWall products={featuredProducts} />
+      <PrintWallMarquee products={randomProducts} />
       <RandomPrintTeaser products={randomProducts} />
-      <HowToOrder />
+      <OrderTimeline />
     </>
   );
 }
