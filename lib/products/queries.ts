@@ -1,4 +1,4 @@
-import { mockProducts, roxColors, roxSizes } from "@/data/mockProducts";
+import { mockProducts, roxLisaColors, roxSizes } from "@/data/mockProducts";
 import type { Product, ProductFilters, ProductOption, ProductStatus } from "@/types/product";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
@@ -190,7 +190,7 @@ export async function getProductOptions(): Promise<ProductOptions> {
       { id: "mock-buz", code: "BUZ", name: "Buzo" },
       { id: "mock-mus", code: "MUS", name: "Musculosa" }
     ],
-    colors: roxColors.map((color) => ({ id: `mock-${color.code}`, code: color.code, name: color.label, hex: color.hex })),
+    colors: roxLisaColors.map((color) => ({ id: `mock-${color.code}`, code: color.code, name: color.label, hex: color.hex })),
     sizes: roxSizes.map((size, index) => ({ id: `mock-${size}`, code: size, name: size, sortOrder: index + 1 }))
   };
 }

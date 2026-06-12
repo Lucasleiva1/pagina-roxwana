@@ -16,6 +16,7 @@ export type ProductImage = {
   alt: string | null;
   sortOrder: number;
   isPrimary: boolean;
+  colorCode?: string | null;
 };
 
 export type Product = {

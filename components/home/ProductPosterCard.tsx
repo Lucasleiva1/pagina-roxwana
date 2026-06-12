@@ -5,39 +5,56 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useMemo, useState } from "react";
 import { ProductResponsiveImage } from "@/components/product/ProductResponsiveImage";
 import { RoxButton } from "@/components/ui/RoxButton";
+import { getImagesForColor } from "@/lib/products/imageColors";
 import type { Product } from "@/types/product";
 
-function getGalleryImages(product: Product) {
-  const images = [...product.images].sort((a, b) => a.sortOrder - b.sortOrder).map((image) => image.url);
+function getPosterGallery(product: Product) {
+  const preferredColor = product.colors.some((color) => color.code === "NEG") ? "NEG" : product.colors[0]?.code;
+  const images = getImagesForColor(product, preferredColor).map((image) => image.url);
   const gallery = [product.image, ...images].filter(Boolean);
+  const hoverImage = images.find((image) => /-03-desktop\.webp$/i.test(image)) || images.find((image) => image !== product.image);
 
-  return Array.from(new Set(gallery));
+  return {
+    images: Array.from(new Set(gallery)),
+    hoverImage
+  };
 }
 
 export function ProductPosterCard({ product }: { product: Product }) {
-  const gallery = useMemo(() => getGalleryImages(product), [product]);
+  const gallery = useMemo(() => getPosterGallery(product), [product]);
   const [activeImage, setActiveImage] = useState(0);
-  const currentImage = gallery[activeImage] || product.image;
-  const hasGallery = gallery.length > 1;
+  const [hoveringImage, setHoveringImage] = useState(false);
+  const currentImage = gallery.images[activeImage] || product.image;
+  const hoverImage = gallery.hoverImage && gallery.hoverImage !== currentImage ? gallery.hoverImage : null;
+  const hasGallery = gallery.images.length > 1;
 
   const goToPrevious = () => {
-    setActiveImage((value) => (value - 1 + gallery.length) % gallery.length);
+    setActiveImage((value) => (value - 1 + gallery.images.length) % gallery.images.length);
   };
 
   const goToNext = () => {
-    setActiveImage((value) => (value + 1) % gallery.length);
+    setActiveImage((value) => (value + 1) % gallery.images.length);
   };
 
   return (
-    <article className="group flex h-full min-h-[500px] flex-col overflow-hidden border border-bone/12 bg-charcoal shadow-gold-soft transition hover:border-roxgold/60">
-      <div className="relative aspect-[4/5] shrink-0 overflow-hidden bg-bone">
+    <article className="group flex h-full min-h-[500px] flex-col overflow-hidden border border-bone/12 bg-charcoal shadow-gold-soft transition hover:border-roxgold/60" data-product-model={product.modelCode}>
+      <div className="relative aspect-[3/4] shrink-0 overflow-hidden bg-bone" onMouseEnter={() => setHoveringImage(true)} onMouseLeave={() => setHoveringImage(false)}>
         <ProductResponsiveImage
           key={currentImage}
           src={currentImage}
           alt={product.name}
           sizes="(min-width: 1280px) 24vw, (min-width: 640px) 48vw, 100vw"
-          className="object-contain object-center p-3 transition duration-500 group-hover:scale-[1.02]"
+          className={`object-contain object-center p-2 transition duration-500 ${hoveringImage && hoverImage ? "scale-[1.015] opacity-0" : "opacity-100 group-hover:scale-[1.015]"}`}
         />
+        {hoverImage ? (
+          <ProductResponsiveImage
+            key={`${hoverImage}-hover`}
+            src={hoverImage}
+            alt={`${product.name} con modelo`}
+            sizes="(min-width: 1280px) 24vw, (min-width: 640px) 48vw, 100vw"
+            className={`object-contain object-center p-2 transition duration-500 ${hoveringImage ? "scale-[1.015] opacity-100" : "scale-100 opacity-0"}`}
+          />
+        ) : null}
         <Link href={`/producto/${product.slug}`} className="absolute inset-0" aria-label={`Ver ${product.name}`} />
 
         <div className="absolute left-3 top-3 border border-roxgold/50 bg-ink/82 px-3 py-2 text-[10px] font-bold uppercase tracking-rox text-roxgold">
@@ -63,7 +80,7 @@ export function ProductPosterCard({ product }: { product: Product }) {
               <ChevronRight size={18} />
             </button>
             <div className="absolute bottom-3 right-3 z-10 border border-bone/20 bg-ink/76 px-2 py-1 text-[10px] font-bold uppercase tracking-rox text-bone/78">
-              {activeImage + 1}/{gallery.length}
+              {activeImage + 1}/{gallery.images.length}
             </div>
           </>
         ) : null}

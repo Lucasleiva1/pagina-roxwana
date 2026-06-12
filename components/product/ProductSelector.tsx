@@ -7,15 +7,23 @@ import type { SiteSettings } from "@/types/settings";
 import { buildSku } from "@/lib/products/buildSku";
 import { addToCartAction } from "@/lib/cart/actions";
 
-export function ProductSelector({ product }: { product: Product; settings: SiteSettings }) {
+export function ProductSelector({
+  product,
+  selectedColor = "",
+  onColorChange
+}: {
+  product: Product;
+  settings: SiteSettings;
+  selectedColor?: string;
+  onColorChange?: (color: string) => void;
+}) {
   const router = useRouter();
-  const [color, setColor] = useState("");
   const [size, setSize] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [message, setMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const sku = useMemo(() => (color && size ? buildSku(product, color, size) : null), [color, product, size]);
-  const canAdd = Boolean(color && size && product.id);
+  const sku = useMemo(() => (selectedColor && size ? buildSku(product, selectedColor, size) : null), [product, selectedColor, size]);
+  const canAdd = Boolean(selectedColor && size && product.id);
 
   const addToCart = () => {
     if (!canAdd || !product.id) {
@@ -26,7 +34,7 @@ export function ProductSelector({ product }: { product: Product; settings: SiteS
     startTransition(async () => {
       const result = await addToCartAction({
         productId: product.id || "",
-        selectedColor: color,
+        selectedColor,
         selectedSize: size,
         quantity
       });
@@ -56,9 +64,10 @@ export function ProductSelector({ product }: { product: Product; settings: SiteS
             <button
               key={item.code}
               type="button"
-              onClick={() => setColor(item.code)}
+              data-product-color={item.code}
+              onClick={() => onColorChange?.(item.code)}
               className={`flex items-center gap-3 border px-4 py-3 text-xs font-bold uppercase tracking-rox transition ${
-                color === item.code ? "border-roxgold text-bone" : "border-bone/12 text-bone/58 hover:border-bone/40"
+                selectedColor === item.code ? "border-roxgold text-bone" : "border-bone/12 text-bone/58 hover:border-bone/40"
               }`}
             >
               <span className="h-4 w-4 border border-bone/24" style={{ backgroundColor: item.hex || "#111111" }} />

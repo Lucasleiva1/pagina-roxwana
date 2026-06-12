@@ -5,7 +5,31 @@ export const roxColors = [
   { code: "BLA", label: "Blanco / Hueso", hex: "#F6F3EE" }
 ] as const;
 
+export const roxGrayColor = { code: "GRI", label: "Gris", hex: "#B8B8B2" } as const;
+export const roxLisaColors = [...roxColors, roxGrayColor] as const;
+
 export const roxSizes = ["S", "M", "L", "XL", "XXL"] as const;
+
+const remeraLisaImageSets = [
+  { code: "NEG", prefix: "neg", label: "negra" },
+  { code: "BLA", prefix: "bla", label: "blanca" },
+  { code: "GRI", prefix: "gri", label: "gris" }
+] as const;
+
+const remeraLisaImages = remeraLisaImageSets.flatMap((set, colorIndex) =>
+  Array.from({ length: 6 }, (_, index) => {
+    const imageNumber = index + 1;
+    const paddedNumber = imageNumber.toString().padStart(2, "0");
+
+    return {
+      url: `/images/products/remera-lisa-fb/${set.prefix}-${paddedNumber}-desktop.webp`,
+      alt: `Remera Lisa ${set.label} vista ${imageNumber}`,
+      sortOrder: colorIndex * 10 + imageNumber,
+      isPrimary: set.code === "NEG" && imageNumber === 1,
+      colorCode: set.code
+    };
+  })
+);
 
 export const mockProducts: Product[] = [
   {
@@ -194,5 +218,24 @@ export const mockProducts: Product[] = [
     slug: "remera-street-rock-001",
     story: "Remera negra de hombre con grafica ROXWANA Street Rock, energia urbana y presencia de escenario.",
     description: "Remera negra de hombre con grafica ROXWANA Street Rock, galeria completa con producto, calle, frente, espalda y lateral."
+  },
+  {
+    id: "mock-remera-lisa-001",
+    modelCode: "RXW-REM-LISA001",
+    model: "LISA001",
+    name: "Remera Lisa",
+    garmentType: "REM",
+    garmentTypeId: "mock-rem",
+    garmentLabel: "Remera",
+    gender: "hombre",
+    status: "active",
+    featured: true,
+    colors: [...roxLisaColors],
+    sizes: [...roxSizes],
+    image: "/images/products/remera-lisa-fb/neg-01-desktop.webp",
+    images: remeraLisaImages,
+    slug: "remera-lisa-001",
+    story: "Remera lisa ROXWANA de calce urbano, disponible en negro, blanco y gris con vista real por color.",
+    description: "Remera lisa ROXWANA para hombre, pensada para elegir color con referencia visual clara antes de sumar al carrito."
   }
 ];

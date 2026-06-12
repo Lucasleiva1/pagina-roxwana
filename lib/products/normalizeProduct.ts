@@ -1,4 +1,5 @@
 import type { Product, ProductColor, ProductImage, ProductSize } from "@/types/product";
+import { getImageColorCode } from "@/lib/products/imageColors";
 
 type LookupRow = {
   id: string;
@@ -61,7 +62,8 @@ export function normalizeProduct(record: ProductRecord): Product {
       url: image.url,
       alt: image.alt,
       sortOrder: image.sort_order || 0,
-      isPrimary: Boolean(image.is_primary)
+      isPrimary: Boolean(image.is_primary),
+      colorCode: getImageColorCode(image.url)
     }))
     .sort((a, b) => a.sortOrder - b.sortOrder);
   const primaryImage = images.find((image) => image.isPrimary) || images[0];

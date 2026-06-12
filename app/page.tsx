@@ -1,5 +1,4 @@
-import { CategorySplit } from "@/components/home/CategorySplit";
-import { DropWall } from "@/components/home/DropWall";
+import { GenderFilteredDrop } from "@/components/home/GenderFilteredDrop";
 import { HeroCampaign } from "@/components/home/HeroCampaign";
 import { OrderTimeline } from "@/components/home/OrderTimeline";
 import { PrintWallMarquee } from "@/components/home/PrintWallMarquee";
@@ -20,8 +19,7 @@ export default async function Home() {
   return (
     <>
       <HeroCampaign whatsappUrl={whatsappUrl} />
-      <CategorySplit />
-      <DropWall products={featuredProducts} />
+      <GenderFilteredDrop products={featuredProducts} />
       <PrintWallMarquee products={randomProducts} />
       <RandomPrintTeaser products={randomProducts} />
       <OrderTimeline />

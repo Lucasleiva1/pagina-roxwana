@@ -2,12 +2,18 @@
 
 import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useState } from "react";
-import type { Product } from "@/types/product";
+import { useMemo, useState } from "react";
+import type { Product, ProductImage } from "@/types/product";
 import { ProductResponsiveImage } from "@/components/product/ProductResponsiveImage";
+import { getImagesForColor } from "@/lib/products/imageColors";
 
-export function ProductGallery({ product }: { product: Product }) {
-  const images = product.images.length > 0 ? product.images : [{ url: product.image, alt: product.name, sortOrder: 0, isPrimary: true }];
+export function ProductGallery({ product, selectedColor }: { product: Product; selectedColor?: string }) {
+  const images = useMemo(() => getImagesForColor(product, selectedColor), [product, selectedColor]);
+
+  return <ProductGalleryFrame key={selectedColor || "all"} product={product} images={images} />;
+}
+
+function ProductGalleryFrame({ product, images }: { product: Product; images: ProductImage[] }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const activeImage = images[activeIndex] || images[0];
   const hasMultipleImages = images.length > 1;
@@ -22,14 +28,14 @@ export function ProductGallery({ product }: { product: Product }) {
 
   return (
     <div className="grid gap-4">
-      <div className="relative aspect-[4/5] overflow-hidden border border-bone/12 bg-charcoal shadow-hard-red">
+      <div className="relative aspect-[3/4] overflow-hidden border border-bone/12 bg-charcoal shadow-hard-red" data-product-gallery>
         <ProductResponsiveImage
           key={activeImage.url}
           src={activeImage.url}
           alt={activeImage.alt || product.name}
           priority
           sizes="(min-width: 1024px) 50vw, 100vw"
-          className="object-contain"
+          className="object-contain object-center p-2"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-ink/55 to-transparent" />
         {hasMultipleImages ? (
@@ -64,7 +70,7 @@ export function ProductGallery({ product }: { product: Product }) {
             key={`${image.url}-${index}`}
             type="button"
             onClick={() => setActiveIndex(index)}
-            className={`relative aspect-[16/10] overflow-hidden border bg-ink transition ${
+            className={`relative aspect-[3/4] overflow-hidden border bg-ink transition ${
               index === activeIndex ? "border-roxgold" : "border-bone/12 hover:border-roxgold"
             }`}
             aria-label={`Ver imagen ${index + 1} de ${product.name}`}

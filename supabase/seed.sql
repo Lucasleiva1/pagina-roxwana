@@ -9,6 +9,7 @@ insert into public.colors (code, name, hex)
 values
   ('NEG', 'Negro', '#111111'),
   ('BLA', 'Blanco Hueso', '#F6F3EE'),
+  ('GRI', 'Gris', '#B8B8B2'),
   ('ROJ', 'Rojo', '#B11226'),
   ('AZU', 'Azul', '#1E3A8A')
 on conflict (code) do update set name = excluded.name, hex = excluded.hex;
@@ -38,7 +39,8 @@ values
   ('RXW-BUZ-HEAVY001', 'Buzo Heavy 001', 'buzo-heavy-001', (select id from buz), 'unisex', 'Buzo pesado con identidad ROXWANA, pensado para la calle fria.', 'draft', false),
   ('RXW-REM-NEG001', 'Remera Boy Band Style 001', 'remera-boy-band-style-001', (select id from rem), 'hombre', 'Remera negra de hombre con grafica ROXWANA Boy Band Style, pensada para una primera prueba real de producto, color negro y galeria completa.', 'active', true),
   ('RXW-REM-FLM001', 'Remera Flame Fearless 001', 'remera-flame-fearless-001', (select id from rem), 'mujer', 'Remera blanca de mujer con grafica ROXWANA flame rosa y negro, galeria con vista producto, frente con modelo y espalda.', 'active', true),
-  ('RXW-REM-SRK001', 'Remera Street Rock 001', 'remera-street-rock-001', (select id from rem), 'hombre', 'Remera negra de hombre con grafica ROXWANA Street Rock, galeria completa con producto, calle, frente, espalda y lateral.', 'active', true)
+  ('RXW-REM-SRK001', 'Remera Street Rock 001', 'remera-street-rock-001', (select id from rem), 'hombre', 'Remera negra de hombre con grafica ROXWANA Street Rock, galeria completa con producto, calle, frente, espalda y lateral.', 'active', true),
+  ('RXW-REM-LISA001', 'Remera Lisa', 'remera-lisa-001', (select id from rem), 'hombre', 'Remera lisa ROXWANA para hombre, pensada para elegir color con referencia visual clara antes de sumar al carrito.', 'active', true)
 on conflict (model_code) do update set
   name = excluded.name,
   slug = excluded.slug,
@@ -76,11 +78,18 @@ join public.colors c on c.code = 'NEG'
 where p.model_code = 'RXW-REM-SRK001'
 on conflict do nothing;
 
+insert into public.product_colors (product_id, color_id)
+select p.id, c.id
+from public.products p
+join public.colors c on c.code in ('NEG', 'BLA', 'GRI')
+where p.model_code = 'RXW-REM-LISA001'
+on conflict do nothing;
+
 insert into public.product_sizes (product_id, size_id)
 select p.id, s.id
 from public.products p
 join public.sizes s on s.code in ('S', 'M', 'L', 'XL', 'XXL')
-where p.model_code in ('RXW-REM-ROCK001', 'RXW-REM-DRAGON002', 'RXW-REM-MOTO003', 'RXW-REM-STREET004', 'RXW-REM-SKULL005', 'RXW-BUZ-HEAVY001', 'RXW-REM-NEG001', 'RXW-REM-FLM001', 'RXW-REM-SRK001')
+where p.model_code in ('RXW-REM-ROCK001', 'RXW-REM-DRAGON002', 'RXW-REM-MOTO003', 'RXW-REM-STREET004', 'RXW-REM-SKULL005', 'RXW-BUZ-HEAVY001', 'RXW-REM-NEG001', 'RXW-REM-FLM001', 'RXW-REM-SRK001', 'RXW-REM-LISA001')
 on conflict do nothing;
 
 insert into public.product_images (product_id, url, alt, sort_order, is_primary)
@@ -116,6 +125,38 @@ join (
     ('/images/products/product-boyband-001-side.png', 'Remera Boy Band Style 001 vista lateral hombre', 5)
 ) as image(url, alt, sort_order) on true
 where p.model_code = 'RXW-REM-NEG001'
+  and not exists (
+    select 1
+    from public.product_images existing
+    where existing.product_id = p.id
+      and existing.url = image.url
+  );
+
+insert into public.product_images (product_id, url, alt, sort_order, is_primary)
+select p.id, image.url, image.alt, image.sort_order, image.is_primary
+from public.products p
+join (
+  values
+    ('/images/products/remera-lisa-fb/neg-01-desktop.webp', 'Remera Lisa negra vista 1', 1, true),
+    ('/images/products/remera-lisa-fb/neg-02-desktop.webp', 'Remera Lisa negra vista 2', 2, false),
+    ('/images/products/remera-lisa-fb/neg-03-desktop.webp', 'Remera Lisa negra vista 3', 3, false),
+    ('/images/products/remera-lisa-fb/neg-04-desktop.webp', 'Remera Lisa negra vista 4', 4, false),
+    ('/images/products/remera-lisa-fb/neg-05-desktop.webp', 'Remera Lisa negra vista 5', 5, false),
+    ('/images/products/remera-lisa-fb/neg-06-desktop.webp', 'Remera Lisa negra vista 6', 6, false),
+    ('/images/products/remera-lisa-fb/bla-01-desktop.webp', 'Remera Lisa blanca vista 1', 11, false),
+    ('/images/products/remera-lisa-fb/bla-02-desktop.webp', 'Remera Lisa blanca vista 2', 12, false),
+    ('/images/products/remera-lisa-fb/bla-03-desktop.webp', 'Remera Lisa blanca vista 3', 13, false),
+    ('/images/products/remera-lisa-fb/bla-04-desktop.webp', 'Remera Lisa blanca vista 4', 14, false),
+    ('/images/products/remera-lisa-fb/bla-05-desktop.webp', 'Remera Lisa blanca vista 5', 15, false),
+    ('/images/products/remera-lisa-fb/bla-06-desktop.webp', 'Remera Lisa blanca vista 6', 16, false),
+    ('/images/products/remera-lisa-fb/gri-01-desktop.webp', 'Remera Lisa gris vista 1', 21, false),
+    ('/images/products/remera-lisa-fb/gri-02-desktop.webp', 'Remera Lisa gris vista 2', 22, false),
+    ('/images/products/remera-lisa-fb/gri-03-desktop.webp', 'Remera Lisa gris vista 3', 23, false),
+    ('/images/products/remera-lisa-fb/gri-04-desktop.webp', 'Remera Lisa gris vista 4', 24, false),
+    ('/images/products/remera-lisa-fb/gri-05-desktop.webp', 'Remera Lisa gris vista 5', 25, false),
+    ('/images/products/remera-lisa-fb/gri-06-desktop.webp', 'Remera Lisa gris vista 6', 26, false)
+) as image(url, alt, sort_order, is_primary) on true
+where p.model_code = 'RXW-REM-LISA001'
   and not exists (
     select 1
     from public.product_images existing
