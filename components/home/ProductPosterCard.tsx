@@ -29,16 +29,23 @@ export function ProductPosterCard({ product }: { product: Product }) {
   const hasGallery = gallery.images.length > 1;
 
   const goToPrevious = () => {
+    setHoveringImage(false);
     setActiveImage((value) => (value - 1 + gallery.images.length) % gallery.images.length);
   };
 
   const goToNext = () => {
+    setHoveringImage(false);
     setActiveImage((value) => (value + 1) % gallery.images.length);
+  };
+
+  const resetGallery = () => {
+    setHoveringImage(false);
+    setActiveImage(0);
   };
 
   return (
     <article className="group flex h-full min-h-[500px] flex-col overflow-hidden border border-bone/12 bg-charcoal shadow-gold-soft transition hover:border-roxgold/60" data-product-model={product.modelCode}>
-      <div className="relative aspect-[3/4] shrink-0 overflow-hidden bg-bone" onMouseEnter={() => setHoveringImage(true)} onMouseLeave={() => setHoveringImage(false)}>
+      <div className="relative aspect-[3/4] shrink-0 overflow-hidden bg-bone" onMouseEnter={() => setHoveringImage(true)} onMouseLeave={resetGallery}>
         <ProductResponsiveImage
           key={currentImage}
           src={currentImage}
