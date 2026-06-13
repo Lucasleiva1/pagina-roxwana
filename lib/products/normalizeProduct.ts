@@ -19,6 +19,7 @@ export type ProductRecord = {
   description: string | null;
   status: Product["status"];
   featured: boolean;
+  price: number;
   created_at: string;
   updated_at: string;
   garment_types: LookupRow | null;
@@ -67,6 +68,18 @@ export function normalizeProduct(record: ProductRecord): Product {
     }))
     .sort((a, b) => a.sortOrder - b.sortOrder);
   const primaryImage = images.find((image) => image.isPrimary) || images[0];
+  const primaryColorCode = primaryImage ? getImageColorCode(primaryImage.url) : null;
+  const orderedColors = [...colors].sort((a, b) => {
+    if (a.code === primaryColorCode) {
+      return -1;
+    }
+
+    if (b.code === primaryColorCode) {
+      return 1;
+    }
+
+    return 0;
+  });
   const description = record.description || "";
 
   return {
@@ -80,9 +93,10 @@ export function normalizeProduct(record: ProductRecord): Product {
     gender: record.gender,
     status: record.status,
     featured: record.featured,
-    colors,
+    price: record.price,
+    colors: orderedColors,
     sizes,
-    image: primaryImage?.url || "/images/products/product-01.png",
+    image: primaryImage?.url || "/images/products/product-street-rock-001-shirt-desktop.webp",
     images,
     slug: record.slug,
     story: description || record.name,

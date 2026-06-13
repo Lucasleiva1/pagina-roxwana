@@ -41,6 +41,7 @@ create table if not exists public.products (
   description text,
   status text not null default 'draft' check (status in ('draft', 'active', 'hidden')),
   featured boolean not null default false,
+  price integer not null check (price > 0),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

@@ -14,6 +14,7 @@ const PRODUCT_SELECT = `
   description,
   status,
   featured,
+  price,
   created_at,
   updated_at,
   garment_types(id, code, name, created_at),

@@ -83,7 +83,7 @@ export async function addToCartAction(input: {
       selected_size: selectedSize,
       quantity,
       sku,
-      price_snapshot: null
+      price_snapshot: product.price
     });
 
     if (error) {

@@ -1,13 +1,14 @@
 import Link from "next/link";
 import type { Product } from "@/types/product";
+import { ProductQuickActions } from "@/components/product/ProductQuickActions";
 import { ProductResponsiveImage } from "@/components/product/ProductResponsiveImage";
-import { RoxButton } from "@/components/ui/RoxButton";
+import { formatPrice } from "@/lib/products/formatPrice";
 
 export function ProductCard({ product }: { product: Product }) {
   const hoverImage = product.images.find((image) => !image.isPrimary)?.url;
 
   return (
-    <article className="group overflow-hidden border border-bone/12 bg-ink shadow-gold-soft">
+    <article className="group relative overflow-hidden border border-bone/12 bg-ink shadow-gold-soft">
       <Link href={`/producto/${product.slug}`} className="relative block aspect-[16/10] overflow-hidden bg-charcoal">
         <ProductResponsiveImage
           src={product.image}
@@ -33,6 +34,7 @@ export function ProductCard({ product }: { product: Product }) {
           <div>
             <p className="text-xs font-bold uppercase tracking-rox text-steel">{product.garmentLabel}</p>
             <h3 className="headline mt-2 text-3xl leading-none text-bone">{product.name}</h3>
+            <p className="mt-3 text-sm font-black uppercase tracking-rox text-roxgold">{formatPrice(product.price)}</p>
           </div>
           <div className="flex gap-1.5 pt-1">
             {product.colors.map((color) => (
@@ -53,14 +55,7 @@ export function ProductCard({ product }: { product: Product }) {
             </span>
           ))}
         </div>
-        <div className="mt-6 grid gap-3 sm:grid-cols-2">
-          <RoxButton href={`/producto/${product.slug}`} className="px-3">
-            Ver modelo
-          </RoxButton>
-          <RoxButton href={`/producto/${product.slug}`} variant="bone" className="px-3">
-            Elegir talle
-          </RoxButton>
-        </div>
+        <ProductQuickActions product={product} viewVariant="ghost" className="mt-6" />
       </div>
     </article>
   );

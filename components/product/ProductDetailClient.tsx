@@ -7,10 +7,13 @@ import type { Product } from "@/types/product";
 import type { SiteSettings } from "@/types/settings";
 import { ProductGallery } from "@/components/product/ProductGallery";
 import { ProductSelector } from "@/components/product/ProductSelector";
+import { formatPrice } from "@/lib/products/formatPrice";
+import { getImageColorCode } from "@/lib/products/imageColors";
 
 export function ProductDetailClient({ product, settings }: { product: Product; settings: SiteSettings }) {
   const router = useRouter();
-  const initialSelectedColor = product.modelCode === "RXW-REM-LISA001" && product.colors.some((color) => color.code === "NEG") ? "NEG" : "";
+  const primaryColor = getImageColorCode(product.image);
+  const initialSelectedColor = product.colors.some((color) => color.code === primaryColor) ? primaryColor || "" : "";
   const [selectedColor, setSelectedColor] = useState(initialSelectedColor);
 
   const goBack = () => {
@@ -39,6 +42,7 @@ export function ProductDetailClient({ product, settings }: { product: Product; s
         <div className="lg:pt-8">
           <p className="text-xs font-bold uppercase tracking-rox text-roxgold">{product.modelCode}</p>
           <h1 className="headline mt-4 text-6xl leading-none text-bone md:text-8xl">{product.name}</h1>
+          <p className="mt-5 text-xl font-black uppercase tracking-rox text-roxgold">{formatPrice(product.price)}</p>
           <p className="mt-5 max-w-xl text-base leading-8 text-bone/70">{product.story}</p>
           <ProductSelector product={product} settings={settings} selectedColor={selectedColor} onColorChange={setSelectedColor} />
         </div>

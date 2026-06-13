@@ -126,9 +126,6 @@ Hero:
 
 Productos y secciones visuales:
 
-- `public/images/products/product-01.png`
-- `public/images/products/product-02.png`
-- `public/images/products/product-03.png`
 - `public/images/products/product-04.png`
 - `public/images/products/product-05.png`
 - `public/images/products/product-06.png`
@@ -190,9 +187,6 @@ Se creo una grilla con 6 productos mock.
 
 Productos:
 
-- `RXW-REM-ROCK001` - Remera Rock 001
-- `RXW-REM-DRAGON002` - Remera Dragon 002
-- `RXW-REM-MOTO003` - Remera Moto 003
 - `RXW-REM-STREET004` - Remera Street 004
 - `RXW-REM-SKULL005` - Remera Skull 005
 - `RXW-BUZ-HEAVY001` - Buzo Heavy 001
@@ -261,7 +255,7 @@ Formato:
 
 Ejemplo:
 
-`RXW-REM-ROCK001-NEG-M`
+`RXW-REM-SRK001-NEG-M`
 
 ### WhatsApp
 
@@ -917,9 +911,6 @@ Incluye:
 
 Productos seed:
 
-- `RXW-REM-ROCK001` - Remera Rock 001
-- `RXW-REM-DRAGON002` - Remera Dragon 002
-- `RXW-REM-MOTO003` - Remera Moto 003
 - `RXW-REM-STREET004` - Remera Street 004
 - `RXW-REM-SKULL005` - Remera Skull 005
 - `RXW-BUZ-HEAVY001` - Buzo Heavy 001
@@ -953,7 +944,7 @@ Hace:
 
 Ejemplo:
 
-`RXW-REM-ROCK001` con prenda `REM` produce `model = ROCK001`.
+`RXW-REM-SRK001` con prenda `REM` produce `model = SRK001`.
 
 ### Queries
 
@@ -1015,7 +1006,7 @@ Si falta color o talle, devuelve SKU parcial.
 Ejemplo:
 
 ```text
-RXW-REM-ROCK001-NEG-M
+RXW-REM-SRK001-NEG-M
 ```
 
 ## 26. Catalogo publico migrado
@@ -2425,11 +2416,8 @@ Se creo una fila inicial de `site_settings` con:
 
 ### Productos base
 
-Se insertaron 6 productos:
+Se insertaron productos base:
 
-- `RXW-REM-ROCK001` - active
-- `RXW-REM-DRAGON002` - active
-- `RXW-REM-MOTO003` - active
 - `RXW-REM-STREET004` - active
 - `RXW-REM-SKULL005` - draft
 - `RXW-BUZ-HEAVY001` - draft
@@ -3214,3 +3202,647 @@ Pendientes conocidos:
 Version estable objetivo:
 
 - tag sugerido: `roxwana-auth-cart-whatsapp-estable-2026-06-11`.
+
+## 74. Patron importante de tarjetas de venta con hover y galeria
+
+Objetivo:
+
+- fijar la forma definitiva de trabajar las tarjetas de venta de productos;
+- permitir hover visual con imagen alternativa;
+- permitir recorrer la galeria con flechas sin que el hover tape la imagen seleccionada;
+- resetear la tarjeta al salir para que vuelva a la imagen inicial.
+
+Problema encontrado:
+
+- en `ProductPosterCard.tsx`, el hover activaba una imagen alternativa por encima de la imagen principal;
+- al tocar las flechas, el contador cambiaba, pero visualmente seguia arriba la imagen de hover;
+- el usuario tenia que sacar el mouse para ver la imagen seleccionada;
+- esto hacia que la galeria pareciera rota aunque el indice interno si estuviera cambiando.
+
+Solucion aplicada:
+
+- se separaron dos estados:
+  - `activeImage`: indice real de galeria;
+  - `hoveringImage`: solo controla el preview de hover;
+- al tocar flecha izquierda o derecha se ejecuta `setHoveringImage(false)`;
+- al salir del area de imagen se ejecuta un reset completo:
+  - `setHoveringImage(false)`;
+  - `setActiveImage(0)`;
+- al volver a entrar con el mouse, el hover vuelve a funcionar desde la imagen inicial.
+
+Regla establecida:
+
+- todas las tarjetas de venta de productos deben seguir este patron;
+- si se crean nuevas tarjetas, primero buscar la referencia en `components/home/ProductPosterCard.tsx`;
+- el comportamiento quedo documentado tambien en `docs/patron-tarjetas-venta-productos.md`.
+
+Validacion:
+
+- con navegador se probo la primera tarjeta de Remera Lisa;
+- hover mostro imagen alternativa;
+- flechas pasaron de `1/6` a `2/6` y `3/6` sin sacar el mouse;
+- al salir del area de imagen volvio a `1/6`;
+- al reingresar, el hover volvio a funcionar.
+
+Guardado importante:
+
+- commit: `71021a0`;
+- mensaje: `Important product card hover gallery pattern`;
+- tag: `roxwana-product-card-hover-gallery-importante-2026-06-12`;
+- remoto: `origin/main`.
+
+Problemas encontrados durante el guardado:
+
+- `gh` no estaba instalado, por lo que no se pudo usar el flujo de PR con GitHub CLI;
+- el sandbox no permitio crear `.git/index.lock`, asi que los comandos de `git add`, `commit`, `tag` y `push` necesitaron ejecucion con permisos elevados;
+- quedaron muchas capturas locales sin trackear, pero no se incluyeron en el commit.
+
+## 75. Eliminacion de productos falsos de prueba
+
+Objetivo:
+
+- eliminar totalmente tres productos que solo eran de prueba;
+- no tocar las prendas reales;
+- evitar que esos modelos reaparezcan desde mocks, seed, Supabase o imagenes.
+
+Productos eliminados:
+
+- `RXW-REM-ROCK001` - Remera Rock 001;
+- `RXW-REM-DRAGON002` - Remera Dragon 002;
+- `RXW-REM-MOTO003` - Remera Moto 003.
+
+Archivos fisicos eliminados:
+
+- `public/images/products/product-01.png`;
+- `public/images/products/product-02.png`;
+- `public/images/products/product-03.png`.
+
+Cambios aplicados:
+
+- se quitaron las tres entradas de `data/mockProducts.ts`;
+- se quitaron del `supabase/seed.sql`;
+- se eliminaron menciones operativas e historicas en `docs/proceso-roxwana-web.md`;
+- se reemplazaron referencias decorativas a `product-01.png` por imagen real de Street Rock:
+  - `app/hombre/page.tsx`;
+  - `components/home/GenderGateway.tsx`;
+  - fallback de `lib/products/normalizeProduct.ts`;
+- se borraron de la base real de Supabase `roxwana-store` usando MCP por `model_code`.
+
+Validacion:
+
+- busqueda global sin resultados para:
+  - `ROCK001`;
+  - `DRAGON002`;
+  - `MOTO003`;
+  - `Remera Rock 001`;
+  - `Remera Dragon 002`;
+  - `Remera Moto 003`;
+  - `product-01.png`;
+  - `product-02.png`;
+  - `product-03.png`;
+- `Test-Path` confirmo que los tres PNG ya no existen;
+- la home local no devuelve esos nombres ni codigos;
+- consulta separada a Supabase devolvio `[]` para esos tres modelos.
+
+Problemas encontrados:
+
+- las primeras referencias no estaban solo en `data/mockProducts.ts`;
+- `product-01.png` tambien era usado como imagen decorativa en secciones;
+- el seed seguia insertando los tres productos falsos;
+- `.env.local` tenia `SUPABASE_SERVICE_ROLE_KEY` y `SUPABASE_DB_PASSWORD` vacios, asi que no se pudo borrar la base con un script local;
+- se uso el conector MCP de Supabase para borrar con seguridad por `model_code`;
+- la primera consulta SQL de borrado mostro un conteo confuso dentro del mismo statement, por lo que se hizo una verificacion separada.
+
+## 76. Precios obligatorios en productos
+
+Objetivo:
+
+- agregar precio obligatorio a los productos;
+- mostrar precio en la experiencia de compra;
+- persistir el precio en Supabase;
+- guardar precio en carrito y pedidos como snapshot.
+
+Regla de precios definida:
+
+- `RXW-REM-LISA001` - Remera Lisa: `$19.000`;
+- todas las otras remeras actuales: `$29.000`;
+- el producto no remera existente `RXW-BUZ-HEAVY001` tambien quedo con `$29.000` porque el precio ahora es obligatorio para todo producto.
+
+Cambios de base de datos:
+
+- se agrego `products.price integer not null`;
+- se agrego constraint `products_price_positive check (price > 0)`;
+- se actualizaron productos existentes:
+  - Lisa a `19000`;
+  - resto a `29000`;
+- se repararon snapshots existentes:
+  - `cart_items.price_snapshot`;
+  - `order_items.price_snapshot`;
+- se creo migracion local:
+  - `supabase/migrations/20260612193000_add_product_prices.sql`;
+- se actualizo `supabase/schema.sql`;
+- se actualizo `supabase/seed.sql` para insertar y actualizar `price`.
+
+Cambios de codigo:
+
+- `types/product.ts` ahora incluye `price: number`;
+- `types/supabase.ts` incluye `products.price`;
+- `lib/products/queries.ts` selecciona `price`;
+- `lib/products/normalizeProduct.ts` normaliza `price`;
+- `data/mockProducts.ts` trae precios locales;
+- `lib/products/formatPrice.ts` formatea visualmente como `$19.000` y `$29.000`;
+- `ProductPosterCard`, `ProductCard` y `ProductDetailClient` muestran precio;
+- `ProductForm` en admin exige precio;
+- `ProductTable` muestra precio en la tabla de admin;
+- `lib/products/mutations.ts` valida precio positivo al crear/editar;
+- `duplicateProductAction` copia el precio;
+- `lib/cart/actions.ts` guarda `price_snapshot` al agregar al carrito;
+- `app/carrito/page.tsx` muestra unitario, subtotal y total;
+- `lib/orders/checkout.ts` incluye precio unitario, subtotal y total en el mensaje de WhatsApp;
+- el cierre del mensaje cambio de pedir precio final a pedir disponibilidad, envio y link de pago.
+
+Validacion Supabase:
+
+- consulta real confirmo:
+  - `RXW-REM-LISA001` con `19000`;
+  - las otras remeras con `29000`;
+  - `RXW-BUZ-HEAVY001` con `29000`;
+- verificacion posterior:
+  - `products_without_price = 0`;
+  - `cart_items_without_price = 0`;
+  - `order_items_without_price = 0`.
+
+Validacion local:
+
+- la home contiene `$19.000`;
+- la home contiene `$29.000`;
+- `npm.cmd run lint` paso;
+- `npx.cmd tsc --noEmit` paso;
+- `npm.cmd run build` paso.
+
+Problemas encontrados:
+
+- Supabase CLI no estaba instalada, asi que no se pudo usar `supabase migration new`;
+- se creo la migracion local manualmente;
+- el changelog externo de Supabase no pudo abrirse desde la herramienta web;
+- como el cambio es SQL estandar pequeno, se continuo con MCP y verificacion real;
+- el formato inicial con `Intl.NumberFormat` en modo `currency` devolvia una representacion rara en HTML, asi que se fijo el formato visual a `$` + numero argentino;
+- ya existian `price_snapshot` en carrito/pedidos, pero estaban quedando `null` porque `products` no tenia precio; se conecto el valor real.
+
+## 77. Estado actual para continuar
+
+Estado funcional:
+
+- tarjetas de venta tienen hover, flechas y reset funcionando;
+- los tres productos falsos fueron eliminados de codigo, assets, seed, docs y Supabase;
+- los productos tienen precio obligatorio;
+- Lisa cuesta `$19.000`;
+- las otras remeras cuestan `$29.000`;
+- carrito y WhatsApp ya incluyen precios;
+- admin permite editar precio.
+
+Checks recientes:
+
+```bash
+npm.cmd run lint
+npx.cmd tsc --noEmit
+npm.cmd run build
+```
+
+Resultado:
+
+- lint paso;
+- TypeScript paso;
+- build paso.
+
+Pendientes recomendados:
+
+- hacer un commit/tag nuevo cuando el usuario confirme que los precios y limpieza quedaron bien;
+- si se agregan nuevas prendas desde admin, cargar siempre precio;
+- si se agregan nuevas tarjetas de venta, aplicar el patron documentado en `docs/patron-tarjetas-venta-productos.md`.
+
+## 78. Remera Lisa Mujer con blanco protagonista
+
+Objetivo:
+
+- agregar la nueva prenda real `Remera Lisa Mujer`;
+- usar los tres sets entregados por el usuario:
+  - `C:/Users/jaell/Downloads/mujer-blanca-lisa-fb/`;
+  - `C:/Users/jaell/Downloads/mujer-negra-lisa-fb/`;
+  - `C:/Users/jaell/Downloads/mujer-gris-lisa/`;
+- mantener exactamente el patron de tarjeta de la Remera Lisa:
+  - hover preview;
+  - flechas navegables sin sacar el mouse;
+  - reset a `1/n` al salir;
+  - galeria por color;
+- hacer que la remera blanca sea la protagonista visual.
+
+Conversion de imagenes:
+
+- se verificaron los 18 archivos fuente;
+- todos tenian base `896x1200`;
+- se uso `sharp` desde `node_modules`, igual que en conversiones anteriores;
+- se generaron versiones:
+  - `*-desktop.webp`;
+  - `*-mobile.webp`;
+- carpeta final:
+  - `public/images/products/remera-lisa-mujer-fb/`;
+- orden de colores:
+  - blanco;
+  - negro;
+  - gris.
+
+Producto creado:
+
+- `model_code`: `RXW-REM-LISAM001`;
+- nombre: `Remera Lisa Mujer`;
+- slug: `remera-lisa-mujer-001`;
+- genero: `mujer`;
+- precio: `$19.000`;
+- estado: `active`;
+- destacado: `true`;
+- colores:
+  - blanco / hueso;
+  - negro;
+  - gris;
+- talles:
+  - S;
+  - M;
+  - L;
+  - XL;
+  - XXL;
+- imagen primaria:
+  - `/images/products/remera-lisa-mujer-fb/bla-01-desktop.webp`.
+
+Cambios de codigo:
+
+- `data/mockProducts.ts` suma `Remera Lisa Mujer` y genera sus 18 imagenes con helper compartido;
+- `supabase/seed.sql` suma el producto, colores, talles e imagenes;
+- `ProductPosterCard.tsx` ahora detecta el color de la imagen principal para decidir el color protagonista de la tarjeta;
+- `ProductDetailClient.tsx` selecciona de entrada el color de la imagen principal;
+- `normalizeProduct.ts` ordena los colores poniendo primero el color de la imagen primaria.
+
+Supabase real:
+
+- se dio de alta `RXW-REM-LISAM001` en `roxwana-store`;
+- se insertaron 3 colores;
+- se insertaron 5 talles;
+- se insertaron 18 imagenes;
+- se verifico que la primaria sea `bla-01-desktop.webp`.
+
+Validacion:
+
+- home:
+  - la tarjeta aparece como `Remera Lisa Mujer`;
+  - imagen inicial blanca;
+  - precio `$19.000`;
+  - hover muestra `bla-03`;
+  - flecha pasa a `2/6` mostrando `bla-02`;
+  - al salir vuelve a `1/6` y `bla-01`;
+- detalle:
+  - abre en `/producto/remera-lisa-mujer-001`;
+  - color blanco aparece primero y seleccionado;
+  - galeria inicial usa `bla-01`;
+  - precio `$19.000`;
+- sin errores de consola en la prueba de navegador.
+
+Checks ejecutados:
+
+```bash
+npm.cmd run lint
+npx.cmd tsc --noEmit
+npm.cmd run build
+```
+
+Resultado:
+
+- lint paso;
+- TypeScript paso;
+- build paso.
+
+Problema importante corregido:
+
+- al principio se revisaron herramientas globales (`python`, `magick`) en lugar de mirar primero el metodo ya usado en el proyecto;
+- eso fue incorrecto porque el proyecto ya tenia `sharp` instalado y scripts previos de optimizacion;
+- se corrigio el rumbo usando `sharp`, que era el metodo correcto y ya probado.
+
+## 79. Remera Lisa Hombre 002 con blanco protagonista
+
+Objetivo:
+
+- agregar otro set real de remera lisa;
+- usar los archivos entregados por el usuario:
+  - `C:/Users/jaell/Downloads/2-blanca-lisa-fondo-banco/`;
+  - `C:/Users/jaell/Downloads/2-negra-lisa-fb/`;
+  - `C:/Users/jaell/Downloads/2-gris-lisa-fb/`;
+- mantener el patron de tarjeta ya aprobado:
+  - hover preview;
+  - flechas navegables;
+  - reset al salir;
+  - galeria por color;
+- dejar nuevamente la remera blanca como protagonista.
+
+Decision de producto:
+
+- la hoja de contacto mostro modelo masculino;
+- por eso no se cargo como segunda mujer;
+- se cargo como producto nuevo:
+  - `RXW-REM-LISAH002`;
+  - `Remera Lisa Hombre 002`;
+  - slug `remera-lisa-hombre-002`;
+  - genero `hombre`.
+
+Conversion de imagenes:
+
+- se uso `sharp` desde `node_modules`;
+- se generaron versiones desktop/mobile `.webp`;
+- carpeta final:
+  - `public/images/products/remera-lisa-hombre-002-fb/`;
+- total generado:
+  - 18 desktop;
+  - 18 mobile;
+  - 36 archivos `.webp`.
+
+Datos del producto:
+
+- precio: `$19.000`;
+- estado: `active`;
+- destacado: `true`;
+- colores:
+  - blanco / hueso;
+  - negro;
+  - gris;
+- talles:
+  - S;
+  - M;
+  - L;
+  - XL;
+  - XXL;
+- imagen primaria:
+  - `/images/products/remera-lisa-hombre-002-fb/bla-01-desktop.webp`.
+
+Cambios aplicados:
+
+- `data/mockProducts.ts` suma `Remera Lisa Hombre 002`;
+- `supabase/seed.sql` suma producto, colores, talles e imagenes;
+- Supabase real recibio el alta via MCP;
+- no se cambio el patron de tarjeta porque ya estaba correcto desde la seccion 74.
+
+Validacion:
+
+- home:
+  - aparece `Remera Lisa Hombre 002`;
+  - imagen inicial blanca;
+  - precio `$19.000`;
+  - hover muestra `bla-03`;
+  - flecha pasa a `2/6` mostrando `bla-02`;
+  - al salir vuelve a `1/6` con `bla-01`;
+- detalle:
+  - abre en `/producto/remera-lisa-hombre-002`;
+  - blanco aparece primero y seleccionado;
+  - galeria inicial usa `bla-01`;
+  - precio `$19.000`;
+- sin errores de consola en la prueba de navegador.
+
+Checks ejecutados:
+
+```bash
+npm.cmd run lint
+npx.cmd tsc --noEmit
+npm.cmd run build
+```
+
+Resultado:
+
+- lint paso;
+- TypeScript paso;
+- build paso.
+
+Nota:
+
+- el intento de verificacion directa adicional por MCP fue rechazado por limite de uso del conector;
+- no se hizo workaround con otra consulta directa;
+- la insercion SQL anterior habia sido aceptada y la validacion de UI confirmo que el producto quedo visible y funcional.
+
+## 80. Conexion de Google OAuth para clientes
+
+Objetivo:
+
+- permitir que los clientes entren a la tienda con su cuenta de Google/Gmail;
+- mantener el login manual por email/password funcionando;
+- reutilizar el callback OAuth ya existente en la app.
+
+Estado previo:
+
+- `app/auth/callback/route.ts` ya existia;
+- el callback intercambia `code` por sesion con Supabase;
+- luego llama `ensureCustomerProfile` para crear o actualizar el perfil del cliente;
+- `/login` mostraba texto indicando que Google estaba postergado.
+
+Cambios aplicados:
+
+- `LoginForm.tsx` ahora tiene boton `Continuar con Google`;
+- el boton usa `createSupabaseBrowserClient()`;
+- llama a `supabase.auth.signInWithOAuth({ provider: "google" })`;
+- usa `redirectTo` apuntando a:
+  - `${window.location.origin}/auth/callback?next=...`;
+- conserva `returnUrl` para volver al carrito/producto despues del login;
+- se agregaron query params:
+  - `access_type=offline`;
+  - `prompt=select_account`;
+- `app/login/page.tsx` ahora dice que se puede entrar con Google o con email/password;
+- `README_SUPABASE.md` documenta la configuracion externa.
+
+Configuracion externa necesaria:
+
+- en Supabase Dashboard:
+  - `Authentication > Providers > Google`;
+  - cargar Google Client ID;
+  - cargar Google Client Secret;
+- en Google Cloud Console, OAuth Authorized redirect URI:
+  - `https://amdrfbppefqbdrxuolje.supabase.co/auth/v1/callback`;
+- en Supabase Redirect URLs:
+  - `http://127.0.0.1:3000/auth/callback`;
+  - dominio final cuando exista: `https://TU-DOMINIO/auth/callback`.
+
+Seguridad:
+
+- el Google Client Secret no se guarda en el repo;
+- queda solo en Google Cloud y Supabase;
+- el codigo del cliente solo usa la anon key publica normal de Supabase.
+
+Pendiente de validacion real:
+
+- probar el flujo completo luego de cargar Client ID/Secret en Supabase;
+- si Google provider no esta habilitado todavia, el boton puede devolver error desde Supabase;
+- el codigo local ya esta cableado para iniciar el OAuth y recibir el callback.
+
+Confirmacion posterior:
+
+- el usuario configuro Google en Supabase/Google Cloud;
+- el usuario probo el flujo real y confirmo que funciona;
+- se mantuvo el login manual como alternativa;
+- el boton quedo con estilo clasico de Google:
+  - fondo blanco;
+  - borde gris;
+  - logo multicolor;
+  - texto `Continuar con Google`.
+
+Validacion local adicional:
+
+- se verifico que el boton dispara a:
+  - `https://amdrfbppefqbdrxuolje.supabase.co/auth/v1/authorize?provider=google`;
+- el `redirect_to` queda apuntando a `/auth/callback`;
+- el navegador automatizado no pudo completar la pantalla externa de Google, pero si confirmo que ROXWANA inicia OAuth contra Supabase correctamente;
+- el usuario hizo la validacion real en navegador normal.
+
+## 81. Agregar al carrito desde tarjetas de producto
+
+Objetivo:
+
+- permitir agregar productos al carrito directamente desde las tarjetas;
+- evitar que el cliente tenga que entrar al detalle si ya vio el modelo, color e imagen;
+- aplicar el comportamiento en todos los productos visibles:
+  - tarjetas editoriales del home/drop;
+  - tarjetas de grilla de catalogo;
+  - productos con codigo;
+  - remeras lisas y productos graficos.
+
+Restriccion importante:
+
+- el carrito necesita producto, color, talle y cantidad;
+- no se debe agregar un producto sin talle/color porque eso rompería el SKU, el pedido y el mensaje de WhatsApp;
+- por eso la accion rapida no agrega a ciegas: primero pide color y talle dentro de la tarjeta.
+
+Primer intento:
+
+- se creo `components/product/ProductQuickActions.tsx`;
+- el componente agregaba:
+  - boton `Ver modelo`;
+  - boton `Agregar`;
+  - selector compacto de color;
+  - selector compacto de talle;
+  - boton `Confirmar carrito`;
+- se conecto en:
+  - `components/home/ProductPosterCard.tsx`;
+  - `components/product/ProductCard.tsx`;
+- al confirmar, usa `addToCartAction`;
+- cantidad fija inicial: `1`;
+- si el usuario no esta logueado, redirige a:
+  - `/login?returnUrl=...`;
+- si el agregado sale bien, dispara:
+  - `roxwana-cart-updated`;
+  - `router.refresh()`.
+
+Problema del primer intento:
+
+- el selector se abría debajo de los botones;
+- eso agrandaba la tarjeta;
+- al abrir una tarjeta, desacomodaba visualmente la grilla;
+- el usuario marco que se veia horrible para una tienda premium;
+- la experiencia era funcional, pero no aceptable visualmente.
+
+Correccion definitiva:
+
+- se elimino el panel desplegable que empujaba contenido;
+- el selector ahora es una placa flotante dentro de la misma card;
+- la card se marco como `relative`;
+- la placa se posiciona con:
+  - `absolute`;
+  - `inset-x-0`;
+  - `bottom-0`;
+  - `z-30`;
+- cuando esta cerrada queda fuera de vista con:
+  - `translate-y-full`;
+  - `opacity-0`;
+  - `pointer-events-none`;
+- cuando se abre sube desde abajo con:
+  - `translate-y-0`;
+  - `opacity-100`;
+  - `transition duration-300 ease-out`;
+- no cambia la altura de la tarjeta;
+- no empuja tarjetas vecinas;
+- no abre espacios raros en la grilla.
+
+Diseño visual de la placa:
+
+- fondo oscuro con gradiente sutil;
+- borde dorado;
+- sombra superior fuerte;
+- `backdrop-blur`;
+- encabezado `Agregar al carrito`;
+- nombre del producto truncado para no romper layout;
+- boton de cierre con icono;
+- swatches de color;
+- botones de talle;
+- boton final dorado `Confirmar carrito`.
+
+Validacion de comportamiento:
+
+- se probo en navegador sobre la primera tarjeta visible;
+- al tocar `Agregar`, la placa se abrio dentro de la card;
+- se selecciono talle;
+- el boton `Confirmar carrito` quedo habilitado;
+- sin sesion activa, la accion redirigio correctamente a `/login?returnUrl=%2F`;
+- no hubo errores de consola.
+
+Validacion de layout:
+
+- altura de la tarjeta antes de abrir:
+  - `662.65625`;
+- altura de la tarjeta despues de abrir:
+  - `662.65625`;
+- diferencia:
+  - `heightDelta: 0`;
+- posicion de la placa:
+  - `position: absolute`;
+  - `bottom: 0px`;
+- resultado:
+  - la placa flota y no modifica la grilla.
+
+Checks ejecutados:
+
+```bash
+npm.cmd run lint
+npx.cmd tsc --noEmit
+npm.cmd run build
+```
+
+Resultado:
+
+- lint paso;
+- TypeScript paso;
+- build paso.
+
+Archivos principales:
+
+- `components/product/ProductQuickActions.tsx`;
+- `components/home/ProductPosterCard.tsx`;
+- `components/product/ProductCard.tsx`;
+
+Leccion de diseño:
+
+- para acciones rapidas dentro de cards premium, no usar paneles que empujen contenido;
+- usar overlays internos o placas flotantes que mantengan estable la grilla;
+- validar siempre que la altura de la card no cambie al abrir acciones secundarias.
+
+## 82. Estado estable previo a guardado en GitHub
+
+Estado funcional acumulado:
+
+- Google OAuth funciona en navegador real segun confirmacion del usuario;
+- login manual sigue disponible;
+- productos falsos de prueba fueron eliminados;
+- precios obligatorios quedaron incorporados;
+- Remera Lisa Mujer fue agregada con blanco protagonista;
+- Remera Lisa Hombre 002 fue agregada con blanco protagonista;
+- tarjetas de producto mantienen hover, flechas y reset;
+- tarjetas de producto ahora permiten agregar al carrito desde vista previa;
+- el selector rapido usa placa flotante premium y no altera la grilla.
+
+Version estable objetivo:
+
+- commit estable con todos los cambios reales del storefront;
+- tag sugerido:
+  - `roxwana-google-cart-preview-estable-2026-06-12`;
+- no incluir capturas temporales ni archivos generados locales como `tsconfig.tsbuildinfo`.

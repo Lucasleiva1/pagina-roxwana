@@ -3,13 +3,15 @@
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useMemo, useState } from "react";
+import { ProductQuickActions } from "@/components/product/ProductQuickActions";
 import { ProductResponsiveImage } from "@/components/product/ProductResponsiveImage";
-import { RoxButton } from "@/components/ui/RoxButton";
-import { getImagesForColor } from "@/lib/products/imageColors";
+import { formatPrice } from "@/lib/products/formatPrice";
+import { getImageColorCode, getImagesForColor } from "@/lib/products/imageColors";
 import type { Product } from "@/types/product";
 
 function getPosterGallery(product: Product) {
-  const preferredColor = product.colors.some((color) => color.code === "NEG") ? "NEG" : product.colors[0]?.code;
+  const primaryColor = getImageColorCode(product.image);
+  const preferredColor = product.colors.some((color) => color.code === primaryColor) ? primaryColor || undefined : product.colors.some((color) => color.code === "NEG") ? "NEG" : product.colors[0]?.code;
   const images = getImagesForColor(product, preferredColor).map((image) => image.url);
   const gallery = [product.image, ...images].filter(Boolean);
   const hoverImage = images.find((image) => /-03-desktop\.webp$/i.test(image)) || images.find((image) => image !== product.image);
@@ -44,7 +46,7 @@ export function ProductPosterCard({ product }: { product: Product }) {
   };
 
   return (
-    <article className="group flex h-full min-h-[500px] flex-col overflow-hidden border border-bone/12 bg-charcoal shadow-gold-soft transition hover:border-roxgold/60" data-product-model={product.modelCode}>
+    <article className="group relative flex h-full min-h-[500px] flex-col overflow-hidden border border-bone/12 bg-charcoal shadow-gold-soft transition hover:border-roxgold/60" data-product-model={product.modelCode}>
       <div className="relative aspect-[3/4] shrink-0 overflow-hidden bg-bone" onMouseEnter={() => setHoveringImage(true)} onMouseLeave={resetGallery}>
         <ProductResponsiveImage
           key={currentImage}
@@ -96,13 +98,10 @@ export function ProductPosterCard({ product }: { product: Product }) {
       <div className="flex flex-1 flex-col p-4">
         <p className="text-xs font-bold uppercase tracking-rox text-roxgold">{product.garmentLabel}</p>
         <h3 className="headline mt-2 min-h-[3.5rem] text-3xl leading-none text-bone">{product.name}</h3>
+        <p className="mt-3 text-sm font-black uppercase tracking-rox text-bone">{formatPrice(product.price)}</p>
         <p className="mt-3 max-h-12 overflow-hidden text-sm leading-6 text-bone/64">{product.story}</p>
 
-        <div className="mt-auto pt-5">
-          <RoxButton href={`/producto/${product.slug}`} variant="bone" className="w-full px-3">
-            Ver modelo
-          </RoxButton>
-        </div>
+        <ProductQuickActions product={product} className="mt-auto pt-5" />
       </div>
     </article>
   );

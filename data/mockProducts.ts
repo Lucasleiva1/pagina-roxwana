@@ -16,79 +16,34 @@ const remeraLisaImageSets = [
   { code: "GRI", prefix: "gri", label: "gris" }
 ] as const;
 
-const remeraLisaImages = remeraLisaImageSets.flatMap((set, colorIndex) =>
-  Array.from({ length: 6 }, (_, index) => {
-    const imageNumber = index + 1;
-    const paddedNumber = imageNumber.toString().padStart(2, "0");
+const remeraLisaMujerImageSets = [
+  { code: "BLA", prefix: "bla", label: "blanca" },
+  { code: "NEG", prefix: "neg", label: "negra" },
+  { code: "GRI", prefix: "gri", label: "gris" }
+] as const;
 
-    return {
-      url: `/images/products/remera-lisa-fb/${set.prefix}-${paddedNumber}-desktop.webp`,
-      alt: `Remera Lisa ${set.label} vista ${imageNumber}`,
-      sortOrder: colorIndex * 10 + imageNumber,
-      isPrimary: set.code === "NEG" && imageNumber === 1,
-      colorCode: set.code
-    };
-  })
-);
+function buildLisaImages(folder: string, sets: readonly { code: string; prefix: string; label: string }[], primaryCode: string) {
+  return sets.flatMap((set, colorIndex) =>
+    Array.from({ length: 6 }, (_, index) => {
+      const imageNumber = index + 1;
+      const paddedNumber = imageNumber.toString().padStart(2, "0");
+
+      return {
+        url: `/images/products/${folder}/${set.prefix}-${paddedNumber}-desktop.webp`,
+        alt: `Remera Lisa ${set.label} vista ${imageNumber}`,
+        sortOrder: colorIndex * 10 + imageNumber,
+        isPrimary: set.code === primaryCode && imageNumber === 1,
+        colorCode: set.code
+      };
+    })
+  );
+}
+
+const remeraLisaImages = buildLisaImages("remera-lisa-fb", remeraLisaImageSets, "NEG");
+const remeraLisaMujerImages = buildLisaImages("remera-lisa-mujer-fb", remeraLisaMujerImageSets, "BLA");
+const remeraLisaHombre002Images = buildLisaImages("remera-lisa-hombre-002-fb", remeraLisaMujerImageSets, "BLA");
 
 export const mockProducts: Product[] = [
-  {
-    id: "mock-rock-001",
-    modelCode: "RXW-REM-ROCK001",
-    model: "ROCK001",
-    name: "Remera Rock 001",
-    garmentType: "REM",
-    garmentTypeId: "mock-rem",
-    garmentLabel: "Remera",
-    gender: "unisex",
-    status: "active",
-    featured: true,
-    colors: [...roxColors],
-    sizes: [...roxSizes],
-    image: "/images/products/product-01.png",
-    images: [{ url: "/images/products/product-01.png", alt: "Remera Rock 001", sortOrder: 0, isPrimary: true }],
-    slug: "remera-rock-001",
-    story: "Logo circular ROXWANA con energia de escenario, calle mojada y noche urbana.",
-    description: "Logo circular ROXWANA con energia de escenario, calle mojada y noche urbana."
-  },
-  {
-    id: "mock-dragon-002",
-    modelCode: "RXW-REM-DRAGON002",
-    model: "DRAGON002",
-    name: "Remera Dragon 002",
-    garmentType: "REM",
-    garmentTypeId: "mock-rem",
-    garmentLabel: "Remera",
-    gender: "hombre",
-    status: "active",
-    featured: true,
-    colors: [...roxColors],
-    sizes: [...roxSizes],
-    image: "/images/products/product-02.png",
-    images: [{ url: "/images/products/product-02.png", alt: "Remera Dragon 002", sortOrder: 0, isPrimary: true }],
-    slug: "remera-dragon-002",
-    story: "Grafica pesada para drops de alto contraste, pensada para vestir fuerte.",
-    description: "Grafica pesada para drops de alto contraste, pensada para vestir fuerte."
-  },
-  {
-    id: "mock-moto-003",
-    modelCode: "RXW-REM-MOTO003",
-    model: "MOTO003",
-    name: "Remera Moto 003",
-    garmentType: "REM",
-    garmentTypeId: "mock-rem",
-    garmentLabel: "Remera",
-    gender: "hombre",
-    status: "active",
-    featured: true,
-    colors: [...roxColors],
-    sizes: [...roxSizes],
-    image: "/images/products/product-03.png",
-    images: [{ url: "/images/products/product-03.png", alt: "Remera Moto 003", sortOrder: 0, isPrimary: true }],
-    slug: "remera-moto-003",
-    story: "Actitud de ruta, metal y asfalto en una composicion grafica premium.",
-    description: "Actitud de ruta, metal y asfalto en una composicion grafica premium."
-  },
   {
     id: "mock-street-004",
     modelCode: "RXW-REM-STREET004",
@@ -100,6 +55,7 @@ export const mockProducts: Product[] = [
     gender: "mujer",
     status: "active",
     featured: false,
+    price: 29000,
     colors: [...roxColors],
     sizes: [...roxSizes],
     image: "/images/products/product-04.png",
@@ -119,6 +75,7 @@ export const mockProducts: Product[] = [
     gender: "unisex",
     status: "active",
     featured: false,
+    price: 29000,
     colors: [...roxColors],
     sizes: [...roxSizes],
     image: "/images/products/product-05.png",
@@ -138,6 +95,7 @@ export const mockProducts: Product[] = [
     gender: "unisex",
     status: "active",
     featured: false,
+    price: 29000,
     colors: [...roxColors],
     sizes: [...roxSizes],
     image: "/images/products/product-06.png",
@@ -157,6 +115,7 @@ export const mockProducts: Product[] = [
     gender: "hombre",
     status: "active",
     featured: true,
+    price: 29000,
     colors: [{ code: "NEG", label: "Negro", hex: "#080808" }],
     sizes: [...roxSizes],
     image: "/images/products/product-boyband-001-shirt.png",
@@ -182,6 +141,7 @@ export const mockProducts: Product[] = [
     gender: "mujer",
     status: "active",
     featured: true,
+    price: 29000,
     colors: [{ code: "BLA", label: "Blanco / Hueso", hex: "#F6F3EE" }],
     sizes: [...roxSizes],
     image: "/images/products/product-flame-fearless-001-shirt-desktop.webp",
@@ -195,6 +155,46 @@ export const mockProducts: Product[] = [
     description: "Remera blanca de mujer con grafica ROXWANA flame rosa y negro, galeria con vista producto, frente con modelo y espalda."
   },
   {
+    id: "mock-remera-lisa-mujer-001",
+    modelCode: "RXW-REM-LISAM001",
+    model: "LISAM001",
+    name: "Remera Lisa Mujer",
+    garmentType: "REM",
+    garmentTypeId: "mock-rem",
+    garmentLabel: "Remera",
+    gender: "mujer",
+    status: "active",
+    featured: true,
+    price: 19000,
+    colors: [roxColors[1], roxColors[0], roxGrayColor],
+    sizes: [...roxSizes],
+    image: "/images/products/remera-lisa-mujer-fb/bla-01-desktop.webp",
+    images: remeraLisaMujerImages,
+    slug: "remera-lisa-mujer-001",
+    story: "Remera lisa ROXWANA para mujer, con calce urbano y blanco protagonista en la galeria.",
+    description: "Remera lisa ROXWANA para mujer, disponible en blanco, negro y gris con vista real por color."
+  },
+  {
+    id: "mock-remera-lisa-hombre-002",
+    modelCode: "RXW-REM-LISAH002",
+    model: "LISAH002",
+    name: "Remera Lisa Hombre 002",
+    garmentType: "REM",
+    garmentTypeId: "mock-rem",
+    garmentLabel: "Remera",
+    gender: "hombre",
+    status: "active",
+    featured: true,
+    price: 19000,
+    colors: [roxColors[1], roxColors[0], roxGrayColor],
+    sizes: [...roxSizes],
+    image: "/images/products/remera-lisa-hombre-002-fb/bla-01-desktop.webp",
+    images: remeraLisaHombre002Images,
+    slug: "remera-lisa-hombre-002",
+    story: "Remera lisa ROXWANA para hombre, con blanco protagonista y galeria real por color.",
+    description: "Remera lisa ROXWANA para hombre, disponible en blanco, negro y gris con vistas de producto y modelo."
+  },
+  {
     id: "mock-street-rock-001",
     modelCode: "RXW-REM-SRK001",
     model: "SRK001",
@@ -205,6 +205,7 @@ export const mockProducts: Product[] = [
     gender: "hombre",
     status: "active",
     featured: true,
+    price: 29000,
     colors: [{ code: "NEG", label: "Negro", hex: "#080808" }],
     sizes: [...roxSizes],
     image: "/images/products/product-street-rock-001-shirt-desktop.webp",
@@ -230,6 +231,7 @@ export const mockProducts: Product[] = [
     gender: "hombre",
     status: "active",
     featured: true,
+    price: 19000,
     colors: [...roxLisaColors],
     sizes: [...roxSizes],
     image: "/images/products/remera-lisa-fb/neg-01-desktop.webp",

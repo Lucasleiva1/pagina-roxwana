@@ -110,7 +110,7 @@ Pruebas:
 
 - `/productos` debe mostrar productos desde Supabase.
 - `/producto/remera-rock-001` debe abrir producto real.
-- `/login` permite entrar o registrarse como cliente con email/password. Google queda postergado.
+- `/login` permite entrar con Google o con email/password, y registrarse manualmente.
 - `/admin-login` permite entrar al Command Center solo si `profiles.role = 'admin'`.
 - `/command` bloquea usuarios sin profile admin.
 - Agregar al carrito sin sesion redirige a `/login?returnUrl=...`.
@@ -123,7 +123,7 @@ En Supabase Auth:
 
 1. Habilitar signup.
 2. Desactivar confirmacion de email si se quiere que el registro manual entre directo.
-3. Google provider queda postergado hasta configurar OAuth.
+3. Para Google OAuth, entrar a **Authentication > Providers > Google** y cargar el Client ID y Client Secret de Google Cloud.
 4. Agregar redirect URL local:
 
 ```text
@@ -137,6 +137,24 @@ https://TU-SITIO.netlify.app/auth/callback
 ```
 
 El Google Client Secret queda solo en Supabase/Google, nunca en el repo.
+
+En Google Cloud Console, el Authorized redirect URI del OAuth client debe apuntar al callback de Supabase:
+
+```text
+https://amdrfbppefqbdrxuolje.supabase.co/auth/v1/callback
+```
+
+En Supabase, las Redirect URLs permitidas deben incluir:
+
+```text
+http://127.0.0.1:3000/auth/callback
+```
+
+Y cuando exista dominio final, tambien:
+
+```text
+https://TU-DOMINIO/auth/callback
+```
 
 ## Storage
 

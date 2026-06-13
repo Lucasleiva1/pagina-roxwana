@@ -51,6 +51,7 @@ export type Database = {
           description: string | null;
           status: ProductStatus;
           featured: boolean;
+          price: number;
           created_at: string;
           updated_at: string;
         };
@@ -64,6 +65,7 @@ export type Database = {
           description?: string | null;
           status: ProductStatus;
           featured?: boolean;
+          price: number;
           created_at?: string;
           updated_at?: string;
         };

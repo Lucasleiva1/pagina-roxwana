@@ -94,6 +94,18 @@ export function ProductForm({ product, options, action, submitLabel }: ProductFo
             <option value="hidden">Oculto</option>
           </select>
         </label>
+        <label className="grid gap-2 text-xs font-bold uppercase tracking-rox text-steel">
+          Precio
+          <input
+            name="price"
+            type="number"
+            min={1}
+            step={1}
+            required
+            defaultValue={product?.price || ""}
+            className="min-h-11 border border-bone/12 bg-ink px-4 text-sm normal-case tracking-normal text-bone outline-none focus:border-roxgold"
+          />
+        </label>
       </div>
 
       <label className="grid gap-2 text-xs font-bold uppercase tracking-rox text-steel">

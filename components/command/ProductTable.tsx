@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Product } from "@/types/product";
 import { changeProductStatusAction, duplicateProductAction } from "@/lib/products/mutations";
 import { StatusBadge } from "@/components/command/StatusBadge";
+import { formatPrice } from "@/lib/products/formatPrice";
 
 export function ProductTable({ products }: { products: Product[] }) {
   if (products.length === 0) {
@@ -16,6 +17,7 @@ export function ProductTable({ products }: { products: Product[] }) {
             <th className="p-4">Modelo</th>
             <th className="p-4">Nombre</th>
             <th className="p-4">Prenda</th>
+            <th className="p-4">Precio</th>
             <th className="p-4">Estado</th>
             <th className="p-4">Acciones</th>
           </tr>
@@ -26,6 +28,7 @@ export function ProductTable({ products }: { products: Product[] }) {
               <td className="p-4 font-bold text-roxgold">{product.modelCode}</td>
               <td className="p-4">{product.name}</td>
               <td className="p-4">{product.garmentLabel}</td>
+              <td className="p-4 font-bold text-bone">{formatPrice(product.price)}</td>
               <td className="p-4">
                 <StatusBadge status={product.status} />
               </td>

@@ -6,6 +6,7 @@ import { getAuthenticatedUser, ensureCustomerProfile } from "@/lib/auth/session"
 import { getActiveCartForUser } from "@/lib/cart/queries";
 import { getSiteSettings } from "@/lib/settings/getSiteSettings";
 import { buildWhatsAppUrl } from "@/lib/whatsapp/buildWhatsAppUrl";
+import { formatPrice } from "@/lib/products/formatPrice";
 import type { Json } from "@/types/supabase";
 
 function readText(formData: FormData, key: string, label: string, minLength = 1) {
@@ -163,6 +164,7 @@ export async function checkoutCartAction(formData: FormData) {
   }
 
   const addressLine = buildAddressLine({ street, streetNumber, apartment, city, province, postalCode });
+  const productsTotal = cart.items.reduce((total, item) => total + (item.priceSnapshot || 0) * item.quantity, 0);
   const message = [
     "Pedido ROXWANA",
     `Orden: ${order.id}`,
@@ -175,11 +177,15 @@ export async function checkoutCartAction(formData: FormData) {
     "",
     "Productos:",
     ...cart.items.map(
-      (item, index) =>
-        `${index + 1}. ${item.productName} | Modelo: ${item.modelCode} | SKU: ${item.sku} | Color: ${item.selectedColor} | Talle: ${item.selectedSize} | Cantidad: ${item.quantity}`
+      (item, index) => {
+        const unitPrice = item.priceSnapshot ? formatPrice(item.priceSnapshot) : "Sin precio";
+        const subtotal = item.priceSnapshot ? formatPrice(item.priceSnapshot * item.quantity) : "Sin precio";
+        return `${index + 1}. ${item.productName} | Modelo: ${item.modelCode} | SKU: ${item.sku} | Color: ${item.selectedColor} | Talle: ${item.selectedSize} | Cantidad: ${item.quantity} | Unitario: ${unitPrice} | Subtotal: ${subtotal}`;
+      }
     ),
+    `Total productos: ${formatPrice(productsTotal)}`,
     "",
-    "Me pasas precio final, disponibilidad y link de pago?"
+    "Me confirmas disponibilidad, envio y link de pago?"
   ]
     .filter(Boolean)
     .join("\n");

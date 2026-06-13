@@ -30,6 +30,7 @@ export type Product = {
   gender: ProductGender;
   status: ProductStatus;
   featured: boolean;
+  price: number;
   colors: ProductColor[];
   sizes: ProductSize[];
   image: string;

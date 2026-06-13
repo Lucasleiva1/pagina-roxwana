@@ -19,6 +19,11 @@ function values(formData: FormData, key: string) {
   return formData.getAll(key).filter((item): item is string => typeof item === "string" && item.trim().length > 0);
 }
 
+function positiveInteger(formData: FormData, key: string) {
+  const parsed = Number(value(formData, key));
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : 0;
+}
+
 function assertChoice<T extends string>(valueToCheck: string, allowed: readonly T[], fallback: T): T {
   return allowed.includes(valueToCheck as T) ? (valueToCheck as T) : fallback;
 }
@@ -33,12 +38,13 @@ function validateProductForm(formData: FormData) {
     gender: assertChoice<ProductGender>(value(formData, "gender"), ["hombre", "mujer", "unisex"], "unisex"),
     description: value(formData, "description") || null,
     status,
-    featured: formData.get("featured") === "on"
+    featured: formData.get("featured") === "on",
+    price: positiveInteger(formData, "price")
   };
   const colorIds = values(formData, "color_ids");
   const sizeIds = values(formData, "size_ids");
 
-  if (!payload.model_code || !payload.name || !payload.slug || !payload.garment_type_id || !payload.status) {
+  if (!payload.model_code || !payload.name || !payload.slug || !payload.garment_type_id || !payload.status || !payload.price) {
     throw new Error("Faltan campos obligatorios del producto.");
   }
 
@@ -242,7 +248,8 @@ export async function duplicateProductAction(formData: FormData) {
       gender: product.gender,
       description: product.description,
       status: "draft",
-      featured: false
+      featured: false,
+      price: product.price
     })
     .select("id")
     .single();

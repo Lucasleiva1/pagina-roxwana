@@ -5,6 +5,7 @@ import { CartWhatsAppNotice } from "@/components/cart/CartWhatsAppNotice";
 import { CommandHeader } from "@/components/command/CommandHeader";
 import { removeCartItemAction, updateCartItemQuantityAction } from "@/lib/cart/actions";
 import { getCustomerCartPageData } from "@/lib/cart/queries";
+import { formatPrice } from "@/lib/products/formatPrice";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +13,7 @@ export default async function CartPage() {
   const { cart, profile, latestAddress, latestWhatsAppNotice } = await getCustomerCartPageData("/carrito");
   const items = cart?.items || [];
   const cartCount = items.reduce((total, item) => total + item.quantity, 0);
+  const cartTotal = items.reduce((total, item) => total + (item.priceSnapshot || 0) * item.quantity, 0);
 
   return (
     <section className="min-h-screen bg-ink pb-20 pt-28">
@@ -30,6 +32,11 @@ export default async function CartPage() {
                     <p className="mt-2 text-sm text-bone/62">
                       SKU {item.sku} / Color {item.selectedColor} / Talle {item.selectedSize}
                     </p>
+                    {item.priceSnapshot ? (
+                      <p className="mt-3 text-sm font-bold text-bone">
+                        {formatPrice(item.priceSnapshot)} x {item.quantity} = {formatPrice(item.priceSnapshot * item.quantity)}
+                      </p>
+                    ) : null}
                   </div>
                   <div className="grid gap-2 md:min-w-48">
                     <form action={updateCartItemQuantityAction} className="flex items-center justify-end gap-2">
@@ -65,6 +72,12 @@ export default async function CartPage() {
               </Link>
             </div>
           )}
+          {items.length > 0 ? (
+            <div className="flex items-center justify-between border border-roxgold/30 bg-charcoal p-4">
+              <p className="text-xs font-bold uppercase tracking-rox text-steel">Total productos</p>
+              <p className="text-xl font-black text-roxgold">{formatPrice(cartTotal)}</p>
+            </div>
+          ) : null}
         </div>
         {items.length > 0 ? <CartCheckout profile={profile} latestAddress={latestAddress} /> : null}
       </div>

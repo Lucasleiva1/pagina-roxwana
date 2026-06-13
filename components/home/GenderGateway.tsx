@@ -7,7 +7,7 @@ const gateways = [
   {
     label: "Hombre",
     href: "/hombre",
-    image: "/images/products/product-01.png",
+    image: "/images/products/product-street-rock-001-front-model-desktop.webp",
     copy: "Remeras y buzos con presencia grafica, noche, asfalto y escenario."
   },
   {

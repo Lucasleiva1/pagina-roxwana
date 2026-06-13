@@ -23,7 +23,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             Guarda tu carrito, vuelve a tus modelos elegidos y completa el pedido por WhatsApp con tus datos listos.
           </p>
           <div className="mt-8 grid gap-3 border-l border-roxgold/40 pl-5 text-sm text-bone/66">
-            <p>Entra con email y password, sin conectar Google por ahora.</p>
+            <p>Entra con Google o con email y password.</p>
             <p>El registro manual solo pide nombre, email y password.</p>
           </div>
         </div>
