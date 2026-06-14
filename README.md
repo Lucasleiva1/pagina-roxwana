@@ -1,6 +1,6 @@
 # ROXWANA Web
 
-Web Store ROXWANA con frontend visual premium, Supabase Auth/Database/Storage, carrito persistente y Command Center.
+Web Store ROXWANA con frontend visual premium, Supabase Auth/Database/Storage, carrito persistente y Admin Backstage.
 
 ## Stack
 
@@ -57,7 +57,7 @@ insert into public.profiles (user_id, name, role)
 values ('USER_ID_DEL_AUTH_USER', 'Admin ROXWANA', 'admin');
 ```
 
-El bucket `product-images` se crea desde `schema.sql`. Las imagenes son publicas para lectura y solo admins pueden subir/editar/borrar.
+Los buckets `product-images`, `site-images` y `brand-assets` se crean desde migraciones. Las imagenes son publicas para lectura y solo admins/editors pueden subir/editar/borrar.
 
 ## Fase 3
 
@@ -65,6 +65,7 @@ El bucket `product-images` se crea desde `schema.sql`. Las imagenes son publicas
 - `/productos` con filtros por genero, prenda, color, talle y busqueda.
 - `/producto/[slug]` con selector de color/talle/cantidad, SKU y agregado al carrito con login requerido.
 - `/login` para clientes con Google principal y registro manual minimo.
-- `/admin-login` para admins; `/command` requiere `profiles.role = 'admin'`.
+- `/admin/login` para admins/editors; `/admin` requiere `profiles.role in ('admin', 'editor')`.
 - `/carrito` persistente, checkout con direccion y pedido enviado por WhatsApp.
-- Command Center para productos, clientes, pedidos, carritos, settings y consultas legacy.
+- Admin Backstage para productos, categorias, drops, home, media, settings, usuarios, clientes, pedidos, carritos y consultas legacy.
+- `/admin-login` y `/command/*` quedan como compatibilidad y redirigen a las rutas nuevas.

@@ -14,7 +14,7 @@ export type Database = {
           phone: string | null;
           avatar_url: string | null;
           marketing_consent: boolean;
-          role: "customer" | "admin";
+          role: "customer" | "editor" | "admin";
           created_at: string;
           updated_at: string;
         };
@@ -49,9 +49,17 @@ export type Database = {
           garment_type_id: string;
           gender: ProductGender;
           description: string | null;
+          description_short: string | null;
+          description_long: string | null;
           status: ProductStatus;
           featured: boolean;
           price: number;
+          compare_at_price: number | null;
+          category_id: string | null;
+          collection_id: string | null;
+          sort_order: number;
+          main_image_path: string | null;
+          whatsapp_message: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -63,13 +71,69 @@ export type Database = {
           garment_type_id: string;
           gender: ProductGender;
           description?: string | null;
+          description_short?: string | null;
+          description_long?: string | null;
           status: ProductStatus;
           featured?: boolean;
           price: number;
+          compare_at_price?: number | null;
+          category_id?: string | null;
+          collection_id?: string | null;
+          sort_order?: number;
+          main_image_path?: string | null;
+          whatsapp_message?: string | null;
           created_at?: string;
           updated_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["products"]["Row"]>;
+        Relationships: [];
+      };
+      categories: {
+        Row: {
+          id: string;
+          name: string;
+          slug: string;
+          description: string | null;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          slug: string;
+          description?: string | null;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["categories"]["Row"]>;
+        Relationships: [];
+      };
+      collections: {
+        Row: {
+          id: string;
+          name: string;
+          slug: string;
+          description: string | null;
+          hero_image_path: string | null;
+          is_active: boolean;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          slug: string;
+          description?: string | null;
+          hero_image_path?: string | null;
+          is_active?: boolean;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["collections"]["Row"]>;
         Relationships: [];
       };
       product_colors: {
@@ -89,21 +153,53 @@ export type Database = {
           id: string;
           product_id: string;
           url: string;
+          path: string | null;
+          bucket: string;
           alt: string | null;
           sort_order: number;
           is_primary: boolean;
+          file_type: string | null;
+          size: number | null;
           created_at: string;
         };
         Insert: {
           id?: string;
           product_id: string;
           url: string;
+          path?: string | null;
+          bucket?: string;
           alt?: string | null;
           sort_order?: number;
           is_primary?: boolean;
+          file_type?: string | null;
+          size?: number | null;
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["product_images"]["Row"]>;
+        Relationships: [];
+      };
+      product_variants: {
+        Row: {
+          id: string;
+          product_id: string;
+          size: string | null;
+          color: string | null;
+          stock: number;
+          sku: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          product_id: string;
+          size?: string | null;
+          color?: string | null;
+          stock?: number;
+          sku?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["product_variants"]["Row"]>;
         Relationships: [];
       };
       site_settings: {
@@ -115,11 +211,86 @@ export type Database = {
           fallback_contact: string | null;
           instagram_url: string | null;
           tiktok_url: string | null;
+          contact_email: string | null;
+          global_cta_label: string | null;
+          global_cta_url: string | null;
           created_at: string;
           updated_at: string;
         };
         Insert: Partial<Database["public"]["Tables"]["site_settings"]["Row"]>;
         Update: Partial<Database["public"]["Tables"]["site_settings"]["Row"]>;
+        Relationships: [];
+      };
+      site_sections: {
+        Row: {
+          id: string;
+          key: string;
+          type: string;
+          title: string | null;
+          subtitle: string | null;
+          body: string | null;
+          image_path: string | null;
+          cta_label: string | null;
+          cta_url: string | null;
+          is_visible: boolean;
+          sort_order: number;
+          metadata: Json;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          key: string;
+          type: string;
+          title?: string | null;
+          subtitle?: string | null;
+          body?: string | null;
+          image_path?: string | null;
+          cta_label?: string | null;
+          cta_url?: string | null;
+          is_visible?: boolean;
+          sort_order?: number;
+          metadata?: Json;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["site_sections"]["Row"]>;
+        Relationships: [];
+      };
+      media_assets: {
+        Row: {
+          id: string;
+          path: string;
+          bucket: string;
+          alt_text: string | null;
+          file_type: string | null;
+          size: number | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          path: string;
+          bucket: string;
+          alt_text?: string | null;
+          file_type?: string | null;
+          size?: number | null;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["media_assets"]["Row"]>;
+        Relationships: [];
+      };
+      settings: {
+        Row: {
+          id: string;
+          key: string;
+          value: Json;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          key: string;
+          value: Json;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["settings"]["Row"]>;
         Relationships: [];
       };
       whatsapp_orders: {

@@ -3,6 +3,7 @@
 import { Check, ShoppingCart, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { ColorSwatch } from "@/components/product/ColorSwatch";
 import { RoxButton } from "@/components/ui/RoxButton";
 import { addToCartAction } from "@/lib/cart/actions";
 import { getImageColorCode } from "@/lib/products/imageColors";
@@ -119,18 +120,12 @@ export function ProductQuickActions({ product, viewVariant = "bone", className =
               <p className="text-[10px] font-bold uppercase tracking-rox text-steel">Color</p>
               <div className="mt-2 flex flex-wrap gap-2">
                 {product.colors.map((color) => (
-                  <button
+                  <ColorSwatch
                     key={color.code}
-                    type="button"
+                    color={color}
+                    selected={selectedColor === color.code}
                     onClick={() => setSelectedColor(color.code)}
-                    className={`grid h-9 w-9 place-items-center border transition ${
-                      selectedColor === color.code ? "border-roxgold bg-roxgold/10" : "border-bone/20 hover:border-bone/50"
-                    }`}
-                    aria-label={color.label}
-                    title={color.label}
-                  >
-                    <span className="h-5 w-5 border border-bone/24" style={{ backgroundColor: color.hex || "#111111" }} />
-                  </button>
+                  />
                 ))}
               </div>
             </div>

@@ -225,8 +225,8 @@ export async function checkoutCartAction(formData: FormData) {
     });
   }
 
-  revalidatePath("/command/pedidos");
-  revalidatePath("/command/carritos");
+  revalidatePath("/admin/pedidos");
+  revalidatePath("/admin/carritos");
 
   return {
     ok: true,

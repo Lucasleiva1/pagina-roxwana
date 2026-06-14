@@ -4,7 +4,9 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Shuffle, Sparkles } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, useTransition, type CSSProperties } from "react";
+import { ColorSwatch } from "@/components/product/ColorSwatch";
 import { addToCartAction } from "@/lib/cart/actions";
+import type { HomeSection } from "@/types/admin";
 import type { Product } from "@/types/product";
 
 type GenderChoice = "hombre" | "mujer";
@@ -60,7 +62,7 @@ function pickWinner(products: Product[], currentBag: string[], lastWinner: strin
   return { winner, remainingBag };
 }
 
-export function RandomPrintTeaser({ compact = false, products }: { compact?: boolean; products: Product[] }) {
+export function RandomPrintTeaser({ compact = false, products, section }: { compact?: boolean; products: Product[]; section?: HomeSection | null }) {
   const [selectedGender, setSelectedGender] = useState<GenderChoice | null>(null);
   const [phase, setPhase] = useState<WheelPhase>("idle");
   const [index, setIndex] = useState(0);
@@ -177,10 +179,10 @@ export function RandomPrintTeaser({ compact = false, products }: { compact?: boo
             Backstage pass
           </div>
           <div>
-            <p className="text-xs font-bold uppercase tracking-rox text-roxgold">Random print</p>
-            <h2 className="headline mt-3 text-5xl leading-none text-bone md:text-7xl">RULETA ROXWANA</h2>
+            <p className="text-xs font-bold uppercase tracking-rox text-roxgold">{section?.subtitle || "Random print"}</p>
+            <h2 className="headline mt-3 text-5xl leading-none text-bone md:text-7xl">{section?.title || "RULETA ROXWANA"}</h2>
             <p className="mt-5 max-w-xl text-sm leading-7 text-bone/68">
-              Elegi categoria, gira la ruleta y deja que el sistema elija una estampa para llevar al carrito.
+              {section?.body || "Elegi categoria, gira la ruleta y deja que el sistema elija una estampa para llevar al carrito."}
             </p>
 
           <div className="mt-8 grid gap-3">
@@ -379,18 +381,12 @@ function PrizePanel({
               <p className="mb-2 text-xs font-bold uppercase tracking-rox text-steel">Color</p>
               <div className="flex flex-wrap gap-2">
                 {product.colors.map((item) => (
-                  <button
+                  <ColorSwatch
                     key={item.code}
-                    type="button"
-                    data-prize-color={item.code}
+                    color={item}
+                    selected={color === item.code}
                     onClick={() => setColor(item.code)}
-                    className={`flex min-h-10 items-center gap-2 border px-3 py-2 text-xs font-bold uppercase tracking-rox transition ${
-                      color === item.code ? "border-roxgold text-bone" : "border-bone/12 text-bone/58 hover:border-bone/40"
-                    }`}
-                  >
-                    <span className="h-3.5 w-3.5 border border-bone/24" style={{ backgroundColor: item.hex || "#111111" }} />
-                    {item.label}
-                  </button>
+                  />
                 ))}
               </div>
             </div>

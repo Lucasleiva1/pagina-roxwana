@@ -8,9 +8,8 @@ export function FeaturedProducts({ products }: { products: Product[] }) {
       <div className="rox-container">
         <div className="mb-10 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
           <SectionHeader
-            eyebrow="Drop 01"
-            title="MODELOS CON CODIGO"
-            description="Catalogo real conectado a ROXWANA Command Center, con codigos visibles y consulta directa."
+            title="ELEGÍ TU MODELO"
+            description="Catalogo real conectado a ROXWANA Admin, con codigos visibles, carrito y pedido por WhatsApp."
           />
         </div>
         <ProductGrid products={products} />

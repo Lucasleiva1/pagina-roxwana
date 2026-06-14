@@ -2,7 +2,7 @@ import Link from "next/link";
 import { CartCountSync } from "@/components/cart/CartCountSync";
 import { CartCheckout } from "@/components/cart/CartCheckout";
 import { CartWhatsAppNotice } from "@/components/cart/CartWhatsAppNotice";
-import { CommandHeader } from "@/components/command/CommandHeader";
+import { SectionHeader } from "@/components/ui/SectionHeader";
 import { removeCartItemAction, updateCartItemQuantityAction } from "@/lib/cart/actions";
 import { getCustomerCartPageData } from "@/lib/cart/queries";
 import { formatPrice } from "@/lib/products/formatPrice";
@@ -20,7 +20,7 @@ export default async function CartPage() {
       <CartCountSync count={cartCount} />
       <div className="rox-container grid gap-8 lg:grid-cols-[1fr_420px] lg:items-start">
         <div className="grid gap-6">
-          <CommandHeader eyebrow="Carrito" title="TU BOLSA" description="Los productos quedan guardados en tu cuenta hasta que envies el pedido." />
+          <SectionHeader eyebrow="Carrito" title="TU BOLSA" description="Los productos quedan guardados en tu cuenta hasta que envies el pedido." />
           <CartWhatsAppNotice initialNotice={latestWhatsAppNotice} />
           {items.length > 0 ? (
             <div className="grid gap-3">

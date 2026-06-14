@@ -4,15 +4,22 @@ import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
 import { RoxButton } from "@/components/ui/RoxButton";
 import { TextureOverlay } from "@/components/ui/TextureOverlay";
+import { getPublicMediaUrl } from "@/lib/media/publicUrl";
+import type { HomeSection } from "@/types/admin";
 
-export function HeroCampaign({ whatsappUrl }: { whatsappUrl: string | null }) {
-  const contactHref = whatsappUrl || "/productos";
+export function HeroCampaign({ section }: { section?: HomeSection | null }) {
   const reduceMotion = useReducedMotion();
+  const heroImage = getPublicMediaUrl(section?.imagePath, "site-images") || "/images/hero/hero-03.png";
+  const title = section?.title || "ROXWANA";
+  const subtitle = section?.subtitle || "ESTILO URBANO";
+  const body = section?.body || "Explorá modelos, colores y talles antes de armar tu pedido.";
+  const ctaLabel = section?.ctaLabel || "Ver catálogo";
+  const ctaUrl = section?.ctaUrl || "#drop-01";
 
   return (
     <section className="relative min-h-[94svh] overflow-hidden bg-ink pt-24 text-bone">
       <div className="absolute inset-0">
-        <Image src="/images/hero/hero-03.png" alt="" fill priority sizes="100vw" className="object-cover object-[58%_center] opacity-56" />
+        <Image src={heroImage} alt="" fill priority sizes="100vw" className="object-cover object-[58%_center] opacity-56" />
         <div className="absolute inset-0 bg-[linear-gradient(90deg,#080808_0%,rgba(8,8,8,0.82)_36%,rgba(8,8,8,0.34)_100%)]" />
         <div className="absolute inset-0 bg-[linear-gradient(0deg,#080808_0%,rgba(8,8,8,0)_35%,rgba(8,8,8,0.66)_100%)]" />
       </div>
@@ -62,17 +69,12 @@ export function HeroCampaign({ whatsappUrl }: { whatsappUrl: string | null }) {
             <span className="h-px w-12 bg-roxred" />
             <span>Graphic wear</span>
           </div>
-          <h1 className="headline max-w-[11ch] text-7xl leading-[0.82] text-bone drop-shadow-2xl md:text-9xl lg:text-[9.4rem]">ROXWANA</h1>
-          <p className="headline mt-4 text-3xl leading-none text-bone md:text-6xl">SIN PEDIR PERMISO</p>
-          <p className="mt-5 max-w-xl text-base leading-8 text-bone/76 md:text-lg">
-            Remeras y buzos graficos con energia rockera, calle oscura y presencia premium.
-          </p>
+          <h1 className="headline max-w-[11ch] text-7xl leading-[0.82] text-bone drop-shadow-2xl md:text-9xl lg:text-[9.4rem]">{title}</h1>
+          <p className="headline mt-4 text-3xl leading-none text-bone md:text-6xl">{subtitle}</p>
+          <p className="mt-5 max-w-xl text-base leading-8 text-bone/76 md:text-lg">{body}</p>
           <div className="mt-8 grid gap-3 sm:flex">
-            <RoxButton href="#drop-01" variant="bone">
-              Ver drop
-            </RoxButton>
-            <RoxButton href={contactHref} variant="red" target={whatsappUrl ? "_blank" : undefined} rel={whatsappUrl ? "noreferrer" : undefined}>
-              Pedir por WhatsApp
+            <RoxButton href={ctaUrl} variant="bone">
+              {ctaLabel}
             </RoxButton>
           </div>
         </motion.div>

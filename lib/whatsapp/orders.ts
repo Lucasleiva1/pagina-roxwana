@@ -77,5 +77,5 @@ export async function updateWhatsAppOrderStatusAction(formData: FormData) {
   }
 
   await supabase.from("whatsapp_orders").update({ status: status as WhatsAppOrderStatus }).eq("id", id);
-  revalidatePath("/command/consultas");
+  revalidatePath("/admin/consultas");
 }

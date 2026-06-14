@@ -43,7 +43,10 @@ export async function updateSiteSettingsAction(formData: FormData) {
     whatsapp_enabled: formData.get("whatsapp_enabled") === "on",
     fallback_contact: value(formData, "fallback_contact") || null,
     instagram_url: cleanUrl(value(formData, "instagram_url")),
-    tiktok_url: cleanUrl(value(formData, "tiktok_url"))
+    tiktok_url: cleanUrl(value(formData, "tiktok_url")),
+    contact_email: value(formData, "contact_email") || null,
+    global_cta_label: value(formData, "global_cta_label") || null,
+    global_cta_url: value(formData, "global_cta_url") || null
   };
 
   if (id) {
@@ -53,5 +56,6 @@ export async function updateSiteSettingsAction(formData: FormData) {
   }
 
   revalidatePath("/");
-  revalidatePath("/command/settings");
+  revalidatePath("/admin/settings");
+  revalidatePath("/admin/settings");
 }

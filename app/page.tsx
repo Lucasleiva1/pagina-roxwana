@@ -1,28 +1,43 @@
+import type { ReactNode } from "react";
 import { GenderFilteredDrop } from "@/components/home/GenderFilteredDrop";
 import { HeroCampaign } from "@/components/home/HeroCampaign";
 import { OrderTimeline } from "@/components/home/OrderTimeline";
 import { PrintWallMarquee } from "@/components/home/PrintWallMarquee";
 import { RandomPrintTeaser } from "@/components/home/RandomPrintTeaser";
+import { getHomeSection, getHomeSections } from "@/lib/home/sections";
 import { getActiveProducts, getFeaturedProducts } from "@/lib/products/queries";
-import { getSiteSettings } from "@/lib/settings/getSiteSettings";
-import { buildWhatsAppUrl } from "@/lib/whatsapp/buildWhatsAppUrl";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const [featuredProducts, randomProducts, settings] = await Promise.all([getFeaturedProducts(), getActiveProducts(), getSiteSettings()]);
-  const whatsappUrl = buildWhatsAppUrl({
-    phone: settings.whatsappEnabled ? settings.whatsappNumber : null,
-    message: "Hola ROXWANA, quiero ver el drop y consultar disponibilidad."
-  });
+  const [featuredProducts, randomProducts, sections] = await Promise.all([getFeaturedProducts(), getActiveProducts(), getHomeSections()]);
+  const dropSection = getHomeSection(sections, "featured_drop");
+  const productsSection = getHomeSection(sections, "featured_products");
+  const rendered: ReactNode[] = [];
+  let productBlockRendered = false;
 
-  return (
-    <>
-      <HeroCampaign whatsappUrl={whatsappUrl} />
-      <GenderFilteredDrop products={featuredProducts} />
-      <PrintWallMarquee products={randomProducts} />
-      <RandomPrintTeaser products={randomProducts} />
-      <OrderTimeline />
-    </>
-  );
+  for (const section of sections) {
+    if (section.key === "hero") {
+      rendered.push(<HeroCampaign key={section.key} section={section} />);
+    }
+
+    if ((section.key === "featured_drop" || section.key === "featured_products") && !productBlockRendered) {
+      productBlockRendered = true;
+      rendered.push(<GenderFilteredDrop key="featured-products" products={featuredProducts} dropSection={dropSection} productsSection={productsSection} />);
+    }
+
+    if (section.key === "brand_statement") {
+      rendered.push(<PrintWallMarquee key={section.key} products={randomProducts} />);
+    }
+
+    if (section.key === "final_cta") {
+      rendered.push(<RandomPrintTeaser key={section.key} products={randomProducts} section={section} />);
+    }
+
+    if (section.key === "how_to_order") {
+      rendered.push(<OrderTimeline key={section.key} section={section} />);
+    }
+  }
+
+  return <>{rendered}</>;
 }

@@ -6,6 +6,9 @@ export type SiteSettings = {
   fallbackContact: string | null;
   instagramUrl: string | null;
   tiktokUrl: string | null;
+  contactEmail: string | null;
+  globalCtaLabel: string | null;
+  globalCtaUrl: string | null;
   createdAt?: string;
   updatedAt?: string;
 };

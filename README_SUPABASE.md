@@ -67,6 +67,7 @@ Las migraciones locales estan en:
 ```bash
 supabase/migrations/20260608210706_initial_roxwana_store.sql
 supabase/migrations/20260609180000_phase3_customer_auth_cart_orders.sql
+supabase/migrations/20260614120000_admin_completo.sql
 ```
 
 El seed esta en:
@@ -77,7 +78,7 @@ supabase/seed.sql
 
 ## Primer Admin Manual
 
-No hay registro publico de admins. Los clientes usan `/login`; el admin usa `/admin-login`.
+No hay registro publico de admins. Los clientes usan `/login`; el admin/editor usa `/admin/login`.
 
 Crear el usuario admin desde Supabase Dashboard:
 
@@ -111,8 +112,9 @@ Pruebas:
 - `/productos` debe mostrar productos desde Supabase.
 - `/producto/remera-rock-001` debe abrir producto real.
 - `/login` permite entrar con Google o con email/password, y registrarse manualmente.
-- `/admin-login` permite entrar al Command Center solo si `profiles.role = 'admin'`.
-- `/command` bloquea usuarios sin profile admin.
+- `/admin/login` permite entrar al Admin Backstage si `profiles.role` es `admin` o `editor`.
+- `/admin` bloquea visitantes y clientes; `/admin/settings` y `/admin/usuarios` requieren `admin`.
+- `/admin-login` y `/command/*` redirigen a las rutas nuevas.
 - Agregar al carrito sin sesion redirige a `/login?returnUrl=...`.
 - `/carrito` guarda pedido, items y eventos antes de abrir WhatsApp.
 - `/command/consultas` queda como historico legacy de `whatsapp_orders`.
@@ -158,14 +160,31 @@ https://TU-DOMINIO/auth/callback
 
 ## Storage
 
-Bucket esperado:
+Buckets esperados:
 
-- Nombre: `product-images`
-- Publico: si, para lectura de imagenes.
-- Limite: 3 MB.
-- MIME permitidos: `image/jpeg`, `image/png`, `image/webp`.
+- `product-images`
+- `site-images`
+- `brand-assets`
+- Publicos: si, para lectura de imagenes.
+- Limite: 5 MB.
+- MIME permitidos: `image/jpeg`, `image/png`, `image/webp`; `brand-assets` tambien acepta `image/svg+xml`.
 
 Policies:
 
-- Publico lee archivos del bucket.
-- Admin autenticado puede insertar, actualizar y borrar.
+- Publico lee archivos de esos buckets.
+- Admin/editor autenticado puede insertar, actualizar y borrar.
+
+## Admin Backstage
+
+Rutas principales:
+
+- `/admin`
+- `/admin/productos`
+- `/admin/categorias`
+- `/admin/drops`
+- `/admin/home`
+- `/admin/media`
+- `/admin/settings`
+- `/admin/usuarios`
+
+El primer admin se crea manualmente con Supabase Auth + SQL. Desde `/admin/usuarios`, un admin puede crear nuevos accesos internos con email/password y rol `editor` o `admin`.

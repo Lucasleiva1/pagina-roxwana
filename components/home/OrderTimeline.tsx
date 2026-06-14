@@ -1,18 +1,20 @@
+import type { HomeSection } from "@/types/admin";
+
 const steps = [
-  { label: "Elegis modelo", copy: "Drop, codigo y prenda que va con tu estilo." },
-  { label: "Seleccionas talle/color", copy: "Opciones claras antes de mandar la consulta." },
-  { label: "Mandas consulta por WhatsApp", copy: "El pedido sale con detalle para coordinar." },
-  { label: "Confirmamos precio y entrega", copy: "Cerramos disponibilidad, pago y envio." }
+  { label: "Elegis modelo", copy: "Mirás la prenda, el codigo y las fotos del drop." },
+  { label: "Seleccionas talle/color", copy: "Definis las opciones antes de agregarlo al carrito." },
+  { label: "Agregas al carrito", copy: "Tu seleccion queda guardada para revisar el pedido." },
+  { label: "Completas entrega y WhatsApp", copy: "Cargas tus datos en el carrito y envias la peticion." }
 ];
 
-export function OrderTimeline() {
+export function OrderTimeline({ section }: { section?: HomeSection | null }) {
   return (
     <section id="ordenar" className="scroll-mt-24 overflow-hidden bg-charcoal py-20 md:py-24">
       <div className="rox-container">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="text-xs font-bold uppercase tracking-rox text-roxgold">Como ordenar</p>
-          <h2 className="headline mt-3 text-5xl leading-none text-bone md:text-7xl">DEL MODELO AL MENSAJE</h2>
-          <p className="mt-5 text-sm leading-7 text-bone/64">Un flujo simple, con estetica de etiqueta de marca y compra por consulta directa.</p>
+          <p className="text-xs font-bold uppercase tracking-rox text-roxgold">{section?.subtitle || "Como ordenar"}</p>
+          <h2 className="headline mt-3 text-5xl leading-none text-bone md:text-7xl">{section?.title || "DEL MODELO AL PEDIDO"}</h2>
+          <p className="mt-5 text-sm leading-7 text-bone/64">{section?.body || "Elegis la prenda, armas el carrito y mandas el pedido por WhatsApp con tus datos de entrega."}</p>
         </div>
 
         <div className="relative mt-12 grid gap-5 md:grid-cols-4">

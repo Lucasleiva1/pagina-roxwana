@@ -18,8 +18,7 @@ export function DropWall({ products }: { products: Product[] }) {
       <div className="rox-container">
         <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-end">
           <div>
-            <p className="text-xs font-bold uppercase tracking-rox text-roxgold">Drop 01</p>
-            <h2 className="headline mt-3 max-w-4xl text-5xl leading-none text-bone md:text-8xl">MODELOS CON CODIGO</h2>
+            <h2 className="headline max-w-4xl text-5xl leading-none text-bone md:text-8xl">ELEGÍ TU MODELO</h2>
           </div>
           <div className="border-y border-roxgold/45 py-3 text-xs font-bold uppercase tracking-rox text-bone/70 md:max-w-xs">
             Grilla clara para mirar modelos, recorrer imagenes y entrar al detalle sin distracciones.

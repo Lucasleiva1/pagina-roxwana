@@ -7,16 +7,39 @@ export type ProductColor = {
 
 export type ProductSize = string;
 
-export type ProductStatus = "draft" | "active" | "hidden";
+export type ProductStatus = "draft" | "published" | "sold_out";
 export type ProductGender = "hombre" | "mujer" | "unisex";
 
 export type ProductImage = {
   id?: string;
   url: string;
+  path?: string | null;
+  bucket?: string | null;
   alt: string | null;
   sortOrder: number;
   isPrimary: boolean;
   colorCode?: string | null;
+};
+
+export type ProductVariant = {
+  id?: string;
+  size: string | null;
+  color: string | null;
+  stock: number;
+  sku: string | null;
+};
+
+export type ProductTaxonomy = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  sortOrder: number;
+};
+
+export type ProductCollection = ProductTaxonomy & {
+  heroImagePath: string | null;
+  isActive: boolean;
 };
 
 export type Product = {
@@ -31,13 +54,24 @@ export type Product = {
   status: ProductStatus;
   featured: boolean;
   price: number;
+  compareAtPrice?: number | null;
+  categoryId?: string | null;
+  categoryLabel?: string | null;
+  collectionId?: string | null;
+  collectionLabel?: string | null;
+  sortOrder?: number;
+  mainImagePath?: string | null;
+  whatsappMessage?: string | null;
   colors: ProductColor[];
   sizes: ProductSize[];
+  variants?: ProductVariant[];
   image: string;
   images: ProductImage[];
   slug: string;
   story: string;
   description: string | null;
+  descriptionShort?: string | null;
+  descriptionLong?: string | null;
   createdAt?: string;
   updatedAt?: string;
 };

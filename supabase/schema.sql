@@ -39,7 +39,7 @@ create table if not exists public.products (
   garment_type_id uuid not null references public.garment_types(id),
   gender text not null check (gender in ('hombre', 'mujer', 'unisex')),
   description text,
-  status text not null default 'draft' check (status in ('draft', 'active', 'hidden')),
+  status text not null default 'draft' check (status in ('draft', 'published', 'sold_out')),
   featured boolean not null default false,
   price integer not null check (price > 0),
   created_at timestamptz not null default now(),
@@ -177,7 +177,7 @@ create policy "Admins manage sizes" on public.sizes for all using (public.is_adm
 drop policy if exists "Public reads active products" on public.products;
 create policy "Public reads active products"
 on public.products for select
-using (status = 'active' or public.is_admin());
+using (status = 'published' or public.is_admin());
 
 drop policy if exists "Admins manage products" on public.products;
 create policy "Admins manage products" on public.products for all using (public.is_admin()) with check (public.is_admin());
@@ -185,17 +185,17 @@ create policy "Admins manage products" on public.products for all using (public.
 drop policy if exists "Public reads active product colors" on public.product_colors;
 create policy "Public reads active product colors"
 on public.product_colors for select
-using (exists (select 1 from public.products p where p.id = product_id and (p.status = 'active' or public.is_admin())));
+using (exists (select 1 from public.products p where p.id = product_id and (p.status = 'published' or public.is_admin())));
 
 drop policy if exists "Public reads active product sizes" on public.product_sizes;
 create policy "Public reads active product sizes"
 on public.product_sizes for select
-using (exists (select 1 from public.products p where p.id = product_id and (p.status = 'active' or public.is_admin())));
+using (exists (select 1 from public.products p where p.id = product_id and (p.status = 'published' or public.is_admin())));
 
 drop policy if exists "Public reads active product images" on public.product_images;
 create policy "Public reads active product images"
 on public.product_images for select
-using (exists (select 1 from public.products p where p.id = product_id and (p.status = 'active' or public.is_admin())));
+using (exists (select 1 from public.products p where p.id = product_id and (p.status = 'published' or public.is_admin())));
 
 drop policy if exists "Admins manage product colors" on public.product_colors;
 create policy "Admins manage product colors" on public.product_colors for all using (public.is_admin()) with check (public.is_admin());

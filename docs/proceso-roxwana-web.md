@@ -3846,3 +3846,527 @@ Version estable objetivo:
 - tag sugerido:
   - `roxwana-google-cart-preview-estable-2026-06-12`;
 - no incluir capturas temporales ni archivos generados locales como `tsconfig.tsbuildinfo`.
+
+## 83. Logo real de ROXWANA en header
+
+Objetivo:
+
+- reemplazar el bloque textual `RW` del header por el logo real entregado por el usuario;
+- guardar el logo como asset reutilizable para futuras secciones;
+- generar formatos optimizados para web.
+
+Fuente recibida:
+
+- `C:/Users/jaell/Desktop/ROXWANA/logos finales principal/logo1.svg`.
+
+Assets generados:
+
+- `public/brand/roxwana-logo.svg`;
+- `public/brand/roxwana-logo-64.png`;
+- `public/brand/roxwana-logo-64.webp`;
+- `public/brand/roxwana-logo-128.png`;
+- `public/brand/roxwana-logo-128.webp`;
+- `public/brand/roxwana-logo-256.png`;
+- `public/brand/roxwana-logo-256.webp`;
+- `public/brand/roxwana-logo-512.png`;
+- `public/brand/roxwana-logo-512.webp`.
+
+Cambios aplicados:
+
+- `components/layout/Header.tsx` usa el logo real en la barra superior;
+- `components/layout/MobileMenu.tsx` usa el logo real en el menu mobile;
+- se uso `next/image` con `roxwana-logo-128.webp` para evitar advertencias de performance por `<img>`.
+
+Problema encontrado:
+
+- el primer intento uso `<img>`;
+- Next marco warning por performance/LCP;
+- se corrigio a `Image` de `next/image`.
+
+Validacion:
+
+- desktop:
+  - logo visible, cuadrado y sin deformarse;
+- mobile:
+  - logo visible en header;
+  - logo visible en menu abierto;
+- no hubo errores de consola;
+- `npm.cmd run lint`, `npx.cmd tsc --noEmit` y `npm.cmd run build` pasaron.
+
+## 84. Imagenes nuevas para entrada Hombre/Mujer
+
+Objetivo:
+
+- reemplazar las imagenes de las tarjetas donde se elige Hombre o Mujer;
+- mantener composicion vertical;
+- generar assets optimizados para desktop y mobile.
+
+Primera tanda recibida:
+
+- `C:/Users/jaell/Downloads/4K.png`;
+- `C:/Users/jaell/Downloads/W4K.png`.
+
+Cambios de primera tanda:
+
+- se genero carpeta:
+  - `public/images/gender-entry/`;
+- se generaron versiones WebP desktop/mobile;
+- se conectaron en `components/home/GenderFilteredDrop.tsx`;
+- se aumento la altura de las cards para que el formato leyera mas vertical;
+- se elimino el cartel superior que tapaba la imagen:
+  - `Asfalto / ruido / noche`;
+  - `Rojo / fuego / calle`.
+
+Segunda tanda recibida:
+
+- `C:/Users/jaell/Downloads/ChatGPT Image 13 jun 2026, 01_15_55 (2).png`;
+- `C:/Users/jaell/Downloads/ChatGPT Image 13 jun 2026, 01_15_57 (7).png`.
+
+Assets definitivos generados:
+
+- `public/images/gender-entry/hombre-urbano-20260613-desktop.webp`;
+- `public/images/gender-entry/hombre-urbano-20260613-mobile.webp`;
+- `public/images/gender-entry/mujer-urbana-20260613-desktop.webp`;
+- `public/images/gender-entry/mujer-urbana-20260613-mobile.webp`.
+
+Problema encontrado:
+
+- al sobrescribir los mismos nombres anteriores, Next seguia mostrando la imagen vieja por cache de optimizacion;
+- para evitar confusiones se generaron nombres nuevos versionados con fecha;
+- luego se apunto el componente a esos nombres nuevos;
+- se eliminaron duplicados viejos dentro de `public/images/gender-entry/`.
+
+Validacion:
+
+- desktop usa los assets `*-desktop.webp`;
+- mobile usa los assets `*-mobile.webp`;
+- ambas cards mantienen `object-cover`;
+- se ajusto `objectPosition`:
+  - Hombre: `50% 12%`;
+  - Mujer: `50% 10%`;
+- no hubo errores de consola;
+- `npm.cmd run lint`, `npx.cmd tsc --noEmit` y `npm.cmd run build` pasaron.
+
+## 85. Textos publicos del home corregidos
+
+Objetivo:
+
+- corregir textos que ya no representaban el flujo real de compra;
+- quitar frases que el usuario marco como incorrectas o feas;
+- dejar el home alineado con carrito, entrega y WhatsApp.
+
+Cambios en portada:
+
+- se cambio `SIN PEDIR PERMISO` por `ESTILO URBANO`;
+- se cambio la bajada por:
+  - `Explora modelos, colores y talles antes de armar tu pedido.`;
+- se elimino el boton `Pedir por WhatsApp`;
+- se cambio el boton `Ver drop` por `Ver catalogo`;
+- el boton sigue apuntando a `#drop-01`, para bajar a las prendas.
+
+Cambios en footer:
+
+- se reemplazo tambien `SIN PEDIR PERMISO` por `ESTILO URBANO`;
+- se mantuvo el link de WhatsApp del footer porque el usuario pidio sacar el boton de portada, no todo WhatsApp del sitio.
+
+Cambios en seccion de flujo:
+
+- se corrigio `DEL MODELO AL MENSAJE`;
+- ahora es `DEL MODELO AL PEDIDO`;
+- el flujo quedo:
+  1. Elegis modelo.
+  2. Seleccionas talle/color.
+  3. Agregas al carrito.
+  4. Completas entrega y WhatsApp.
+- se eliminaron textos viejos como:
+  - `Mandas consulta por WhatsApp`;
+  - `Confirmamos precio y entrega`;
+  - `compra por consulta directa`.
+
+Cambios en encabezado del catalogo:
+
+- se elimino `Drop 01`;
+- se elimino `MODELOS CON CODIGO`;
+- se elimino `MODELOS HOMBRE` / `MODELOS MUJER` como titulo principal de la grilla;
+- el titulo quedo:
+  - `ELEGI TU MODELO`.
+
+Problema encontrado:
+
+- en un momento el texto con acento `ELEGI` quedo con encoding roto como `ELEGÃ`;
+- para estabilizarlo se uso entidad HTML:
+  - `ELEG&Iacute; TU MODELO`;
+- asi el navegador muestra `ELEGI` con acento sin depender de la codificacion del archivo.
+
+Validacion:
+
+- busqueda global confirmo que ya no quedaban:
+  - `SIN PEDIR PERMISO`;
+  - `Pedir por WhatsApp`;
+  - `Ver drop`;
+  - `DEL MODELO AL MENSAJE`;
+  - `consulta directa`;
+- `npm.cmd run lint`, `npx.cmd tsc --noEmit` y `npm.cmd run build` pasaron.
+
+## 86. Selectores de color redondos
+
+Objetivo:
+
+- reemplazar los botones cuadrados con nombre de color;
+- mostrar swatches redondos con el color real de la prenda;
+- mantener accesibilidad con `aria-label` y `title`.
+
+Cambios aplicados:
+
+- se creo `components/product/ColorSwatch.tsx`;
+- se conecto en:
+  - `components/product/ProductSelector.tsx`;
+  - `components/product/ProductQuickActions.tsx`;
+  - `components/product/ProductCard.tsx`;
+  - `components/home/RandomPrintTeaser.tsx`.
+
+Comportamiento:
+
+- en detalle de producto:
+  - circulos grandes para Blanco, Negro, Gris, etc.;
+- en placa rapida de agregar al carrito:
+  - circulos medianos;
+- en tarjetas/listados:
+  - mini circulos;
+- el color seleccionado muestra borde dorado y sombra;
+- el nombre del color ya no aparece visible dentro del boton.
+
+Validacion:
+
+- navegador verifico swatches de detalle:
+  - `48x48`;
+  - `borderRadius: 9999px`;
+  - labels accesibles como `Blanco / Hueso`, `Negro`, `Gris`;
+- no hubo errores de consola;
+- `npm.cmd run lint`, `npx.cmd tsc --noEmit` y `npm.cmd run build` pasaron.
+
+## 87. Hombre/Mujer siempre lado a lado en mobile
+
+Objetivo:
+
+- en vista celular, las cards Hombre y Mujer no deben apilarse una debajo de la otra;
+- deben entrar lado a lado para elegir rapido.
+
+Cambios aplicados:
+
+- en `components/home/GenderFilteredDrop.tsx`, la grilla paso de una columna mobile a:
+  - `grid-cols-2`;
+- se redujo gap mobile:
+  - `gap-2`;
+- se mantuvo el layout especial desktop:
+  - `md:grid-cols-[1.05fr_0.95fr]`;
+- se redujo altura mobile:
+  - `min-h-[390px]`;
+- se mantuvo altura mayor en desktop:
+  - `md:min-h-[760px]`;
+- los titulos `Hombre` y `Mujer` se hicieron mas compactos en mobile:
+  - `text-4xl`;
+- el texto descriptivo de cada card se oculta en mobile para no aplastar la imagen:
+  - `hidden sm:block`;
+- se mantiene `Filtrar drop` como accion visual.
+
+Validacion mobile:
+
+- viewport probado:
+  - `390x844`;
+- tarjeta Hombre:
+  - `x = 16`;
+  - `width = 175`;
+  - `height = 390`;
+- tarjeta Mujer:
+  - `x = 199`;
+  - `width = 175`;
+  - `height = 390`;
+- ambas tienen la misma coordenada vertical:
+  - `sameRow: true`;
+- no hubo errores de consola.
+
+Checks ejecutados:
+
+```bash
+npm.cmd run lint
+npx.cmd tsc --noEmit
+npm.cmd run build
+```
+
+Resultado:
+
+- lint paso;
+- TypeScript paso;
+- build paso.
+
+## 88. Estado estable objetivo 2026-06-13
+
+Estado funcional acumulado de esta version:
+
+- header y menu mobile usan logo real de ROXWANA;
+- assets de logo quedan disponibles para futuros usos;
+- entrada Hombre/Mujer usa imagenes urbanas nuevas;
+- en mobile Hombre/Mujer aparecen lado a lado;
+- portada dice `ESTILO URBANO`;
+- boton principal dice `Ver catalogo` y baja al catalogo;
+- textos del flujo de pedido explican carrito, entrega y WhatsApp;
+- colores de productos se eligen con circulos visuales;
+- catalogo dice `ELEGI TU MODELO`;
+- no quedan capturas temporales ni scripts de verificacion en el commit estable.
+
+Tag estable sugerido:
+
+- `roxwana-home-brand-mobile-catalog-estable-2026-06-13`.
+
+## 89. Admin completo ROXWANA 2026-06-14
+
+Objetivo:
+
+- crear un panel privado real para gestionar catalogo, productos, imagenes, categorias, drops, home, settings y usuarios autorizados;
+- mantener la web publica actual sin redisenar la landing;
+- conservar compatibilidad con el Command Center existente;
+- dejar una base preparada para Supabase real con RLS y Storage.
+
+Rutas creadas o consolidadas:
+
+- `/admin/login`;
+- `/admin`;
+- `/admin/productos`;
+- `/admin/productos/nuevo`;
+- `/admin/productos/[id]`;
+- `/admin/categorias`;
+- `/admin/drops`;
+- `/admin/home`;
+- `/admin/media`;
+- `/admin/settings`;
+- `/admin/usuarios`.
+
+Rutas de compatibilidad:
+
+- `/admin-login` queda redirigido al login nuevo;
+- `/command` y rutas del Command Center quedan redirigidas al nuevo panel;
+- las secciones viejas no se borraron de golpe, se reutilizo la base donde convenia.
+
+Componentes y helpers principales:
+
+- `components/admin/AdminShell.tsx`;
+- `components/admin/AdminStates.tsx`;
+- `components/admin/ConfirmDeleteDialog.tsx`;
+- `lib/admin/form.ts`;
+- `lib/admin/home.ts`;
+- `lib/admin/media.ts`;
+- `lib/admin/taxonomy.ts`;
+- `lib/admin/users.ts`;
+- `lib/home/sections.ts`;
+- `lib/media/publicUrl.ts`;
+- `types/admin.ts`.
+
+Base de datos y Supabase:
+
+- se agrego la migracion:
+  - `supabase/migrations/20260614120000_admin_completo.sql`;
+- se amplio el modelo para roles:
+  - `customer`;
+  - `editor`;
+  - `admin`;
+- se prepararon entidades para:
+  - categorias;
+  - colecciones/drops;
+  - secciones editables de home;
+  - assets de media;
+  - settings ampliados;
+  - productos con galeria, imagen principal, precio anterior, orden, destacado, mensaje de WhatsApp, variantes, stock y SKU;
+- se mantuvo el criterio de que `service_role` solo debe usarse en server/helpers server-only;
+- el cliente sigue usando sesion normal y las reglas de RLS.
+
+Estados de producto:
+
+- se paso a vocabulario claro de admin:
+  - `draft`;
+  - `published`;
+  - `sold_out`;
+- se preservo el catalogo existente con normalizacion desde estados previos como `active` y `hidden`.
+
+Web publica:
+
+- la home puede leer `site_sections`;
+- productos publicos se filtran por `published`;
+- categorias y drops activos quedan disponibles para la experiencia publica;
+- si falta contenido de admin, la web usa fallbacks para no romper el diseno.
+
+## 90. Problema de ingreso al admin y solucion local
+
+Problema detectado:
+
+- se intento entrar con un mail supuesto de admin y el panel mostro:
+  - `Credenciales invalidas.`;
+- ese usuario no existia realmente en Supabase;
+- fue un error tratar esa credencial como si ya estuviera creada;
+- para crear el primer admin real desde el entorno local hacia Supabase hacia falta `SUPABASE_SERVICE_ROLE_KEY`;
+- el `.env.local` tenia la variable sin valor util, por eso no se podia crear el usuario real desde aca.
+
+Decision aplicada para poder probar el panel sin bloquear el trabajo:
+
+- se agrego un acceso local de desarrollo;
+- este acceso funciona solo fuera de produccion;
+- no crea un admin real en Supabase;
+- permite entrar al panel local para revisar UI, rutas, CRUD visual y flujo general.
+
+Credenciales locales de prueba:
+
+- mail:
+  - `admin@roxwana.local`;
+- clave:
+  - `roxwana123`.
+
+Archivos agregados o modificados:
+
+- `lib/auth/devAdmin.ts`;
+- `app/api/auth/dev-admin-login/route.ts`;
+- `app/admin-login/AdminLoginForm.tsx`;
+- `lib/auth/requireAdmin.ts`;
+- `proxy.ts`.
+
+Comportamiento:
+
+- primero se intenta login normal con Supabase;
+- si Supabase rechaza las credenciales y el entorno es local, se intenta el login de desarrollo;
+- si coincide con `admin@roxwana.local` y `roxwana123`, se crea una cookie local:
+  - `roxwana_dev_admin`;
+- `requireAdmin` y `proxy` aceptan esa cookie solo para desarrollo local.
+
+Validacion realizada:
+
+- endpoint local probado:
+  - `/api/auth/dev-admin-login`;
+- respuesta:
+  - `STATUS=200`;
+  - `{"ok":true,"returnUrl":"/admin"}`.
+
+Pendiente para produccion:
+
+- crear el primer admin real en Supabase Dashboard o por SQL seguro;
+- completar `SUPABASE_SERVICE_ROLE_KEY` solo en entorno server;
+- cambiar o eliminar cualquier credencial local antes de publicar;
+- desde el panel, un admin real podra autorizar otros mails como `admin` o `editor`.
+
+## 91. Arreglo de casilleros desbordados en admin
+
+Problema reportado:
+
+- en `/admin/home`, algunos campos se salian del borde del formulario;
+- el caso visible era el bloque del hero, especialmente el campo `Orden`;
+- en anchos intermedios la grilla obligaba columnas demasiado anchas y los inputs no achicaban correctamente.
+
+Causa tecnica:
+
+- algunas grillas internas no tenian suficiente tolerancia para anchos medios;
+- los controles de formulario no tenian una regla global de `min-width: 0`;
+- eso podia provocar overflow horizontal aunque visualmente el panel pareciera entrar.
+
+Cambios aplicados:
+
+- se agrego la clase de superficie:
+  - `admin-surface`;
+- se conecto en:
+  - `components/admin/AdminShell.tsx`;
+- se agregaron reglas CSS en:
+  - `app/globals.css`;
+- reglas principales:
+  - formularios, labels y grillas dentro de admin usan `min-width: 0`;
+  - inputs, selects y textareas usan `width: 100%`, `max-width: 100%` y `min-width: 0`;
+  - textareas quedan con resize vertical;
+- se ajusto la grilla de home en:
+  - `app/admin/(panel)/home/page.tsx`;
+- el bloque `imagen / CTA / orden` ahora usa:
+  - dos columnas en `md`;
+  - tres columnas recien en `xl`;
+  - CTA URL ocupa todo el ancho correcto segun breakpoint.
+
+Verificacion visual:
+
+- se revisaron paginas del admin en desktop, tablet y mobile:
+  - `/admin/home`;
+  - `/admin/categorias`;
+  - `/admin/drops`;
+  - `/admin/media`;
+  - `/admin/usuarios`;
+  - `/admin/productos`;
+- viewports usados:
+  - desktop `1440px`;
+  - tablet `900px`;
+  - mobile `390px`;
+- resultado:
+  - no hubo scroll horizontal de pagina;
+  - no quedaron controles salidos del formulario;
+  - las tablas largas de productos/usuarios quedan dentro de su contenedor con overflow horizontal controlado, que es el comportamiento esperado.
+
+## 92. Validaciones de estabilidad
+
+Checks ejecutados durante la implementacion del admin:
+
+```bash
+npm.cmd run lint
+npx.cmd tsc --noEmit --incremental false --pretty false
+npm.cmd run build
+```
+
+Resultado inicial del admin:
+
+- lint paso;
+- TypeScript paso;
+- build paso.
+
+Checks ejecutados despues del login local y del arreglo de formularios:
+
+```bash
+npm.cmd run lint
+npx.cmd tsc --noEmit --incremental false --pretty false
+```
+
+Resultado:
+
+- lint paso;
+- TypeScript paso;
+- rutas del admin respondieron en local;
+- login local de desarrollo respondio correctamente;
+- verificacion visual confirmo que los casilleros ya no se salen.
+
+## 93. Estado estable objetivo 2026-06-14
+
+Estado funcional acumulado de esta version:
+
+- admin principal vive en `/admin`;
+- login del admin vive en `/admin/login`;
+- acceso local de prueba:
+  - `admin@roxwana.local`;
+  - `roxwana123`;
+- panel permite gestionar:
+  - productos;
+  - categorias;
+  - drops;
+  - secciones controladas de home;
+  - media;
+  - settings;
+  - usuarios autorizados;
+- la web publica queda conectada a productos publicados y secciones editables con fallback;
+- Command Center viejo queda redirigido;
+- se corrigieron desbordes visuales de formularios;
+- se dejo una migracion Supabase completa para aplicar en base real;
+- se documentaron los problemas reales de credenciales para no volver a confundir mail local, usuario real y primer admin de Supabase.
+
+Punto de retorno recomendado:
+
+- commit estable:
+  - `Admin backstage stable version`;
+- tag estable:
+  - `roxwana-admin-backstage-estable-2026-06-14`.
+
+Notas importantes antes de produccion:
+
+- ejecutar la migracion de Supabase en el proyecto real;
+- crear el primer admin real en Supabase;
+- completar variables secretas server-only;
+- revisar que el acceso local de desarrollo no se use como credencial de produccion;
+- probar como visitante, cliente, editor y admin real antes de publicar.

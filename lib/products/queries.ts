@@ -12,21 +12,34 @@ const PRODUCT_SELECT = `
   garment_type_id,
   gender,
   description,
+  description_short,
+  description_long,
   status,
   featured,
   price,
+  compare_at_price,
+  category_id,
+  collection_id,
+  sort_order,
+  main_image_path,
+  whatsapp_message,
   created_at,
   updated_at,
   garment_types(id, code, name, created_at),
+  categories(id, name, slug, description, sort_order, created_at, updated_at),
+  collections(id, name, slug, description, hero_image_path, is_active, sort_order, created_at, updated_at),
   product_colors(colors(id, code, name, hex, created_at)),
   product_sizes(sizes(id, code, name, sort_order)),
-  product_images(id, url, alt, sort_order, is_primary, created_at)
+  product_images(id, url, path, bucket, alt, sort_order, is_primary, file_type, size, created_at),
+  product_variants(id, size, color, stock, sku, created_at, updated_at)
 `;
 
 export type ProductOptions = {
   garmentTypes: ProductOption[];
   colors: ProductOption[];
   sizes: ProductOption[];
+  categories: ProductOption[];
+  collections: ProductOption[];
 };
 
 function canUseMockFallback() {
@@ -71,7 +84,7 @@ async function getProductsFromSupabase(status?: ProductStatus) {
     return [];
   }
 
-  let query = supabase.from("products").select(PRODUCT_SELECT).order("created_at", { ascending: false });
+  let query = supabase.from("products").select(PRODUCT_SELECT).order("sort_order", { ascending: true }).order("created_at", { ascending: false });
 
   if (status) {
     query = query.eq("status", status);
@@ -87,11 +100,11 @@ async function getProductsFromSupabase(status?: ProductStatus) {
 }
 
 export async function getActiveProducts() {
-  return fallbackProducts(await getProductsFromSupabase("active"));
+  return fallbackProducts(await getProductsFromSupabase("published"));
 }
 
 export async function getFeaturedProducts() {
-  const products = fallbackProducts(await getProductsFromSupabase("active"));
+  const products = fallbackProducts(await getProductsFromSupabase("published"));
   const featured = products.filter((product) => product.featured);
   return featured.length > 0 ? featured : products.slice(0, 6);
 }
@@ -104,7 +117,7 @@ export async function getProductBySlug(slug: string, includeHidden = false) {
       let query = supabase.from("products").select(PRODUCT_SELECT).eq("slug", slug);
 
       if (!includeHidden) {
-        query = query.eq("status", "active");
+        query = query.eq("status", "published");
       }
 
       const { data, error } = await query.maybeSingle();
@@ -127,7 +140,7 @@ export async function getProductById(id: string) {
     const supabase = await createSupabaseServerClient();
 
     if (supabase) {
-      const { data, error } = await supabase.from("products").select(PRODUCT_SELECT).eq("id", id).eq("status", "active").maybeSingle();
+      const { data, error } = await supabase.from("products").select(PRODUCT_SELECT).eq("id", id).eq("status", "published").maybeSingle();
 
       if (!error && data) {
         return normalizeProducts([data as unknown as ProductRecord])[0] || null;
@@ -142,7 +155,7 @@ export async function getProductById(id: string) {
   return null;
 }
 
-export async function getProductsForCommand() {
+export async function getProductsForAdmin() {
   if (!isSupabaseConfigured()) {
     return canUseMockFallback() ? mockProducts : [];
   }
@@ -161,17 +174,21 @@ export async function getProductOptions(): Promise<ProductOptions> {
     const supabase = await createSupabaseServerClient();
 
     if (supabase) {
-      const [garments, colors, sizes] = await Promise.all([
+      const [garments, colors, sizes, categories, collections] = await Promise.all([
         supabase.from("garment_types").select("id, code, name").order("name"),
         supabase.from("colors").select("id, code, name, hex").order("name"),
-        supabase.from("sizes").select("id, code, name, sort_order").order("sort_order")
+        supabase.from("sizes").select("id, code, name, sort_order").order("sort_order"),
+        supabase.from("categories").select("id, slug, name").order("sort_order"),
+        supabase.from("collections").select("id, slug, name").eq("is_active", true).order("sort_order")
       ]);
 
       if (!garments.error && !colors.error && !sizes.error) {
         return {
           garmentTypes: (garments.data || []).map((item) => ({ id: item.id, code: item.code, name: item.name })),
           colors: (colors.data || []).map((item) => ({ id: item.id, code: item.code, name: item.name, hex: item.hex })),
-          sizes: (sizes.data || []).map((item) => ({ id: item.id, code: item.code, name: item.name, sortOrder: item.sort_order }))
+          sizes: (sizes.data || []).map((item) => ({ id: item.id, code: item.code, name: item.name, sortOrder: item.sort_order })),
+          categories: categories.error ? [] : (categories.data || []).map((item) => ({ id: item.id, code: item.slug, name: item.name })),
+          collections: collections.error ? [] : (collections.data || []).map((item) => ({ id: item.id, code: item.slug, name: item.name }))
         };
       }
     }
@@ -181,7 +198,9 @@ export async function getProductOptions(): Promise<ProductOptions> {
     return {
       garmentTypes: [],
       colors: [],
-      sizes: []
+      sizes: [],
+      categories: [],
+      collections: []
     };
   }
 
@@ -192,7 +211,12 @@ export async function getProductOptions(): Promise<ProductOptions> {
       { id: "mock-mus", code: "MUS", name: "Musculosa" }
     ],
     colors: roxLisaColors.map((color) => ({ id: `mock-${color.code}`, code: color.code, name: color.label, hex: color.hex })),
-    sizes: roxSizes.map((size, index) => ({ id: `mock-${size}`, code: size, name: size, sortOrder: index + 1 }))
+    sizes: roxSizes.map((size, index) => ({ id: `mock-${size}`, code: size, name: size, sortOrder: index + 1 })),
+    categories: [
+      { id: "mock-rem", code: "remeras", name: "Remeras" },
+      { id: "mock-buz", code: "buzos", name: "Buzos" }
+    ],
+    collections: [{ id: "mock-drop", code: "drop-01", name: "Drop 01" }]
   };
 }
 

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { Menu, Search, ShoppingCart, User } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
@@ -65,9 +66,14 @@ export function Header() {
       <header className="site-header fixed inset-x-0 top-0 z-40 border-b border-bone/10 bg-ink/35 backdrop-blur-md">
         <div className="mx-auto flex h-20 w-[min(1220px,calc(100vw-28px))] items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
-            <span className="grid h-10 w-10 place-items-center border border-roxgold/50 bg-charcoal text-lg font-black text-bone shadow-gold-soft">
-              RW
-            </span>
+            <Image
+              src="/brand/roxwana-logo-128.webp"
+              alt="ROXWANA"
+              width={44}
+              height={44}
+              className="h-11 w-11 shrink-0 rounded-full border border-roxgold/45 bg-bone object-contain shadow-gold-soft"
+              priority
+            />
             <span className="headline text-2xl text-bone">ROXWANA</span>
           </Link>
           <nav className="hidden items-center gap-8 md:flex">

@@ -111,6 +111,26 @@ a {
   scrollbar-width: none;
 }
 
+.admin-surface form,
+.admin-surface form *,
+.admin-surface .grid,
+.admin-surface .grid > *,
+.admin-surface label {
+  min-width: 0;
+}
+
+.admin-surface input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+.admin-surface textarea,
+.admin-surface select {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.admin-surface textarea {
+  resize: vertical;
+}
+
 @keyframes random-print-selection-pop {
   0% {
     transform: scale(0.98);

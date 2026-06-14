@@ -6,6 +6,7 @@ import type { Product } from "@/types/product";
 import type { SiteSettings } from "@/types/settings";
 import { buildSku } from "@/lib/products/buildSku";
 import { addToCartAction } from "@/lib/cart/actions";
+import { ColorSwatch } from "@/components/product/ColorSwatch";
 
 export function ProductSelector({
   product,
@@ -61,18 +62,14 @@ export function ProductSelector({
         <p className="mb-3 text-xs font-bold uppercase tracking-rox text-steel">Color</p>
         <div className="flex flex-wrap gap-3">
           {product.colors.map((item) => (
-            <button
+            <ColorSwatch
               key={item.code}
-              type="button"
-              data-product-color={item.code}
+              color={item}
+              selected={selectedColor === item.code}
+              size="lg"
               onClick={() => onColorChange?.(item.code)}
-              className={`flex items-center gap-3 border px-4 py-3 text-xs font-bold uppercase tracking-rox transition ${
-                selectedColor === item.code ? "border-roxgold text-bone" : "border-bone/12 text-bone/58 hover:border-bone/40"
-              }`}
-            >
-              <span className="h-4 w-4 border border-bone/24" style={{ backgroundColor: item.hex || "#111111" }} />
-              {item.label}
-            </button>
+              dataProductColor={item.code}
+            />
           ))}
         </div>
 

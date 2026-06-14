@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { DEV_ADMIN_COOKIE, isDevAdminEnabled } from "@/lib/auth/devAdmin";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
 
 export async function proxy(request: NextRequest) {
@@ -7,11 +8,27 @@ export async function proxy(request: NextRequest) {
     request
   });
   const config = getSupabasePublicConfig();
+  const pathname = request.nextUrl.pathname;
+  const hasDevAdmin = isDevAdminEnabled() && request.cookies.get(DEV_ADMIN_COOKIE)?.value === "1";
+
+  if (pathname.startsWith("/admin-login")) {
+    const redirectUrl = new URL("/admin/login", request.url);
+    const returnUrl = request.nextUrl.searchParams.get("returnUrl");
+    if (returnUrl) {
+      redirectUrl.searchParams.set("returnUrl", returnUrl.replace(/^\/command/, "/admin"));
+    }
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  if (pathname.startsWith("/command")) {
+    const redirectUrl = new URL(pathname.replace(/^\/command/, "/admin") + request.nextUrl.search, request.url);
+    return NextResponse.redirect(redirectUrl);
+  }
 
   if (!config) {
-    if (request.nextUrl.pathname.startsWith("/command")) {
-      const redirectUrl = new URL("/admin-login", request.url);
-      redirectUrl.searchParams.set("returnUrl", request.nextUrl.pathname + request.nextUrl.search);
+    if (pathname.startsWith("/admin") && !pathname.startsWith("/admin/login") && !hasDevAdmin) {
+      const redirectUrl = new URL("/admin/login", request.url);
+      redirectUrl.searchParams.set("returnUrl", pathname + request.nextUrl.search);
       return NextResponse.redirect(redirectUrl);
     }
 
@@ -35,9 +52,9 @@ export async function proxy(request: NextRequest) {
     data: { user }
   } = await supabase.auth.getUser();
 
-  if (request.nextUrl.pathname.startsWith("/command") && !user) {
-    const redirectUrl = new URL("/admin-login", request.url);
-    redirectUrl.searchParams.set("returnUrl", request.nextUrl.pathname + request.nextUrl.search);
+  if (pathname.startsWith("/admin") && !pathname.startsWith("/admin/login") && !user && !hasDevAdmin) {
+    const redirectUrl = new URL("/admin/login", request.url);
+    redirectUrl.searchParams.set("returnUrl", pathname + request.nextUrl.search);
     return NextResponse.redirect(redirectUrl);
   }
 

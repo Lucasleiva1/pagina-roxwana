@@ -3,8 +3,8 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 const steps = [
   "Elegis modelo",
   "Seleccionas talle/color",
-  "Mandas consulta por WhatsApp",
-  "Confirmamos precio y entrega"
+  "Agregas al carrito",
+  "Completas entrega y WhatsApp"
 ];
 
 export function HowToOrder() {
@@ -13,8 +13,8 @@ export function HowToOrder() {
       <div className="rox-container">
         <SectionHeader
           eyebrow="Como ordenar"
-          title="DEL MODELO AL MENSAJE"
-          description="Flujo simple para vender por consulta directa en esta primera version."
+          title="DEL MODELO AL PEDIDO"
+          description="Elegis la prenda, armas el carrito y mandas el pedido por WhatsApp con tus datos de entrega."
           align="center"
         />
         <div className="mt-12 grid gap-4 md:grid-cols-4">

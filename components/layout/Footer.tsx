@@ -25,7 +25,7 @@ export async function Footer() {
         <div>
           <p className="text-xs font-bold uppercase tracking-rox text-roxgold">Wear it loud</p>
           <div className="headline mt-3 text-7xl leading-none text-bone md:text-9xl">ROXWANA</div>
-          <p className="headline mt-4 max-w-3xl text-3xl leading-none text-bone/90 md:text-5xl">SIN PEDIR PERMISO</p>
+          <p className="headline mt-4 max-w-3xl text-3xl leading-none text-bone/90 md:text-5xl">ESTILO URBANO</p>
           <p className="mt-5 max-w-xl text-sm uppercase tracking-rox text-bone/62">Street rock / graphic wear. Hecho para la calle.</p>
           {!settings.whatsappNumber ? (
             <p className="mt-4 text-xs uppercase tracking-rox text-roxgold/80">

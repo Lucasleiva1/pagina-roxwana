@@ -31,15 +31,15 @@ with rem as (select id from public.garment_types where code = 'REM'),
      buz as (select id from public.garment_types where code = 'BUZ')
 insert into public.products (model_code, name, slug, garment_type_id, gender, description, status, featured, price)
 values
-  ('RXW-REM-STREET004', 'Remera Street 004', 'remera-street-004', (select id from rem), 'mujer', 'Pared de posters, textura rota y presencia de marca para uso diario.', 'active', false, 29000),
+  ('RXW-REM-STREET004', 'Remera Street 004', 'remera-street-004', (select id from rem), 'mujer', 'Pared de posters, textura rota y presencia de marca para uso diario.', 'published', false, 29000),
   ('RXW-REM-SKULL005', 'Remera Skull 005', 'remera-skull-005', (select id from rem), 'unisex', 'Drop oscuro con filo rockero, rojo medido y detalle dorado.', 'draft', false, 29000),
   ('RXW-BUZ-HEAVY001', 'Buzo Heavy 001', 'buzo-heavy-001', (select id from buz), 'unisex', 'Buzo pesado con identidad ROXWANA, pensado para la calle fria.', 'draft', false, 29000),
-  ('RXW-REM-NEG001', 'Remera Boy Band Style 001', 'remera-boy-band-style-001', (select id from rem), 'hombre', 'Remera negra de hombre con grafica ROXWANA Boy Band Style, pensada para una primera prueba real de producto, color negro y galeria completa.', 'active', true, 29000),
-  ('RXW-REM-FLM001', 'Remera Flame Fearless 001', 'remera-flame-fearless-001', (select id from rem), 'mujer', 'Remera blanca de mujer con grafica ROXWANA flame rosa y negro, galeria con vista producto, frente con modelo y espalda.', 'active', true, 29000),
-  ('RXW-REM-LISAM001', 'Remera Lisa Mujer', 'remera-lisa-mujer-001', (select id from rem), 'mujer', 'Remera lisa ROXWANA para mujer, disponible en blanco, negro y gris con vista real por color.', 'active', true, 19000),
-  ('RXW-REM-LISAH002', 'Remera Lisa Hombre 002', 'remera-lisa-hombre-002', (select id from rem), 'hombre', 'Remera lisa ROXWANA para hombre, disponible en blanco, negro y gris con vistas de producto y modelo.', 'active', true, 19000),
-  ('RXW-REM-SRK001', 'Remera Street Rock 001', 'remera-street-rock-001', (select id from rem), 'hombre', 'Remera negra de hombre con grafica ROXWANA Street Rock, galeria completa con producto, calle, frente, espalda y lateral.', 'active', true, 29000),
-  ('RXW-REM-LISA001', 'Remera Lisa', 'remera-lisa-001', (select id from rem), 'hombre', 'Remera lisa ROXWANA para hombre, pensada para elegir color con referencia visual clara antes de sumar al carrito.', 'active', true, 19000)
+  ('RXW-REM-NEG001', 'Remera Boy Band Style 001', 'remera-boy-band-style-001', (select id from rem), 'hombre', 'Remera negra de hombre con grafica ROXWANA Boy Band Style, pensada para una primera prueba real de producto, color negro y galeria completa.', 'published', true, 29000),
+  ('RXW-REM-FLM001', 'Remera Flame Fearless 001', 'remera-flame-fearless-001', (select id from rem), 'mujer', 'Remera blanca de mujer con grafica ROXWANA flame rosa y negro, galeria con vista producto, frente con modelo y espalda.', 'published', true, 29000),
+  ('RXW-REM-LISAM001', 'Remera Lisa Mujer', 'remera-lisa-mujer-001', (select id from rem), 'mujer', 'Remera lisa ROXWANA para mujer, disponible en blanco, negro y gris con vista real por color.', 'published', true, 19000),
+  ('RXW-REM-LISAH002', 'Remera Lisa Hombre 002', 'remera-lisa-hombre-002', (select id from rem), 'hombre', 'Remera lisa ROXWANA para hombre, disponible en blanco, negro y gris con vistas de producto y modelo.', 'published', true, 19000),
+  ('RXW-REM-SRK001', 'Remera Street Rock 001', 'remera-street-rock-001', (select id from rem), 'hombre', 'Remera negra de hombre con grafica ROXWANA Street Rock, galeria completa con producto, calle, frente, espalda y lateral.', 'published', true, 29000),
+  ('RXW-REM-LISA001', 'Remera Lisa', 'remera-lisa-001', (select id from rem), 'hombre', 'Remera lisa ROXWANA para hombre, pensada para elegir color con referencia visual clara antes de sumar al carrito.', 'published', true, 19000)
 on conflict (model_code) do update set
   name = excluded.name,
   slug = excluded.slug,

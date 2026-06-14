@@ -9,7 +9,10 @@ export function getFallbackSiteSettings(): SiteSettings {
     whatsappEnabled: true,
     fallbackContact: "Escribinos por redes y te respondemos con disponibilidad.",
     instagramUrl: "https://instagram.com",
-    tiktokUrl: "https://tiktok.com"
+    tiktokUrl: "https://tiktok.com",
+    contactEmail: null,
+    globalCtaLabel: "Ver catalogo",
+    globalCtaUrl: "/productos"
   };
 }
 
@@ -38,6 +41,9 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     fallbackContact: data.fallback_contact,
     instagramUrl: data.instagram_url,
     tiktokUrl: data.tiktok_url,
+    contactEmail: data.contact_email,
+    globalCtaLabel: data.global_cta_label,
+    globalCtaUrl: data.global_cta_url,
     createdAt: data.created_at,
     updatedAt: data.updated_at
   };

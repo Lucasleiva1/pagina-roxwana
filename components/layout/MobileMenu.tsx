@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { X } from "lucide-react";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
@@ -20,8 +21,16 @@ export function MobileMenu({ isOpen, onClose, cartCount }: { isOpen: boolean; on
   return (
     <div className="fixed inset-0 z-50 bg-ink md:hidden">
       <div className="flex h-20 items-center justify-between px-5">
-        <Link href="/" onClick={onClose} className="headline text-3xl text-bone">
-          RXW
+        <Link href="/" onClick={onClose} className="flex items-center gap-3">
+          <Image
+            src="/brand/roxwana-logo-128.webp"
+            alt="ROXWANA"
+            width={48}
+            height={48}
+            className="h-12 w-12 shrink-0 rounded-full border border-roxgold/45 bg-bone object-contain shadow-gold-soft"
+            priority
+          />
+          <span className="headline text-3xl text-bone">ROXWANA</span>
         </Link>
         <button
           type="button"

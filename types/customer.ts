@@ -8,7 +8,7 @@ export type CustomerProfile = {
   phone: string | null;
   avatarUrl: string | null;
   marketingConsent: boolean;
-  role: "customer" | "admin";
+  role: "customer" | "editor" | "admin";
   createdAt: string;
   updatedAt: string;
 };

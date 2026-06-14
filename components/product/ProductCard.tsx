@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Product } from "@/types/product";
+import { ColorSwatch } from "@/components/product/ColorSwatch";
 import { ProductQuickActions } from "@/components/product/ProductQuickActions";
 import { ProductResponsiveImage } from "@/components/product/ProductResponsiveImage";
 import { formatPrice } from "@/lib/products/formatPrice";
@@ -38,12 +39,7 @@ export function ProductCard({ product }: { product: Product }) {
           </div>
           <div className="flex gap-1.5 pt-1">
             {product.colors.map((color) => (
-              <span
-                key={color.code}
-                className="h-4 w-4 border border-bone/30"
-                style={{ backgroundColor: color.hex || "#111111" }}
-                title={color.label}
-              />
+              <ColorSwatch key={color.code} color={color} size="sm" />
             ))}
           </div>
         </div>
