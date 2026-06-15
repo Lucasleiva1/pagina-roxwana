@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { requireStaff } from "@/lib/auth/requireAdmin";
 import type { Database } from "@/types/supabase";
 import type { ProductGender, ProductStatus } from "@/types/product";
@@ -332,13 +332,27 @@ function revalidateProductSurfaces(slug?: string) {
   }
 }
 
-export async function createProductAction(formData: FormData) {
+async function createProductMutationClient() {
   await requireStaff();
-  const supabase = createSupabaseAdminClient();
+  const supabase = await createSupabaseServerClient();
 
   if (!supabase) {
-    throw new Error("Supabase admin no esta configurado.");
+    throw new Error("Supabase no esta configurado.");
   }
+
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error("Para guardar productos inicia sesion con un usuario admin real de Supabase.");
+  }
+
+  return supabase;
+}
+
+export async function createProductAction(formData: FormData) {
+  const supabase = await createProductMutationClient();
 
   const { payload, colorIds, sizeIds, variants } = validateProductForm(formData);
   const { data, error } = await supabase.from("products").insert(payload).select("id, slug").single();
@@ -356,12 +370,7 @@ export async function createProductAction(formData: FormData) {
 }
 
 export async function updateProductAction(formData: FormData) {
-  await requireStaff();
-  const supabase = createSupabaseAdminClient();
-
-  if (!supabase) {
-    throw new Error("Supabase admin no esta configurado.");
-  }
+  const supabase = await createProductMutationClient();
 
   const id = value(formData, "id");
   const { payload, colorIds, sizeIds, variants } = validateProductForm(formData);
@@ -393,8 +402,7 @@ export async function updateProductAction(formData: FormData) {
 }
 
 export async function changeProductStatusAction(formData: FormData) {
-  await requireStaff();
-  const supabase = createSupabaseAdminClient();
+  const supabase = await createProductMutationClient();
   const id = value(formData, "id");
   const status = assertChoice<ProductStatus>(value(formData, "status"), PRODUCT_STATUSES, "draft");
 
@@ -407,8 +415,7 @@ export async function changeProductStatusAction(formData: FormData) {
 }
 
 export async function toggleFeaturedProductAction(formData: FormData) {
-  await requireStaff();
-  const supabase = createSupabaseAdminClient();
+  const supabase = await createProductMutationClient();
   const id = value(formData, "id");
   const featured = value(formData, "featured") === "true";
 
@@ -421,8 +428,7 @@ export async function toggleFeaturedProductAction(formData: FormData) {
 }
 
 export async function deleteProductAction(formData: FormData) {
-  await requireStaff();
-  const supabase = createSupabaseAdminClient();
+  const supabase = await createProductMutationClient();
   const id = value(formData, "id");
 
   if (!supabase || !id) {
@@ -436,8 +442,7 @@ export async function deleteProductAction(formData: FormData) {
 }
 
 export async function duplicateProductAction(formData: FormData) {
-  await requireStaff();
-  const supabase = createSupabaseAdminClient();
+  const supabase = await createProductMutationClient();
   const id = value(formData, "id");
 
   if (!supabase || !id) {

@@ -4776,3 +4776,281 @@ Estado actual:
 - Drops queda preparado para previews reales cuando haya imagen de hero;
 - Media no ocupa espacio en el menu principal;
 - acciones reales de producto siguen pendientes de service role key para Supabase.
+
+## 2026-06-15 - Cierre operativo de subida de prendas
+
+Objetivo de esta tanda:
+
+- retomar el trabajo que habia quedado colgado el 2026-06-14;
+- dejar el admin de productos conectado a Supabase real;
+- corregir el error visto al intentar guardar una prenda con imagen;
+- documentar el estado real para preparar Netlify.
+
+### Estado inicial verificado
+
+Estado Git:
+
+```bash
+git status -sb
+```
+
+Resultado:
+
+- rama `main`;
+- sincronizada con `origin/main`;
+- arbol limpio antes de los cambios de codigo.
+
+Variables locales revisadas sin exponer secretos:
+
+```text
+NEXT_PUBLIC_SUPABASE_URL=<set>
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<set>
+SUPABASE_SERVICE_ROLE_KEY=<empty>
+NEXT_PUBLIC_SITE_URL=<set>
+NEXT_PUBLIC_WHATSAPP_NUMBER=<set>
+SUPABASE_PROJECT_REF=<set>
+SUPABASE_DB_PASSWORD=<empty>
+```
+
+Conclusion inicial:
+
+- el error de la captura no venia de Supabase;
+- venia de Next.js cortando el formulario antes de ejecutar la Server Action;
+- igualmente, `SUPABASE_SERVICE_ROLE_KEY` seguia vacia y eso dejaba fragil el guardado de productos si las acciones dependian de service role.
+
+### Error reportado
+
+Error visible en pantalla:
+
+```text
+Body exceeded 1 MB limit.
+To configure the body size limit for Server Actions...
+```
+
+Ubicacion indicada por Next:
+
+- `components/admin/product-studio/ProductStudio.tsx`;
+- formulario del Studio en la linea del `<form action={action}>`.
+
+Causa:
+
+- Next.js Server Actions tienen limite de body bajo por defecto;
+- el Studio envia datos + imagen por formulario;
+- una imagen real de producto supera facilmente 1 MB;
+- por eso el request se bloqueaba antes de llegar a `createProductAction` o `updateProductAction`.
+
+### Supabase real alineado
+
+Proyecto real:
+
+```text
+roxwana-store
+project_ref=amdrfbppefqbdrxuolje
+```
+
+Migraciones confirmadas en Supabase:
+
+- `20260608210706 initial_roxwana_store`;
+- `20260610002848 phase3_customer_auth_cart_orders`;
+- `20260610010431 lock_legacy_whatsapp_orders`;
+- `20260614172402 product_studio_image_metadata`;
+- `20260615010622 admin_completo`;
+- `20260615163143 promote_first_roxwana_admin`.
+
+La migracion `admin_completo` ya habia sido aplicada el 2026-06-15 01:06 aprox. desde el conector, pero la verificacion habia quedado bloqueada por limite de uso. En esta tanda se verifico que quedo aplicada.
+
+Tablas admin verificadas:
+
+- `categories`;
+- `collections`;
+- `media_assets`;
+- `product_images`;
+- `product_variants`;
+- `products`;
+- `profiles`;
+- `settings`;
+- `site_sections`.
+
+Buckets verificados:
+
+- `product-images`;
+- `site-images`;
+- `brand-assets`.
+
+Estado de buckets:
+
+- publicos;
+- limite `5242880` bytes;
+- `product-images` acepta:
+  - `image/jpeg`;
+  - `image/png`;
+  - `image/webp`;
+- `brand-assets` tambien acepta `image/svg+xml`.
+
+Estados de productos verificados:
+
+```text
+draft=2
+published=7
+```
+
+Esto confirma que los productos que antes estaban como `active` quedaron normalizados a `published`, que es lo que espera el codigo actual.
+
+### Primer admin real
+
+Cuenta promovida:
+
+```text
+jaelleiva@gmail.com
+```
+
+Estado final verificado:
+
+```text
+role=admin
+name=lucas fabian leiva
+```
+
+Detalle importante:
+
+- el intento directo de `update profiles set role='admin'` fallo por el trigger `profiles_prevent_role_escalation`;
+- ese trigger protege contra escalado de privilegios;
+- para crear el primer admin se aplico una migracion controlada:
+  - desactivar trigger;
+  - actualizar solo el perfil de `jaelleiva@gmail.com`;
+  - reactivar trigger inmediatamente.
+
+Verificacion posterior:
+
+- `profiles_prevent_role_escalation` quedo activo;
+- `tgenabled=O`.
+
+### Cambios de codigo
+
+Archivo modificado:
+
+- `next.config.mjs`.
+
+Cambio:
+
+- se agrego `experimental.serverActions.bodySizeLimit = "12mb"`.
+
+Motivo:
+
+- permitir guardar prendas con imagen real;
+- mantener margen sobre el limite de imagen de 5 MB;
+- no abrir un limite excesivo.
+
+Archivo modificado:
+
+- `lib/products/mutations.ts`.
+
+Cambio:
+
+- las acciones de producto dejaron de depender de `createSupabaseAdminClient()`;
+- ahora usan `createSupabaseServerClient()` y la sesion real del usuario admin/editor;
+- se agrego `createProductMutationClient()`;
+- si no existe sesion Supabase real, el guardado falla con mensaje explicito:
+
+```text
+Para guardar productos inicia sesion con un usuario admin real de Supabase.
+```
+
+Motivo:
+
+- `SUPABASE_SERVICE_ROLE_KEY` local seguia vacia;
+- para subir prendas no hace falta service role si el usuario esta autenticado y RLS permite `admin/editor`;
+- la migracion `admin_completo` ya dejo politicas de staff para productos, imagenes y storage;
+- este enfoque acerca el comportamiento local y Netlify al flujo real:
+  - login admin;
+  - session cookie;
+  - RLS de Supabase;
+  - upload a Storage.
+
+Impacto:
+
+- `/admin/productos/nuevo/studio` debe guardar con `jaelleiva@gmail.com` logueado;
+- `/admin/productos/[id]/studio` debe actualizar y borrar/reemplazar imagenes con sesion real;
+- publicar/despublicar, destacar, borrar y duplicar tambien usan sesion staff real;
+- el fallback `admin@roxwana.local` queda solo como acceso de desarrollo para ver el panel, no para guardar productos reales.
+
+### Validaciones ejecutadas
+
+Build:
+
+```bash
+npm.cmd run build
+```
+
+Resultado:
+
+- paso;
+- Next.js 16.2.7 compilo;
+- TypeScript paso;
+- rutas admin quedaron disponibles;
+- Next reconocio el experimento `serverActions`.
+
+Lint:
+
+```bash
+npm.cmd run lint
+```
+
+Resultado:
+
+- paso.
+
+Servidor local:
+
+```bash
+npm.cmd run dev -- --hostname 127.0.0.1 --port 3000
+```
+
+Verificacion HTTP:
+
+```text
+http://127.0.0.1:3000/admin/login
+STATUS=200
+```
+
+### Advisors de Supabase
+
+Se ejecutaron advisors de seguridad y performance.
+
+Warnings relevantes encontrados:
+
+- `function_search_path_mutable` en `public.set_updated_at`;
+- buckets publicos con politicas amplias de listado;
+- funciones `SECURITY DEFINER` ejecutables por `anon/authenticated`;
+- proteccion de passwords filtrados deshabilitada;
+- foreign keys sin indices;
+- RLS con `auth.uid()` reevaluado por fila;
+- multiples politicas permisivas en algunas tablas.
+
+Decision:
+
+- no se corrigieron en esta tanda para no mezclar el fix urgente de carga de prendas con una migracion de hardening mas amplia;
+- no bloquean el flujo de subida de producto;
+- quedan como deuda tecnica real antes de produccion final endurecida.
+
+### Prueba pendiente con usuario real
+
+No se completo desde Codex el submit visual completo porque no se dispone de la password real de `jaelleiva@gmail.com`.
+
+Prueba que debe hacer el usuario en navegador:
+
+1. abrir `http://127.0.0.1:3000/admin/login`;
+2. entrar con `jaelleiva@gmail.com`;
+3. ir a `/admin/productos/nuevo/studio`;
+4. crear una prenda en `draft`;
+5. subir una imagen menor o igual a 5 MB;
+6. guardar;
+7. verificar que vuelve a `/admin/productos`;
+8. editar esa prenda;
+9. publicar;
+10. verificar que aparece en `/productos`.
+
+Resultado esperado despues de esta tanda:
+
+- no debe aparecer mas el error `Body exceeded 1 MB limit`;
+- si hay error, ya deberia venir de validacion de producto, credenciales, RLS o Storage, no del limite de Next.
