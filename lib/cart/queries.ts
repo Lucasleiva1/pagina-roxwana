@@ -5,14 +5,55 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Cart, CartItem, CustomerAddress, CustomerProfile } from "@/types/customer";
 import type { Database } from "@/types/supabase";
 import { requireCustomer, getCurrentProfile } from "@/lib/auth/session";
+import { getPublicMediaUrl } from "@/lib/media/publicUrl";
 import { getSiteSettings } from "@/lib/settings/getSiteSettings";
 import { buildWhatsAppUrl } from "@/lib/whatsapp/buildWhatsAppUrl";
 
 type CartRow = Database["public"]["Tables"]["carts"]["Row"];
 type CartItemRow = Database["public"]["Tables"]["cart_items"]["Row"];
 type AddressRow = Database["public"]["Tables"]["customer_addresses"]["Row"];
+type ProductImageRow = Pick<Database["public"]["Tables"]["product_images"]["Row"], "product_id" | "url" | "path" | "bucket" | "is_primary" | "sort_order">;
+type ProductMainImageRow = Pick<Database["public"]["Tables"]["products"]["Row"], "id" | "main_image_path">;
 
-function mapCartItem(row: CartItemRow): CartItem {
+function productImageUrl(image: ProductImageRow) {
+  return image.url || getPublicMediaUrl(image.path, image.bucket || "product-images");
+}
+
+async function getCartItemImageMap(supabase: SupabaseClient<Database>, items: CartItemRow[]) {
+  const productIds = Array.from(new Set(items.map((item) => item.product_id).filter((id): id is string => Boolean(id))));
+  const imageByProductId = new Map<string, string>();
+
+  if (productIds.length === 0) {
+    return imageByProductId;
+  }
+
+  const [imagesResult, productsResult] = await Promise.all([
+    supabase.from("product_images").select("product_id, url, path, bucket, is_primary, sort_order").in("product_id", productIds).order("sort_order", { ascending: true }),
+    supabase.from("products").select("id, main_image_path").in("id", productIds)
+  ]);
+
+  const images = ((imagesResult.data || []) as ProductImageRow[]).sort((a, b) => Number(b.is_primary) - Number(a.is_primary) || a.sort_order - b.sort_order);
+
+  for (const image of images) {
+    const url = productImageUrl(image);
+
+    if (url && !imageByProductId.has(image.product_id)) {
+      imageByProductId.set(image.product_id, url);
+    }
+  }
+
+  for (const product of (productsResult.data || []) as ProductMainImageRow[]) {
+    const url = getPublicMediaUrl(product.main_image_path, "product-images");
+
+    if (url && !imageByProductId.has(product.id)) {
+      imageByProductId.set(product.id, url);
+    }
+  }
+
+  return imageByProductId;
+}
+
+function mapCartItem(row: CartItemRow, imageByProductId: Map<string, string>): CartItem {
   return {
     id: row.id,
     cartId: row.cart_id,
@@ -24,17 +65,18 @@ function mapCartItem(row: CartItemRow): CartItem {
     quantity: row.quantity,
     sku: row.sku,
     priceSnapshot: row.price_snapshot,
+    imageUrl: row.product_id ? imageByProductId.get(row.product_id) || null : null,
     createdAt: row.created_at,
     updatedAt: row.updated_at
   };
 }
 
-function mapCart(row: CartRow, items: CartItemRow[]): Cart {
+function mapCart(row: CartRow, items: CartItemRow[], imageByProductId: Map<string, string>): Cart {
   return {
     id: row.id,
     userId: row.user_id,
     status: row.status,
-    items: items.map(mapCartItem),
+    items: items.map((item) => mapCartItem(item, imageByProductId)),
     createdAt: row.created_at,
     updatedAt: row.updated_at
   };
@@ -94,10 +136,13 @@ export async function getCartByRow(supabase: SupabaseClient<Database>, cartRow: 
   const { data, error } = await supabase.from("cart_items").select("*").eq("cart_id", cartRow.id).order("created_at", { ascending: true });
 
   if (error) {
-    return mapCart(cartRow, []);
+    return mapCart(cartRow, [], new Map());
   }
 
-  return mapCart(cartRow, data || []);
+  const items = data || [];
+  const imageByProductId = await getCartItemImageMap(supabase, items);
+
+  return mapCart(cartRow, items, imageByProductId);
 }
 
 export async function getActiveCartForUser(supabase: SupabaseClient<Database>, userId: string) {

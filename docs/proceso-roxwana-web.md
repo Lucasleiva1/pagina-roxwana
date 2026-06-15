@@ -5054,3 +5054,237 @@ Resultado esperado despues de esta tanda:
 
 - no debe aparecer mas el error `Body exceeded 1 MB limit`;
 - si hay error, ya deberia venir de validacion de producto, credenciales, RLS o Storage, no del limite de Next.
+
+## 2026-06-15 - Cierre estable de carga real, visibilidad publica y carrito visual
+
+### Objetivo de la tanda
+
+Cerrar una version estable despues de probar carga real de prendas desde el admin:
+
+- dejar un archivo de ficha reutilizable para autocompletar el Product Studio;
+- hacer que los productos publicados aparezcan adelante sin depender de destacados;
+- permitir que el filtro Hombre/Mujer se pueda deseleccionar;
+- simplificar los circulos de color de producto;
+- mostrar la imagen principal del producto dentro del carrito;
+- validar localmente;
+- guardar el estado en GitHub como checkpoint estable.
+
+### Estado inicial detectado
+
+El admin ya podia crear y publicar una prenda real con imagen.
+
+Se creo una ficha local para pruebas:
+
+```text
+ficha-producto-prueba-studio-roxwana.txt
+```
+
+Esa ficha usa codigos reales del catalogo:
+
+- prenda `REM`;
+- categoria `rem`;
+- colores `NEG`, `BLA`, `GRI`;
+- talles `S`, `M`, `L`, `XL`;
+- estado inicial `draft`.
+
+La imagen no se incluye en el archivo porque se sube manualmente desde el Studio.
+
+### Problema 1: producto publicado que no aparecia adelante
+
+Sintoma:
+
+- el producto se habia creado;
+- se habia publicado;
+- tenia imagen;
+- pero el usuario no lo veia en la pagina principal.
+
+Verificacion realizada:
+
+- se consulto Supabase real;
+- el producto `RXW-REM-TEST-JAEL-0615` existia;
+- estaba en `status = published`;
+- tenia imagen primaria en bucket `product-images`;
+- tenia categoria, prenda, colores, talles y variantes.
+
+Causa:
+
+- la home usaba `getFeaturedProducts()`;
+- cuando habia productos destacados, la grilla principal privilegiaba ese subconjunto;
+- un producto publicado pero no destacado podia quedar invisible en el primer bloque.
+
+Solucion:
+
+- `app/page.tsx` dejo de pedir `getFeaturedProducts()`;
+- la home ahora usa `getActiveProducts()`;
+- todos los productos publicados entran en la grilla principal;
+- `getFeaturedProducts()` se neutralizo para devolver los activos publicados y evitar que una reutilizacion futura vuelva a esconder productos.
+
+Archivos modificados:
+
+- `app/page.tsx`;
+- `lib/products/queries.ts`.
+
+Resultado:
+
+- si el usuario no filtra por Hombre/Mujer, se muestran todos los publicados;
+- el producto de prueba aparece en la home, en `/productos` y en su detalle.
+
+### Problema 2: filtro Hombre/Mujer no se podia deseleccionar
+
+Sintoma:
+
+- al tocar `Hombre`, la grilla filtraba por hombre;
+- para salir de esa vista habia que tocar `Mujer` o cambiar de contexto;
+- no habia forma directa de volver a `todos` tocando el mismo filtro.
+
+Solucion:
+
+- `components/home/GenderFilteredDrop.tsx` ahora trata Hombre/Mujer como toggle;
+- si se toca una opcion no activa, filtra;
+- si se toca la misma opcion activa, la deselecciona;
+- al deseleccionar vuelve a mostrar todos los productos publicados;
+- se elimino el limite artificial de `slice(0, 8)` en esa grilla.
+
+Validacion con navegador:
+
+```text
+inicio: 8 cards
+click Hombre: 4 cards
+click Hombre otra vez: 8 cards
+```
+
+Capturas generadas durante la verificacion:
+
+- `home-all-products-initial.png`;
+- `home-all-products-hombre.png`;
+- `home-all-products-back-to-all.png`.
+
+### Problema 3: swatches de color con doble circulo
+
+Sintoma:
+
+- el selector de color mostraba un circulo dentro de otro;
+- el seleccionado parecia tener un aro externo adicional;
+- visualmente se veia pesado y poco premium.
+
+Solucion:
+
+- `components/product/ColorSwatch.tsx` fue simplificado;
+- el boton ahora es el propio circulo de color;
+- no hay contenedor circular externo;
+- el seleccionado tiene borde fino dorado y glow suave;
+- el foco accesible mantiene feedback visual sin duplicar el aro.
+
+Impacto:
+
+- tarjetas de producto;
+- detalle de producto;
+- acciones rapidas;
+- cualquier uso compartido de `ColorSwatch`.
+
+Validacion:
+
+- se genero captura `color-swatch-single-circle.png`;
+- `npm.cmd run lint` paso;
+- `npm.cmd run build` paso.
+
+### Problema 4: carrito sin vista previa de imagen
+
+Sintoma:
+
+- al agregar una prenda al carrito, el item mostraba texto, SKU, color, talle, cantidad y precio;
+- no mostraba la imagen principal de lo que el cliente estaba comprando;
+- esto hacia menos claro el control visual del pedido.
+
+Decision tecnica:
+
+- no se agrego una nueva columna ni migracion;
+- se aprovecho que `cart_items` ya guarda `product_id`;
+- al leer el carrito, se buscan imagenes asociadas al producto en `product_images`;
+- se prefiere la imagen `is_primary`;
+- si no hay imagen primaria, se usa la primera por orden;
+- si hiciera falta, se usa `products.main_image_path` convertido a URL publica de `product-images`;
+- si un item viejo no tiene imagen o no tiene `product_id`, se muestra placeholder `RXW`.
+
+Archivos modificados:
+
+- `types/customer.ts`;
+- `lib/cart/queries.ts`;
+- `app/carrito/page.tsx`.
+
+Implementacion:
+
+- `CartItem` recibio `imageUrl: string | null`;
+- `getCartByRow()` ahora adjunta un mapa `product_id -> imageUrl`;
+- `/carrito` muestra una miniatura vertical con aspect ratio de producto;
+- la miniatura usa `next/image`;
+- el layout se ajusto para desktop y mobile con `minmax(0, 1fr)` y columnas estables;
+- se mantiene fallback visual si falta imagen.
+
+Validacion:
+
+```bash
+npm.cmd run lint
+npx.cmd tsc --noEmit --incremental false --pretty false
+npm.cmd run build
+```
+
+Resultados:
+
+- lint paso;
+- TypeScript paso;
+- build paso.
+
+Limitacion de prueba:
+
+- Codex no hizo una compra visual completa con una cuenta real porque no dispone de password/sesion real del usuario;
+- la validacion se realizo a nivel de tipos, build y flujo de datos;
+- el comportamiento esperado es que cualquier item con `product_id` valido muestre la imagen principal cargada en `product_images`.
+
+### Problemas encontrados durante la tanda
+
+1. El producto no estaba roto: el problema era de criterio visual en la home.
+   - La base tenia el producto publicado correctamente.
+   - La home seguia pensando en destacados.
+
+2. El filtro de genero era de una sola direccion.
+   - Seleccionaba Hombre/Mujer.
+   - No tenia estado de salida hacia `todos`.
+
+3. La primera captura automatizada del swatch fallo.
+   - El selector `article[data-product-model]` apuntaba a muchas tarjetas.
+   - Playwright rechazo el selector por `strict mode violation`.
+   - Se corrigio apuntando a una tarjeta concreta:
+
+```text
+article[data-product-model="RXW-REM-TEST-JAEL-0615"]
+```
+
+4. El carrito no guardaba imagen en `cart_items`.
+   - Se resolvio sin migracion, consultando la imagen por `product_id`.
+   - Esto evita guardar snapshots visuales duplicados por ahora.
+
+### Estado final de la version
+
+Estado funcional:
+
+- el admin puede crear prendas con ficha y subir imagen;
+- el producto publicado aparece en la tienda;
+- la home muestra todos los publicados por defecto;
+- Hombre/Mujer filtra y permite volver a todos;
+- los swatches son de un solo circulo;
+- el carrito muestra miniatura de producto;
+- los cambios pasaron lint, TypeScript y build.
+
+Comandos de validacion ejecutados:
+
+```bash
+npm.cmd run lint
+npx.cmd tsc --noEmit --incremental false --pretty false
+npm.cmd run build
+```
+
+GitHub:
+
+- esta tanda se prepara para guardarse como version estable con commit y tag;
+- no se registran claves privadas ni valores sensibles en esta documentacion.

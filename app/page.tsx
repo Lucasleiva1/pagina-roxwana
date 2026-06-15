@@ -5,12 +5,12 @@ import { OrderTimeline } from "@/components/home/OrderTimeline";
 import { PrintWallMarquee } from "@/components/home/PrintWallMarquee";
 import { RandomPrintTeaser } from "@/components/home/RandomPrintTeaser";
 import { getHomeSection, getHomeSections } from "@/lib/home/sections";
-import { getActiveProducts, getFeaturedProducts } from "@/lib/products/queries";
+import { getActiveProducts } from "@/lib/products/queries";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const [featuredProducts, randomProducts, sections] = await Promise.all([getFeaturedProducts(), getActiveProducts(), getHomeSections()]);
+  const [products, sections] = await Promise.all([getActiveProducts(), getHomeSections()]);
   const dropSection = getHomeSection(sections, "featured_drop");
   const productsSection = getHomeSection(sections, "featured_products");
   const rendered: ReactNode[] = [];
@@ -23,15 +23,15 @@ export default async function Home() {
 
     if ((section.key === "featured_drop" || section.key === "featured_products") && !productBlockRendered) {
       productBlockRendered = true;
-      rendered.push(<GenderFilteredDrop key="featured-products" products={featuredProducts} dropSection={dropSection} productsSection={productsSection} />);
+      rendered.push(<GenderFilteredDrop key="featured-products" products={products} dropSection={dropSection} productsSection={productsSection} />);
     }
 
     if (section.key === "brand_statement") {
-      rendered.push(<PrintWallMarquee key={section.key} products={randomProducts} />);
+      rendered.push(<PrintWallMarquee key={section.key} products={products} />);
     }
 
     if (section.key === "final_cta") {
-      rendered.push(<RandomPrintTeaser key={section.key} products={randomProducts} section={section} />);
+      rendered.push(<RandomPrintTeaser key={section.key} products={products} section={section} />);
     }
 
     if (section.key === "how_to_order") {

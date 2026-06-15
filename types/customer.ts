@@ -28,6 +28,7 @@ export type CartItem = {
   quantity: number;
   sku: string;
   priceSnapshot: number | null;
+  imageUrl: string | null;
   createdAt: string;
   updatedAt: string;
 };

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { CartCountSync } from "@/components/cart/CartCountSync";
 import { CartCheckout } from "@/components/cart/CartCheckout";
 import { CartWhatsAppNotice } from "@/components/cart/CartWhatsAppNotice";
@@ -25,18 +26,32 @@ export default async function CartPage() {
           {items.length > 0 ? (
             <div className="grid gap-3">
               {items.map((item) => (
-                <article key={item.id} className="grid gap-4 border border-bone/12 bg-charcoal p-4 md:grid-cols-[1fr_auto]">
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-rox text-roxgold">{item.modelCode}</p>
-                    <h2 className="headline mt-2 text-3xl text-bone">{item.productName}</h2>
-                    <p className="mt-2 text-sm text-bone/62">
-                      SKU {item.sku} / Color {item.selectedColor} / Talle {item.selectedSize}
-                    </p>
-                    {item.priceSnapshot ? (
-                      <p className="mt-3 text-sm font-bold text-bone">
-                        {formatPrice(item.priceSnapshot)} x {item.quantity} = {formatPrice(item.priceSnapshot * item.quantity)}
+                <article key={item.id} className="grid gap-4 border border-bone/12 bg-charcoal p-4 md:grid-cols-[minmax(0,1fr)_auto]">
+                  <div className="grid min-w-0 grid-cols-[5.5rem_minmax(0,1fr)] gap-4 sm:grid-cols-[7rem_minmax(0,1fr)]">
+                    <div className="relative aspect-[3/4] overflow-hidden border border-bone/12 bg-bone">
+                      {item.imageUrl ? (
+                        <Image src={item.imageUrl} alt={item.productName} fill sizes="112px" className="object-contain object-center p-1.5" />
+                      ) : (
+                        <div className="grid h-full place-items-center bg-ink">
+                          <div className="text-center">
+                            <p className="headline text-3xl text-roxgold">RXW</p>
+                            <p className="mt-1 text-[9px] font-bold uppercase tracking-rox text-bone/42">Sin imagen</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="break-words text-xs font-bold uppercase tracking-rox text-roxgold">{item.modelCode}</p>
+                      <h2 className="headline mt-2 text-3xl leading-none text-bone">{item.productName}</h2>
+                      <p className="mt-2 text-sm leading-6 text-bone/62">
+                        SKU {item.sku} / Color {item.selectedColor} / Talle {item.selectedSize}
                       </p>
-                    ) : null}
+                      {item.priceSnapshot ? (
+                        <p className="mt-3 text-sm font-bold text-bone">
+                          {formatPrice(item.priceSnapshot)} x {item.quantity} = {formatPrice(item.priceSnapshot * item.quantity)}
+                        </p>
+                      ) : null}
+                    </div>
                   </div>
                   <div className="grid gap-2 md:min-w-48">
                     <form action={updateCartItemQuantityAction} className="flex items-center justify-end gap-2">

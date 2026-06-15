@@ -1,0 +1,31 @@
+# ROXWANA - ficha de prueba para Product Studio
+# Uso: copiar todo este archivo, pegarlo en el cuadro del Studio y tocar "Pegar al Studio".
+# La imagen se sube manualmente desde el bloque Media/Imagenes del Studio.
+# Si repetis la prueba, cambia codigo y slug para evitar duplicados.
+
+ROXWANA Product Sheet v1
+codigo: RXW-REM-TEST-JAEL-0615
+nombre: Remera Test Admin ROXWANA
+slug: remera-test-admin-roxwana-0615
+prenda: REM
+genero: unisex
+estado: draft
+precio: 29000
+precio_anterior: 35000
+categoria: rem
+destacado: false
+orden: 99
+colores: NEG, BLA, GRI
+talles: S, M, L, XL
+descripcion_corta: Prenda de prueba para validar carga real desde el admin ROXWANA.
+descripcion_larga: |
+  Remera de prueba creada para verificar el flujo completo del Product Studio.
+  Sirve para confirmar guardado, carga de imagen, variantes, edicion y publicacion.
+whatsapp: Hola, quiero consultar por la Remera Test Admin ROXWANA.
+variantes:
+  RXW-REM-TEST-JAEL-0615-S-NEG | S | NEG | 2
+  RXW-REM-TEST-JAEL-0615-M-NEG | M | NEG | 3
+  RXW-REM-TEST-JAEL-0615-L-NEG | L | NEG | 3
+  RXW-REM-TEST-JAEL-0615-XL-NEG | XL | NEG | 1
+  RXW-REM-TEST-JAEL-0615-S-BLA | S | BLA | 2
+  RXW-REM-TEST-JAEL-0615-M-BLA | M | BLA | 2

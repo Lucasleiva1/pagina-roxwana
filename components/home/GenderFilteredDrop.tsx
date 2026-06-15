@@ -44,7 +44,7 @@ export function GenderFilteredDrop({ products, dropSection, productsSection }: {
   );
 
   const selectGender = (gender: GenderFilter) => {
-    setSelectedGender(gender);
+    setSelectedGender((current) => (current === gender ? null : gender));
     window.setTimeout(() => dropRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
   };
 
@@ -91,7 +91,7 @@ export function GenderFilteredDrop({ products, dropSection, productsSection }: {
                     </div>
                     <p className="mt-3 hidden max-w-md text-sm leading-7 text-bone/74 sm:block md:mt-5">{item.copy}</p>
                     <span className="mt-3 inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-rox text-roxgold md:mt-5 md:gap-3 md:text-xs">
-                      {active ? "Drop filtrado" : "Filtrar drop"} <ArrowUpRight size={16} />
+                      {active ? "Ver todos" : "Filtrar drop"} <ArrowUpRight size={16} />
                     </span>
                   </div>
                 </button>
@@ -114,7 +114,7 @@ export function GenderFilteredDrop({ products, dropSection, productsSection }: {
 
           {visibleProducts.length > 0 ? (
             <div className="mt-10 grid items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {visibleProducts.slice(0, 8).map((product) => (
+              {visibleProducts.map((product) => (
                 <ProductPosterCard key={product.modelCode} product={product} />
               ))}
             </div>
