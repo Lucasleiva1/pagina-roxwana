@@ -1,14 +1,14 @@
 import { notFound } from "next/navigation";
 import { AdminHeader } from "@/components/admin/AdminHeader";
-import { ProductStudio } from "@/components/admin/product-studio/ProductStudio";
+import { ProductForm } from "@/components/admin/ProductForm";
 import { updateProductAction } from "@/lib/products/mutations";
 import { getProductOptions, getProductsForAdmin } from "@/lib/products/queries";
 
-type AdminEditarProductoProps = {
+type AdminEditarProductoSimpleProps = {
   params: Promise<{ id: string }>;
 };
 
-export default async function AdminEditarProductoPage({ params }: AdminEditarProductoProps) {
+export default async function AdminEditarProductoSimplePage({ params }: AdminEditarProductoSimpleProps) {
   const { id } = await params;
   const [products, options] = await Promise.all([getProductsForAdmin(), getProductOptions()]);
   const product = products.find((item) => item.id === id);
@@ -19,8 +19,8 @@ export default async function AdminEditarProductoPage({ params }: AdminEditarPro
 
   return (
     <div className="grid gap-8">
-      <AdminHeader compact eyebrow="Product Studio" title={product.modelCode} description="Actualizar ficha, variantes, imagenes y estado publico desde una sola pantalla." />
-      <ProductStudio mode="edit" product={product} options={options} action={updateProductAction} submitLabel="Guardar producto" />
+      <AdminHeader eyebrow="Formulario simple" title={product.modelCode} description="Respaldo temporal del formulario anterior." />
+      <ProductForm product={product} options={options} action={updateProductAction} submitLabel="Guardar producto" />
     </div>
   );
 }

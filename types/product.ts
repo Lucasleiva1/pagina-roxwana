@@ -18,6 +18,10 @@ export type ProductImage = {
   alt: string | null;
   sortOrder: number;
   isPrimary: boolean;
+  role?: "cover" | "hover" | "gallery" | "detail" | "lifestyle" | "technical" | null;
+  viewNumber?: string | null;
+  deviceVariant?: "desktop" | "mobile" | "base" | null;
+  originalFilename?: string | null;
   colorCode?: string | null;
 };
 

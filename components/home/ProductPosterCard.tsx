@@ -12,9 +12,10 @@ import type { Product } from "@/types/product";
 function getPosterGallery(product: Product) {
   const primaryColor = getImageColorCode(product.image);
   const preferredColor = product.colors.some((color) => color.code === primaryColor) ? primaryColor || undefined : product.colors.some((color) => color.code === "NEG") ? "NEG" : product.colors[0]?.code;
-  const images = getImagesForColor(product, preferredColor).map((image) => image.url);
+  const productImages = getImagesForColor(product, preferredColor);
+  const images = productImages.map((image) => image.url);
   const gallery = [product.image, ...images].filter(Boolean);
-  const hoverImage = images.find((image) => /-03-desktop\.webp$/i.test(image)) || images.find((image) => image !== product.image);
+  const hoverImage = productImages.find((image) => image.role === "hover")?.url || productImages.find((image) => image.viewNumber === "03")?.url || images.find((image) => /-03-desktop\.webp$/i.test(image)) || images.find((image) => image !== product.image);
 
   return {
     images: Array.from(new Set(gallery)),

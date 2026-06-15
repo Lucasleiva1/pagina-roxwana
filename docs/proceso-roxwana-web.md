@@ -4370,3 +4370,409 @@ Notas importantes antes de produccion:
 - completar variables secretas server-only;
 - revisar que el acceso local de desarrollo no se use como credencial de produccion;
 - probar como visitante, cliente, editor y admin real antes de publicar.
+
+## 94. Product Studio: ajuste visual y manejo dinamico de imagenes
+
+Motivo:
+
+- la pantalla de Product Studio habia quedado funcional, pero demasiado grande visualmente;
+- los titulos, paddings, inputs y paneles ocupaban demasiado espacio;
+- al cargar imagenes nuevas no habia una accion clara para quitarlas antes de guardar;
+- el objetivo del Studio es ser una mesa de trabajo rapida para cargar producto, ficha, variantes e imagenes, no una pagina de presentacion.
+
+Cambios realizados:
+
+- se compacto `components/admin/product-studio/ProductStudio.tsx`;
+- se bajaron tamanos de titulos internos;
+- se redujeron paddings, gaps, alturas de inputs y botones;
+- se achicaron columnas laterales de ficha y preview;
+- se mantuvo el look ROXWANA con fondo ink/charcoal, hueso, dorado y rojo;
+- se agrego manejo dinamico de imagenes nuevas:
+  - carga en varias tandas;
+  - boton para quitar imagen antes de guardar;
+  - botones para subir y bajar orden;
+  - edicion directa de rol, numero, color, device y orden;
+  - selector de portada;
+  - advertencias cuando el nombre no trae color o numero;
+- si una imagen no viene numerada, el Studio le asigna orden por carga;
+- se agrego estado interno para distinguir imagenes activas y marcadas para no subir;
+- se agrego `image_skip` en el formulario para que el backend ignore archivos quitados aunque el input del navegador todavia los tenga seleccionados.
+
+Cambios en backend:
+
+- en `lib/products/mutations.ts`, `uploadImages` ahora revisa `image_skip`;
+- si `image_skip` es `"true"`, esa imagen no se sube a Storage;
+- se preserva el orden, metadata, rol, color y device de las imagenes que si quedan activas.
+
+Problemas detectados durante el ajuste:
+
+- los inputs de archivo del navegador no permiten borrar internamente un archivo ya seleccionado de forma individual;
+- por eso se resolvio con estado local y una senal server-side (`image_skip`);
+- asi el usuario ve la imagen como quitada y el servidor respeta esa decision al guardar.
+
+Validaciones:
+
+```bash
+npm.cmd run lint
+npx.cmd tsc --noEmit --incremental false --pretty false
+npm.cmd run build
+```
+
+Resultado:
+
+- lint paso;
+- TypeScript paso;
+- build paso;
+- `/admin/productos/nuevo/studio` respondio `STATUS=200` con sesion local;
+- la pantalla quedo mas compacta y usable.
+
+## 95. Catalogo admin: fichas premium con preview visual
+
+Motivo:
+
+- la pantalla `/admin/productos` funcionaba, pero se sentia como tabla plana;
+- no permitia reconocer visualmente cada producto;
+- las acciones competian entre si y quedaban visualmente ruidosas;
+- el producto es el centro del negocio, por lo que el admin necesitaba una lectura mas editorial y premium.
+
+Restricciones aplicadas:
+
+- no se cambiaron rutas;
+- no se agregaron librerias;
+- no se inventaron campos;
+- se uso la estructura real `Product`:
+  - `id`;
+  - `modelCode`;
+  - `name`;
+  - `garmentLabel`;
+  - `categoryLabel`;
+  - `price`;
+  - `compareAtPrice`;
+  - `status`;
+  - `featured`;
+  - `image`;
+  - `images`.
+
+Componentes agregados:
+
+- `components/admin/ProductImagePreview.tsx`;
+- `components/admin/AdminProductRow.tsx`.
+
+`ProductImagePreview.tsx`:
+
+- recibe `images: string[]`;
+- muestra la primera imagen por defecto;
+- permite navegar con flecha anterior/siguiente si hay mas de una imagen;
+- muestra contador `1 / N`;
+- muestra placeholder `RXW` si no hay imagen;
+- usa aspect ratio vertical tipo producto;
+- usa estado local solamente;
+- no escribe nada en backend;
+- agrega `aria-label` a botones de carrusel.
+
+`AdminProductRow.tsx`:
+
+- reemplaza la fila plana por una ficha visual;
+- pone la imagen a la izquierda;
+- agrupa datos principales:
+  - modelo en dorado;
+  - nombre del producto;
+  - prenda;
+  - categoria;
+  - drop si existe;
+  - precio;
+  - precio anterior si existe;
+  - estado;
+- agrega indicador sutil `Home` cuando el producto esta destacado;
+- reorganiza acciones:
+  - principales visibles: `Studio`, `Editar`, `Publicar/Despublicar`;
+  - secundarias en menu `Mas`: `Agotar`, `Destacar`, `Duplicar`;
+  - `Borrar` queda separado, rojo y con confirmacion;
+- reutiliza `ConfirmDeleteDialog`.
+
+Cambios en `ProductTable.tsx`:
+
+- dejo de renderizar `<table>`;
+- ahora funciona como contenedor de fichas;
+- mantiene el mismo contrato `products: Product[]`;
+- se sigue reutilizando en `/admin/productos` y en el dashboard.
+
+Validacion visual:
+
+- se verifico con navegador real en desktop y mobile;
+- resultado observado:
+  - 9 fichas de producto renderizadas;
+  - 6 productos con carrusel disponible;
+  - 9 menus secundarios;
+  - sin overflow horizontal;
+- capturas generadas:
+  - `admin-products-premium-desktop.png`;
+  - `admin-products-premium-mobile.png`.
+
+Validaciones tecnicas:
+
+```bash
+npm.cmd run lint
+npx.cmd tsc --noEmit --incremental false --pretty false
+npm.cmd run build
+```
+
+Resultado:
+
+- lint paso;
+- TypeScript paso;
+- build paso;
+- `/admin/productos` respondio correctamente con sesion local.
+
+## 96. Error al cambiar estado de producto: causa confirmada
+
+Problema reportado:
+
+- al intentar quitar o cambiar un producto desde el admin aparecio una pantalla de error de Next.js;
+- el error visible fue:
+  - `No se pudo cambiar el estado del producto.`;
+- la traza apunto a:
+  - `lib/products/mutations.ts`;
+  - `changeProductStatusAction`;
+  - linea del guard que valida `supabase` e `id`.
+
+Analisis:
+
+- se reviso el formulario de `AdminProductRow`;
+- el formulario si enviaba `id`;
+- el problema no era el nuevo diseno visual ni la falta de producto;
+- se reviso `lib/supabase/admin.ts`;
+- `createSupabaseAdminClient()` devuelve `null` si falta `SUPABASE_SERVICE_ROLE_KEY`;
+- se reviso `.env.local`;
+- `SUPABASE_SERVICE_ROLE_KEY` estaba vacio.
+
+Causa real:
+
+- el admin local permite entrar por cookie de desarrollo;
+- eso sirve para navegar y revisar UI;
+- pero las acciones que escriben en Supabase necesitan service role key;
+- sin `SUPABASE_SERVICE_ROLE_KEY`, acciones como publicar, despublicar, agotar, destacar, duplicar o borrar no pueden ejecutarse contra Supabase.
+
+Conclusion:
+
+- no era un bug del nuevo listado de productos;
+- era una configuracion pendiente de Supabase admin;
+- se decidio dejarlo para mas adelante y seguir con mejoras visuales.
+
+Pendiente:
+
+- cargar `SUPABASE_SERVICE_ROLE_KEY` real en `.env.local`;
+- reiniciar servidor;
+- probar acciones reales con productos reales de Supabase;
+- mejorar luego el mensaje de error para que no aparezca pantalla roja cuando falte la clave.
+
+## 97. Media fuera del flujo principal
+
+Motivo:
+
+- la seccion `Media` ya no era necesaria para el flujo principal de productos;
+- Product Studio ahora sube y administra imagenes de producto directamente;
+- mantener `Media` visible en el menu generaba ruido y confusion.
+
+Decision:
+
+- no se borro `/admin/media`;
+- no se borro `lib/admin/media.ts`;
+- no se borro la tabla `media_assets`;
+- se dejo la ruta disponible como herramienta secundaria para assets generales:
+  - home;
+  - banners;
+  - brand assets;
+  - drops;
+- se retiro del flujo principal.
+
+Cambios realizados:
+
+- en `components/admin/AdminShell.tsx` se quito `Media` del menu lateral;
+- en `app/admin/(panel)/page.tsx` se quito el boton rapido `Subir imagenes`;
+- el dashboard quedo mas enfocado en:
+  - productos;
+  - Studio;
+  - home;
+  - drops;
+  - operaciones.
+
+Validaciones:
+
+```bash
+npm.cmd run lint
+npx.cmd tsc --noEmit --incremental false --pretty false
+```
+
+Resultado:
+
+- lint paso;
+- TypeScript paso;
+- no se tocaron rutas ni acciones internas de Media.
+
+## 98. Previews visuales en secciones admin fuera de Productos y Studio
+
+Pedido:
+
+- revisar seccion por seccion del admin;
+- agregar vista previa visual donde haya algo real que mostrar;
+- no inventar previews donde no exista imagen o superficie visual;
+- dejar `Studio` y `Productos` sin tocar porque ya quedaron aprobados.
+
+Secciones revisadas:
+
+- Dashboard;
+- Categorias;
+- Drops;
+- Home;
+- Media;
+- Clientes;
+- Pedidos;
+- Carritos;
+- Consultas;
+- Settings;
+- Usuarios;
+- Productos;
+- Studio.
+
+Decision por seccion:
+
+- `Productos`:
+  - no se toco;
+  - ya tiene preview visual por producto;
+- `Studio`:
+  - no se toco;
+  - ya tiene preview de producto e imagenes;
+- `Home`:
+  - si tiene material visual;
+  - se agregaron previews;
+- `Drops`:
+  - si puede tener `hero_image_path`;
+  - se agrego soporte de preview cuando el dato exista;
+- `Media`:
+  - ya mostraba imagenes subidas;
+  - ademas quedo fuera del menu principal;
+- `Categorias`:
+  - no tiene imagen ni preview real;
+  - no se invento nada;
+- `Clientes`, `Pedidos`, `Carritos`, `Consultas`:
+  - son datos operativos;
+  - no tienen imagen propia de seccion;
+  - no se invento preview;
+- `Settings`, `Usuarios`:
+  - configuracion/accesos;
+  - no tienen visual propio;
+  - no se agrego preview.
+
+Componente agregado:
+
+- `components/admin/AdminVisualPreview.tsx`.
+
+Funciones del componente:
+
+- `ImagePathPreview`:
+  - recibe `imagePath`;
+  - usa `getPublicMediaUrl`;
+  - muestra imagen real si existe;
+  - no renderiza nada si no hay path;
+  - soporta bucket por defecto `site-images`;
+- `RandomWheelAdminPreview`:
+  - muestra una preview compacta de la ruleta usando:
+    - datos reales de `final_cta`;
+    - primer producto real disponible;
+    - imagen real del producto;
+    - textos reales de la seccion;
+  - no escribe backend;
+  - no ejecuta acciones de carrito;
+  - es una preview visual administrativa;
+- `HomeSectionVisualPreview`:
+  - decide por tipo de seccion:
+    - si `final_cta`, muestra ruleta;
+    - si hay `imagePath`, muestra imagen;
+    - si no hay nada visual, no muestra nada.
+
+Cambios en `/admin/home`:
+
+- se importo `HomeSectionVisualPreview`;
+- se cargo tambien `getActiveProducts()` para alimentar la preview de ruleta;
+- cada seccion se convirtio en un `article` que contiene:
+  - formulario editable;
+  - preview visual separada;
+- se evito poner previews interactivos dentro del formulario;
+- se corrigio el layout para que el preview no aplaste inputs:
+  - en desktop normal el preview queda debajo;
+  - en pantallas muy anchas pasa al costado;
+  - no hay overflow horizontal.
+
+Previews reales agregados en Home:
+
+- `hero`:
+  - muestra imagen real de `imagePath`;
+- `final_cta`:
+  - muestra preview de ruleta con producto real;
+- secciones sin imagen:
+  - no muestran preview.
+
+Cambios en `/admin/drops`:
+
+- se importo `ImagePathPreview`;
+- cada drop existente puede mostrar preview de `heroImagePath`;
+- si el drop no tiene `heroImagePath`, no se muestra nada;
+- en el estado actual no habia drops con imagen, por lo que no se invento preview.
+
+Problema detectado y corregido:
+
+- primer layout de Home ponia el preview al costado en `xl`;
+- con sidebar admin, ese ancho comprimio demasiado algunos inputs;
+- se cambio a `2xl:grid-cols[...]`;
+- con eso:
+  - en desktop comun el formulario conserva espacio;
+  - el preview queda debajo;
+  - en pantallas grandes puede ir al costado.
+
+Validacion visual:
+
+- se uso navegador real con cookie local de admin;
+- rutas verificadas:
+  - `/admin/home`;
+  - `/admin/drops`;
+- resultados:
+  - `/admin/home` mostro 2 previews:
+    - imagen hero;
+    - ruleta final CTA;
+  - `/admin/drops` no mostro preview porque no habia `hero_image_path` cargado;
+  - no hubo overflow horizontal;
+- capturas generadas:
+  - `admin-visual-previews-admin-home.png`;
+  - `admin-visual-previews-admin-drops.png`.
+
+Validaciones tecnicas finales:
+
+```bash
+npm.cmd run lint
+npx.cmd tsc --noEmit --incremental false --pretty false
+npm.cmd run build
+```
+
+Resultado:
+
+- lint paso;
+- TypeScript paso;
+- build paso;
+- rutas del admin siguieron disponibles en build:
+  - `/admin/home`;
+  - `/admin/drops`;
+  - `/admin/productos`;
+  - `/admin/productos/nuevo`;
+  - `/admin/productos/nuevo/studio`;
+  - `/admin/productos/[id]`;
+  - `/admin/productos/[id]/simple`;
+  - `/admin/media`.
+
+Estado actual:
+
+- Productos y Studio quedan congelados visualmente segun aprobacion del usuario;
+- Home tiene previews visuales reales;
+- Drops queda preparado para previews reales cuando haya imagen de hero;
+- Media no ocupa espacio en el menu principal;
+- acciones reales de producto siguen pendientes de service role key para Supabase.

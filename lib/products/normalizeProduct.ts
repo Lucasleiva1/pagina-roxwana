@@ -45,6 +45,11 @@ export type ProductRecord = {
     is_primary: boolean | null;
     file_type?: string | null;
     size?: number | null;
+    image_role?: ProductImage["role"];
+    view_number?: string | null;
+    color_code?: string | null;
+    device_variant?: ProductImage["deviceVariant"];
+    original_filename?: string | null;
     created_at: string;
   }[] | null;
   product_variants: {
@@ -87,11 +92,15 @@ export function normalizeProduct(record: ProductRecord): Product {
       alt: image.alt,
       sortOrder: image.sort_order || 0,
       isPrimary: Boolean(image.is_primary),
-      colorCode: getImageColorCode(image.url)
+      role: image.image_role || null,
+      viewNumber: image.view_number || null,
+      deviceVariant: image.device_variant || null,
+      originalFilename: image.original_filename || null,
+      colorCode: image.color_code || getImageColorCode(image.url)
     }))
     .sort((a, b) => a.sortOrder - b.sortOrder);
-  const primaryImage = images.find((image) => image.isPrimary) || images[0];
-  const primaryColorCode = primaryImage ? getImageColorCode(primaryImage.url) : null;
+  const primaryImage = images.find((image) => image.isPrimary) || images.find((image) => image.role === "cover") || images[0];
+  const primaryColorCode = primaryImage ? primaryImage.colorCode || getImageColorCode(primaryImage.url) : null;
   const orderedColors = [...colors].sort((a, b) => {
     if (a.code === primaryColorCode) {
       return -1;

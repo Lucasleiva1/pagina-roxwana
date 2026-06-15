@@ -1,5 +1,5 @@
 import { AdminHeader } from "@/components/admin/AdminHeader";
-import { ProductForm } from "@/components/admin/ProductForm";
+import { ProductStudio } from "@/components/admin/product-studio/ProductStudio";
 import { createProductAction } from "@/lib/products/mutations";
 import { getProductOptions } from "@/lib/products/queries";
 
@@ -8,8 +8,8 @@ export default async function AdminNuevoProductoPage() {
 
   return (
     <div className="grid gap-8">
-      <AdminHeader eyebrow="Nuevo producto" title="CARGAR MODELO" description="Crear producto real para catalogo, drop y home." />
-      <ProductForm options={options} action={createProductAction} submitLabel="Crear producto" />
+      <AdminHeader compact eyebrow="Product Studio" title="CARGAR MODELO" description="Crear producto real con ficha, variantes e imagenes numeradas." />
+      <ProductStudio mode="create" options={options} action={createProductAction} submitLabel="Crear producto" />
     </div>
   );
 }

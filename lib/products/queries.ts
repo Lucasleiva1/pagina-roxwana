@@ -30,9 +30,14 @@ const PRODUCT_SELECT = `
   collections(id, name, slug, description, hero_image_path, is_active, sort_order, created_at, updated_at),
   product_colors(colors(id, code, name, hex, created_at)),
   product_sizes(sizes(id, code, name, sort_order)),
-  product_images(id, url, path, bucket, alt, sort_order, is_primary, file_type, size, created_at),
+  product_images(id, url, path, bucket, alt, sort_order, is_primary, file_type, size, image_role, view_number, color_code, device_variant, original_filename, created_at),
   product_variants(id, size, color, stock, sku, created_at, updated_at)
 `;
+
+const PRODUCT_SELECT_LEGACY = PRODUCT_SELECT.replace(
+  "product_images(id, url, path, bucket, alt, sort_order, is_primary, file_type, size, image_role, view_number, color_code, device_variant, original_filename, created_at)",
+  "product_images(id, url, path, bucket, alt, sort_order, is_primary, file_type, size, created_at)"
+);
 
 export type ProductOptions = {
   garmentTypes: ProductOption[];
@@ -90,13 +95,27 @@ async function getProductsFromSupabase(status?: ProductStatus) {
     query = query.eq("status", status);
   }
 
-  const { data, error } = await query;
+  const primary = await query;
+  let data: unknown = primary.data;
+  let error = primary.error;
+
+  if (error) {
+    let legacyQuery = supabase.from("products").select(PRODUCT_SELECT_LEGACY).order("sort_order", { ascending: true }).order("created_at", { ascending: false });
+
+    if (status) {
+      legacyQuery = legacyQuery.eq("status", status);
+    }
+
+    const legacy = await legacyQuery;
+    data = legacy.data;
+    error = legacy.error;
+  }
 
   if (error) {
     return [];
   }
 
-  return normalizeProducts(data as unknown as ProductRecord[]);
+  return normalizeProducts(data as ProductRecord[]);
 }
 
 export async function getActiveProducts() {
@@ -120,10 +139,24 @@ export async function getProductBySlug(slug: string, includeHidden = false) {
         query = query.eq("status", "published");
       }
 
-      const { data, error } = await query.maybeSingle();
+      const primary = await query.maybeSingle();
+      let data: unknown = primary.data;
+      let error = primary.error;
+
+      if (error) {
+        let legacyQuery = supabase.from("products").select(PRODUCT_SELECT_LEGACY).eq("slug", slug);
+
+        if (!includeHidden) {
+          legacyQuery = legacyQuery.eq("status", "published");
+        }
+
+        const legacy = await legacyQuery.maybeSingle();
+        data = legacy.data;
+        error = legacy.error;
+      }
 
       if (!error && data) {
-        return normalizeProducts([data as unknown as ProductRecord])[0] || null;
+        return normalizeProducts([data as ProductRecord])[0] || null;
       }
     }
   }
@@ -140,10 +173,18 @@ export async function getProductById(id: string) {
     const supabase = await createSupabaseServerClient();
 
     if (supabase) {
-      const { data, error } = await supabase.from("products").select(PRODUCT_SELECT).eq("id", id).eq("status", "published").maybeSingle();
+      const primary = await supabase.from("products").select(PRODUCT_SELECT).eq("id", id).eq("status", "published").maybeSingle();
+      let data: unknown = primary.data;
+      let error = primary.error;
+
+      if (error) {
+        const legacy = await supabase.from("products").select(PRODUCT_SELECT_LEGACY).eq("id", id).eq("status", "published").maybeSingle();
+        data = legacy.data;
+        error = legacy.error;
+      }
 
       if (!error && data) {
-        return normalizeProducts([data as unknown as ProductRecord])[0] || null;
+        return normalizeProducts([data as ProductRecord])[0] || null;
       }
     }
   }

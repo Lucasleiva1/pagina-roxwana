@@ -33,9 +33,6 @@ export default async function AdminPage() {
         <Link href="/admin/home" className="border border-bone/20 px-5 py-3 text-xs font-bold uppercase tracking-rox text-bone">
           Editar home
         </Link>
-        <Link href="/admin/media" className="border border-bone/20 px-5 py-3 text-xs font-bold uppercase tracking-rox text-bone">
-          Subir imagenes
-        </Link>
       </div>
       <section className="grid gap-4">
         <AdminHeader eyebrow="Home" title="SECCIONES CONTROLADAS" />

@@ -160,6 +160,11 @@ export type Database = {
           is_primary: boolean;
           file_type: string | null;
           size: number | null;
+          image_role: "cover" | "hover" | "gallery" | "detail" | "lifestyle" | "technical" | null;
+          view_number: string | null;
+          color_code: string | null;
+          device_variant: "desktop" | "mobile" | "base" | null;
+          original_filename: string | null;
           created_at: string;
         };
         Insert: {
@@ -173,6 +178,11 @@ export type Database = {
           is_primary?: boolean;
           file_type?: string | null;
           size?: number | null;
+          image_role?: "cover" | "hover" | "gallery" | "detail" | "lifestyle" | "technical" | null;
+          view_number?: string | null;
+          color_code?: string | null;
+          device_variant?: "desktop" | "mobile" | "base" | null;
+          original_filename?: string | null;
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["product_images"]["Row"]>;

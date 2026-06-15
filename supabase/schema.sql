@@ -62,9 +62,18 @@ create table if not exists public.product_images (
   id uuid primary key default gen_random_uuid(),
   product_id uuid not null references public.products(id) on delete cascade,
   url text not null,
+  path text,
+  bucket text not null default 'product-images',
   alt text,
   sort_order int not null default 0,
   is_primary boolean not null default false,
+  file_type text,
+  size integer,
+  image_role text check (image_role is null or image_role in ('cover', 'hover', 'gallery', 'detail', 'lifestyle', 'technical')),
+  view_number text,
+  color_code text,
+  device_variant text check (device_variant is null or device_variant in ('desktop', 'mobile', 'base')),
+  original_filename text,
   created_at timestamptz not null default now()
 );
 
@@ -102,6 +111,8 @@ create index if not exists products_status_idx on public.products(status);
 create index if not exists products_featured_idx on public.products(featured);
 create index if not exists products_gender_idx on public.products(gender);
 create index if not exists product_images_product_idx on public.product_images(product_id, sort_order);
+create index if not exists product_images_product_role_idx on public.product_images(product_id, image_role, sort_order);
+create index if not exists product_images_product_color_idx on public.product_images(product_id, color_code, sort_order);
 create index if not exists whatsapp_orders_created_idx on public.whatsapp_orders(created_at desc);
 
 create or replace function public.set_updated_at()

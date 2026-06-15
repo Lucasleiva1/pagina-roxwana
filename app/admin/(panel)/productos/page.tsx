@@ -27,7 +27,7 @@ export default async function AdminProductosPage({ searchParams }: AdminProducto
       <div className="flex flex-wrap items-end justify-between gap-4">
         <AdminHeader eyebrow="Catalogo" title="PRODUCTOS" description="Editar, publicar, agotar, destacar, duplicar o borrar modelos." />
         <Link href="/admin/productos/nuevo" className="border border-roxgold bg-roxgold px-5 py-3 text-xs font-bold uppercase tracking-rox text-charcoal transition hover:border-bone">
-          Nuevo producto
+          Abrir Studio
         </Link>
       </div>
       <form className="grid gap-3 border border-bone/12 bg-charcoal p-4 md:grid-cols-[1fr_auto_auto]" action="/admin/productos">

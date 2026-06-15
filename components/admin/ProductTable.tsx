@@ -1,9 +1,5 @@
-import Link from "next/link";
 import type { Product } from "@/types/product";
-import { changeProductStatusAction, deleteProductAction, duplicateProductAction, toggleFeaturedProductAction } from "@/lib/products/mutations";
-import { StatusBadge } from "@/components/admin/StatusBadge";
-import { formatPrice } from "@/lib/products/formatPrice";
-import { ConfirmDeleteDialog } from "@/components/admin/ConfirmDeleteDialog";
+import { AdminProductRow } from "@/components/admin/AdminProductRow";
 
 export function ProductTable({ products }: { products: Product[] }) {
   if (products.length === 0) {
@@ -11,76 +7,10 @@ export function ProductTable({ products }: { products: Product[] }) {
   }
 
   return (
-    <div className="overflow-x-auto border border-bone/12 bg-charcoal">
-      <table className="min-w-[860px] w-full border-collapse text-left text-sm">
-        <thead className="border-b border-bone/12 text-[10px] uppercase tracking-rox text-steel">
-          <tr>
-            <th className="p-4">Modelo</th>
-            <th className="p-4">Nombre</th>
-            <th className="p-4">Prenda</th>
-            <th className="p-4">Categoria</th>
-            <th className="p-4">Precio</th>
-            <th className="p-4">Estado</th>
-            <th className="p-4">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {products.map((product) => (
-            <tr key={product.id || product.modelCode} className="border-b border-bone/8 text-bone/76">
-              <td className="p-4 font-bold text-roxgold">{product.modelCode}</td>
-              <td className="p-4">{product.name}</td>
-              <td className="p-4">{product.garmentLabel}</td>
-              <td className="p-4">{product.categoryLabel || "Sin categoria"}</td>
-              <td className="p-4 font-bold text-bone">{formatPrice(product.price)}</td>
-              <td className="p-4">
-                <StatusBadge status={product.status} />
-              </td>
-              <td className="p-4">
-                <div className="flex flex-wrap gap-2">
-                  <Link href={`/admin/productos/${product.id}`} className="border border-bone/16 px-3 py-2 text-[10px] font-bold uppercase tracking-rox text-bone transition hover:border-roxgold">
-                    Editar
-                  </Link>
-                  {product.id ? (
-                    <>
-                      <form action={changeProductStatusAction}>
-                        <input type="hidden" name="id" value={product.id} />
-                        <input type="hidden" name="status" value={product.status === "published" ? "draft" : "published"} />
-                        <button type="submit" className="border border-bone/16 px-3 py-2 text-[10px] font-bold uppercase tracking-rox text-bone transition hover:border-roxgold">
-                          {product.status === "published" ? "Despublicar" : "Publicar"}
-                        </button>
-                      </form>
-                      <form action={changeProductStatusAction}>
-                        <input type="hidden" name="id" value={product.id} />
-                        <input type="hidden" name="status" value="sold_out" />
-                        <button type="submit" className="border border-bone/16 px-3 py-2 text-[10px] font-bold uppercase tracking-rox text-bone transition hover:border-roxgold">
-                          Agotar
-                        </button>
-                      </form>
-                      <form action={toggleFeaturedProductAction}>
-                        <input type="hidden" name="id" value={product.id} />
-                        <input type="hidden" name="featured" value={product.featured ? "false" : "true"} />
-                        <button type="submit" className="border border-bone/16 px-3 py-2 text-[10px] font-bold uppercase tracking-rox text-bone transition hover:border-roxgold">
-                          {product.featured ? "Quitar destacado" : "Destacar"}
-                        </button>
-                      </form>
-                      <form action={duplicateProductAction}>
-                        <input type="hidden" name="id" value={product.id} />
-                        <button type="submit" className="border border-bone/16 px-3 py-2 text-[10px] font-bold uppercase tracking-rox text-bone transition hover:border-roxgold">
-                          Duplicar
-                        </button>
-                      </form>
-                      <form action={deleteProductAction}>
-                        <input type="hidden" name="id" value={product.id} />
-                        <ConfirmDeleteDialog message={`Borrar ${product.name}?`}>Borrar</ConfirmDeleteDialog>
-                      </form>
-                    </>
-                  ) : null}
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <section className="grid gap-3" aria-label="Listado de productos">
+      {products.map((product) => (
+        <AdminProductRow key={product.id || product.modelCode} product={product} />
+      ))}
+    </section>
   );
 }

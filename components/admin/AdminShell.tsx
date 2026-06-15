@@ -5,11 +5,10 @@ import type { AdminProfile } from "@/lib/auth/requireAdmin";
 const navItems = [
   { label: "Dashboard", href: "/admin" },
   { label: "Productos", href: "/admin/productos" },
-  { label: "Nuevo", href: "/admin/productos/nuevo" },
+  { label: "Studio", href: "/admin/productos/nuevo" },
   { label: "Categorias", href: "/admin/categorias" },
   { label: "Drops", href: "/admin/drops" },
   { label: "Home", href: "/admin/home" },
-  { label: "Media", href: "/admin/media" },
   { label: "Clientes", href: "/admin/clientes" },
   { label: "Pedidos", href: "/admin/pedidos" },
   { label: "Carritos", href: "/admin/carritos" },

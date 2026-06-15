@@ -1,6 +1,7 @@
 import { ConfirmDeleteDialog } from "@/components/admin/ConfirmDeleteDialog";
 import { EmptyState } from "@/components/admin/AdminStates";
 import { AdminHeader } from "@/components/admin/AdminHeader";
+import { ImagePathPreview } from "@/components/admin/AdminVisualPreview";
 import { deleteCollectionAction, getAdminCollections, upsertCollectionAction } from "@/lib/admin/taxonomy";
 
 export default async function AdminDropsPage() {
@@ -29,26 +30,29 @@ export default async function AdminDropsPage() {
       ) : (
         <div className="grid gap-4">
           {collections.map((collection) => (
-            <article key={collection.id} className="grid gap-3 border border-bone/12 bg-charcoal p-4">
-              <form action={upsertCollectionAction} className="grid gap-3 lg:grid-cols-[1fr_1fr_100px_auto]">
-                <input type="hidden" name="id" value={collection.id} />
-                <input name="name" defaultValue={collection.name} required className="min-h-11 border border-bone/12 bg-ink px-4 text-sm text-bone outline-none focus:border-roxgold" />
-                <input name="slug" defaultValue={collection.slug} required className="min-h-11 border border-bone/12 bg-ink px-4 text-sm text-bone outline-none focus:border-roxgold" />
-                <input name="sort_order" type="number" defaultValue={collection.sortOrder} className="min-h-11 border border-bone/12 bg-ink px-4 text-sm text-bone outline-none focus:border-roxgold" />
-                <button type="submit" className="border border-roxgold px-4 py-2 text-[10px] font-bold uppercase tracking-rox text-roxgold">
-                  Guardar
-                </button>
-                <input name="hero_image_path" defaultValue={collection.heroImagePath || ""} className="min-h-11 border border-bone/12 bg-ink px-4 text-sm text-bone outline-none focus:border-roxgold lg:col-span-2" />
-                <label className="flex min-h-11 items-center gap-3 text-xs font-bold uppercase tracking-rox text-bone/70">
-                  <input type="checkbox" name="is_active" defaultChecked={collection.isActive} />
-                  Activo
-                </label>
-                <textarea name="description" defaultValue={collection.description || ""} className="border border-bone/12 bg-ink px-4 py-3 text-sm text-bone outline-none focus:border-roxgold lg:col-span-4" />
-              </form>
-              <form action={deleteCollectionAction}>
-                <input type="hidden" name="id" value={collection.id} />
-                <ConfirmDeleteDialog message={`Borrar drop ${collection.name}? Los productos quedaran sin drop.`}>Borrar drop</ConfirmDeleteDialog>
-              </form>
+            <article key={collection.id} className="grid gap-4 border border-bone/12 bg-charcoal p-4 2xl:grid-cols-[minmax(0,1fr)_320px]">
+              <div className="grid min-w-0 gap-3">
+                <form action={upsertCollectionAction} className="grid gap-3 lg:grid-cols-[1fr_1fr_100px_auto]">
+                  <input type="hidden" name="id" value={collection.id} />
+                  <input name="name" defaultValue={collection.name} required className="min-h-11 border border-bone/12 bg-ink px-4 text-sm text-bone outline-none focus:border-roxgold" />
+                  <input name="slug" defaultValue={collection.slug} required className="min-h-11 border border-bone/12 bg-ink px-4 text-sm text-bone outline-none focus:border-roxgold" />
+                  <input name="sort_order" type="number" defaultValue={collection.sortOrder} className="min-h-11 border border-bone/12 bg-ink px-4 text-sm text-bone outline-none focus:border-roxgold" />
+                  <button type="submit" className="border border-roxgold px-4 py-2 text-[10px] font-bold uppercase tracking-rox text-roxgold">
+                    Guardar
+                  </button>
+                  <input name="hero_image_path" defaultValue={collection.heroImagePath || ""} className="min-h-11 border border-bone/12 bg-ink px-4 text-sm text-bone outline-none focus:border-roxgold lg:col-span-2" />
+                  <label className="flex min-h-11 items-center gap-3 text-xs font-bold uppercase tracking-rox text-bone/70">
+                    <input type="checkbox" name="is_active" defaultChecked={collection.isActive} />
+                    Activo
+                  </label>
+                  <textarea name="description" defaultValue={collection.description || ""} className="border border-bone/12 bg-ink px-4 py-3 text-sm text-bone outline-none focus:border-roxgold lg:col-span-4" />
+                </form>
+                <form action={deleteCollectionAction}>
+                  <input type="hidden" name="id" value={collection.id} />
+                  <ConfirmDeleteDialog message={`Borrar drop ${collection.name}? Los productos quedaran sin drop.`}>Borrar drop</ConfirmDeleteDialog>
+                </form>
+              </div>
+              <ImagePathPreview imagePath={collection.heroImagePath} title={collection.name} />
             </article>
           ))}
         </div>
