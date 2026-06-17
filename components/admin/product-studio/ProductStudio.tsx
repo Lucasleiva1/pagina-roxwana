@@ -54,7 +54,7 @@ type ExistingImageDraft = {
   delete: boolean;
 };
 
-const ROLE_OPTIONS: StudioImageRole[] = ["cover", "hover", "gallery", "detail", "lifestyle", "technical"];
+const ROLE_OPTIONS: StudioImageRole[] = ["cover", "gallery", "hover", "lifestyle", "technical", "detail"];
 const DEVICE_OPTIONS: StudioDeviceVariant[] = ["desktop", "mobile", "base"];
 const INITIAL_IMAGE_INPUT_ID = "studio-image-input-0";
 
@@ -212,7 +212,7 @@ export function ProductStudio({ mode, product, options, action, submitLabel }: P
         viewNumber: parsed.viewNumber || fallbackViewNumber,
         colorCode: parsed.colorCode || "",
         deviceVariant: parsed.deviceVariant,
-        sortOrder: String(parsed.viewNumber ? parsed.sortOrder + index : fallbackPosition * 10),
+        sortOrder: String(parsed.viewNumber ? parsed.sortOrder : fallbackPosition * 10),
         delete: false,
         warnings: parsed.warnings.map((warning) => (warning.startsWith("No se detecto numero") ? "Sin numero: se ordeno por carga." : warning))
       };

@@ -227,6 +227,9 @@ variantes:
 imagenes:
   neg-01-desktop.webp = portada
   neg-01-mobile.webp = portada
+  neg-02-desktop.webp = espalda
   neg-03-desktop.webp = hover
-  neg-04-desktop.webp = galeria`;
+  neg-04-desktop.webp = costado
+  neg-05-desktop.webp = modelo
+  neg-06-desktop.webp = detalle`;
 }

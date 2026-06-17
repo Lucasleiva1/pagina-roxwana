@@ -15,7 +15,11 @@ function getPosterGallery(product: Product) {
   const productImages = getImagesForColor(product, preferredColor);
   const images = productImages.map((image) => image.url);
   const gallery = [product.image, ...images].filter(Boolean);
-  const hoverImage = productImages.find((image) => image.role === "hover")?.url || productImages.find((image) => image.viewNumber === "03")?.url || images.find((image) => /-03-desktop\.webp$/i.test(image)) || images.find((image) => image !== product.image);
+  const hoverImage =
+    productImages.find((image) => image.role === "hover")?.url ||
+    productImages.find((image) => image.viewNumber === "03")?.url ||
+    images.find((image) => /-03-desktop\.webp$/i.test(image)) ||
+    images.find((image) => image !== product.image);
 
   return {
     images: Array.from(new Set(gallery)),
@@ -66,10 +70,6 @@ export function ProductPosterCard({ product }: { product: Product }) {
           />
         ) : null}
         <Link href={`/producto/${product.slug}`} className="absolute inset-0" aria-label={`Ver ${product.name}`} />
-
-        <div className="absolute left-3 top-3 border border-roxgold/50 bg-ink/82 px-3 py-2 text-[10px] font-bold uppercase tracking-rox text-roxgold">
-          {product.modelCode}
-        </div>
 
         {hasGallery ? (
           <>

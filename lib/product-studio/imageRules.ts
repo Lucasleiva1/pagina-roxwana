@@ -53,13 +53,17 @@ const ROLE_ALIASES: Record<string, StudioImageRole> = {
   front: "gallery",
   espalda: "gallery",
   back: "gallery",
+  atras: "gallery",
   detalle: "detail",
   detail: "detail",
   lifestyle: "lifestyle",
   calle: "lifestyle",
   street: "lifestyle",
+  costado: "lifestyle",
+  lado: "lifestyle",
   tecnica: "technical",
-  technical: "technical"
+  technical: "technical",
+  modelo: "technical"
 };
 
 function stripExtension(fileName: string) {
@@ -103,11 +107,23 @@ function inferRoleFromNumber(viewNumber: string | null): StudioImageRole {
     return "cover";
   }
 
+  if (viewNumber === "02" || viewNumber === "2") {
+    return "gallery";
+  }
+
   if (viewNumber === "03" || viewNumber === "3") {
     return "hover";
   }
 
-  return "gallery";
+  if (viewNumber === "04" || viewNumber === "4") {
+    return "lifestyle";
+  }
+
+  if (viewNumber === "05" || viewNumber === "5") {
+    return "technical";
+  }
+
+  return "detail";
 }
 
 export function normalizeImageRole(value?: string | null): StudioImageRole | null {
@@ -142,7 +158,7 @@ export function parseProductImageName(fileName: string, explicitRole?: string | 
   const namedRole = normalizedTokens.map((token) => ROLE_ALIASES[token]).find(Boolean) || null;
   const requestedRole = normalizeImageRole(explicitRole);
   const numberedRole = inferRoleFromNumber(viewNumber);
-  const role = requestedRole || namedRole || numberedRole;
+  const role = requestedRole || numberedRole || namedRole;
 
   if (!viewNumber) {
     warnings.push("No se detecto numero de vista; se ordena al final.");
@@ -175,12 +191,12 @@ export function parseProductImageName(fileName: string, explicitRole?: string | 
 
 export function getImageRoleLabel(role: StudioImageRole) {
   const labels: Record<StudioImageRole, string> = {
-    cover: "Portada",
-    hover: "Hover",
-    gallery: "Galeria",
-    detail: "Detalle",
-    lifestyle: "Lifestyle",
-    technical: "Tecnica"
+    cover: "1 Portada",
+    hover: "3 Hover",
+    gallery: "2 Espalda remera",
+    detail: "6/7 Detalle",
+    lifestyle: "4 Costado",
+    technical: "5 Espalda modelo"
   };
 
   return labels[role];

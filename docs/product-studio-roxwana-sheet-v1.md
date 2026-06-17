@@ -31,8 +31,11 @@ variantes:
 imagenes:
   neg-01-desktop.webp = portada
   neg-01-mobile.webp = portada
+  neg-02-desktop.webp = espalda
   neg-03-desktop.webp = hover
-  neg-04-desktop.webp = galeria
+  neg-04-desktop.webp = costado
+  neg-05-desktop.webp = modelo
+  neg-06-desktop.webp = detalle
 ```
 
 ## Imagenes
@@ -48,17 +51,25 @@ Ejemplos:
 ```txt
 neg-01-desktop.webp
 neg-01-mobile.webp
+neg-02-desktop.webp
 neg-03-desktop.webp
+neg-04-desktop.webp
+neg-05-desktop.webp
+neg-06-desktop.webp
 ```
 
 Reglas:
 
 - `01` es portada.
+- `02` es espalda de la remera.
 - `03` es hover.
-- `02`, `04`, `05`, `06` son galeria salvo que la ficha fuerce otro rol.
+- `04` es costado, si existe.
+- `05` es espalda con modelo.
+- `06` y `07` son detalle.
+- Si falta una vista intermedia, por ejemplo `04`, el orden se mantiene por numero.
 - `desktop`, `mobile` y `base` se guardan como variante responsive.
 - `NEG`, `BLA`, `GRI` se guardan como color detectado.
-- Si el nombre es ambiguo, Product Studio permite guardar, pero muestra advertencia.
+- Si el nombre es ambiguo, el numero manda primero; Product Studio permite cambiar el tipo manualmente antes de guardar.
 
 ## Archivos Soportados
 

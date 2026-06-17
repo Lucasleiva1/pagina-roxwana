@@ -7,10 +7,10 @@ import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { RoxButton } from "@/components/ui/RoxButton";
 
 const navItems = [
-  { label: "Shop", href: "/productos" },
-  { label: "Colecciones", href: "/hombre" },
-  { label: "Lookbook", href: "/mujer" },
-  { label: "Nosotros", href: "/#ordenar" }
+  { label: "Inicio", href: "/" },
+  { label: "Todos los modelos", href: "/productos" },
+  { label: "Ruleta", href: "/random" },
+  { label: "Nosotros", href: "/nosotros" }
 ];
 
 export function MobileMenu({ isOpen, onClose, cartCount }: { isOpen: boolean; onClose: () => void; cartCount: number }) {
@@ -55,7 +55,7 @@ export function MobileMenu({ isOpen, onClose, cartCount }: { isOpen: boolean; on
           ))}
         </div>
         <RoxButton href="/productos" variant="bone" className="mt-10 w-full" onClick={onClose}>
-          Ver coleccion
+          Todos los modelos
         </RoxButton>
         <div className="mt-4 grid grid-cols-2 gap-3">
           <RoxButton href="/login" variant="ghost" className="w-full" onClick={onClose}>

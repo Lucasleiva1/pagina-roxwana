@@ -35,6 +35,15 @@ function getProductKey(product: Product) {
   return product.id || product.slug || product.modelCode;
 }
 
+function getRouletteCoverImage(product: Product) {
+  return (
+    product.images.find((image) => image.role === "cover")?.url ||
+    product.images.find((image) => image.viewNumber === "01" || image.viewNumber === "1")?.url ||
+    product.images.find((image) => image.isPrimary)?.url ||
+    product.image
+  );
+}
+
 function getProductsForGender(products: Product[], gender: GenderChoice | null) {
   if (!gender) {
     return products;
@@ -78,6 +87,7 @@ export function RandomPrintTeaser({ compact = false, products, section }: { comp
   const previewProducts = selectedGender ? filteredProducts : products;
   const displayProduct = winner || previewProducts[index % Math.max(previewProducts.length, 1)] || products[0];
   const hasCategoryProducts = Boolean(selectedGender && filteredProducts.length > 0);
+  const awaitingSpin = phase === "idle" && !winner;
 
   const clearSpinTimers = () => {
     timersRef.current.forEach((timer) => window.clearTimeout(timer));
@@ -234,15 +244,24 @@ export function RandomPrintTeaser({ compact = false, products, section }: { comp
             {displayProduct ? (
               <Image
                 key={`${getProductKey(displayProduct)}-${phase}`}
-                src={displayProduct.image}
+                src={getRouletteCoverImage(displayProduct)}
                 alt={displayProduct.name}
                 fill
                 priority={compact}
                 sizes="(min-width: 1024px) 58vw, 100vw"
-                className={`object-cover transition duration-300 ${wheelLocked ? "scale-105 blur-[1px]" : "scale-100 blur-0"}`}
+                className={`object-cover transition duration-300 ${
+                  awaitingSpin ? "scale-105 opacity-16 blur-[1px]" : wheelLocked ? "scale-105 opacity-70 blur-[1px]" : "scale-100 opacity-100 blur-0"
+                }`}
               />
             ) : null}
-            <div className="absolute inset-0 bg-gradient-to-t from-ink via-transparent to-transparent" />
+            <div className={`absolute inset-0 bg-gradient-to-t from-ink via-transparent to-transparent ${awaitingSpin ? "opacity-95" : "opacity-100"}`} />
+            {awaitingSpin ? (
+              <div className="absolute inset-0 z-10 grid place-items-center bg-ink/50">
+                <div className="grid h-40 w-40 place-items-center border border-roxgold/48 bg-ink/62 text-roxgold shadow-gold-soft backdrop-blur-sm md:h-52 md:w-52">
+                  <span className="text-[8rem] font-black leading-none md:text-[11rem]">?</span>
+                </div>
+              </div>
+            ) : null}
 
             {showPrizeBurst ? (
               <div className="pointer-events-none absolute inset-0 z-10 overflow-hidden">
@@ -267,12 +286,12 @@ export function RandomPrintTeaser({ compact = false, products, section }: { comp
 
             <div className="absolute left-5 top-5 z-20 inline-flex items-center gap-2 border border-roxgold/45 bg-ink/72 px-3 py-2 text-xs font-bold uppercase tracking-rox text-roxgold backdrop-blur">
               <Sparkles size={16} />
-              {phase === "winner" ? "Estampa seleccionada" : wheelLocked ? "Eligiendo estampa" : "Ruleta lista"}
+              {phase === "winner" ? "Estampa seleccionada" : wheelLocked ? "Eligiendo estampa" : "Seleccion sorpresa"}
             </div>
 
             <div className="absolute bottom-5 left-5 right-5 z-20">
-              <p className="text-xs font-bold uppercase tracking-rox text-roxgold">{displayProduct?.modelCode || "ROXWANA"}</p>
-              <h3 className="headline mt-2 text-4xl leading-none text-bone md:text-5xl">{displayProduct?.name || "Random print"}</h3>
+              <p className="text-xs font-bold uppercase tracking-rox text-roxgold">{awaitingSpin ? "ROXWANA" : displayProduct?.modelCode || "ROXWANA"}</p>
+              <h3 className="headline mt-2 text-4xl leading-none text-bone md:text-5xl">{awaitingSpin ? "Prenda sorpresa" : displayProduct?.name || "Random print"}</h3>
             </div>
           </div>
 

@@ -122,8 +122,9 @@ export async function getActiveProducts() {
   return fallbackProducts(await getProductsFromSupabase("published"));
 }
 
-export async function getFeaturedProducts() {
-  return getActiveProducts();
+export async function getFeaturedProducts(limit = 10) {
+  const products = fallbackProducts(await getProductsFromSupabase("published"));
+  return products.filter((product) => product.featured).slice(0, limit);
 }
 
 export async function getProductBySlug(slug: string, includeHidden = false) {

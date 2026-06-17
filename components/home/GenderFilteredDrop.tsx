@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { ProductPosterCard } from "@/components/home/ProductPosterCard";
@@ -113,15 +114,25 @@ export function GenderFilteredDrop({ products, dropSection, productsSection }: {
           </div>
 
           {visibleProducts.length > 0 ? (
-            <div className="mt-10 grid items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {visibleProducts.map((product) => (
-                <ProductPosterCard key={product.modelCode} product={product} />
-              ))}
-            </div>
+            <>
+              <div className="mt-10 grid items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {visibleProducts.map((product) => (
+                  <ProductPosterCard key={product.modelCode} product={product} />
+                ))}
+              </div>
+              <div className="mt-10 flex justify-center">
+                <Link href="/productos" className="inline-flex min-h-11 items-center justify-center border border-bone/30 px-5 text-xs font-bold uppercase tracking-rox text-bone transition hover:border-roxgold hover:bg-roxgold hover:text-charcoal">
+                  Ver todos los productos
+                </Link>
+              </div>
+            </>
           ) : (
             <div className="mt-10 border-y border-roxgold/30 py-12 text-center">
-              <p className="headline text-5xl text-bone">DROP EN PREPARACION</p>
-              <p className="mt-3 text-sm uppercase tracking-rox text-bone/58">Todavia no hay modelos cargados para esta seleccion.</p>
+              <p className="headline text-5xl text-bone">DESTACADOS EN PREPARACION</p>
+              <p className="mt-3 text-sm uppercase tracking-rox text-bone/58">Marca productos como destacados desde el admin para mostrarlos aca.</p>
+              <Link href="/productos" className="mt-6 inline-flex min-h-11 items-center justify-center border border-bone/30 px-5 text-xs font-bold uppercase tracking-rox text-bone transition hover:border-roxgold hover:bg-roxgold hover:text-charcoal">
+                Ver todos los productos
+              </Link>
             </div>
           )}
         </div>

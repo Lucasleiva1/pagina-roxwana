@@ -5288,3 +5288,123 @@ GitHub:
 
 - esta tanda se prepara para guardarse como version estable con commit y tag;
 - no se registran claves privadas ni valores sensibles en esta documentacion.
+
+## Tanda 2026-06-17 - Home visual, redes, footer y checkpoint super estable
+
+### Objetivo
+
+Dejar la home y el footer mas cerca de la identidad final de ROXWANA, corregir problemas visuales que aparecieron durante la revision en vivo, preparar la seccion nueva de redes y guardar una version estable recuperable.
+
+### Cambios implementados
+
+1. Portada
+   - se incorporo el video de portada optimizado para web;
+   - se agregaron controles temporales para ajustar opacidad y capa oscura;
+   - esos controles quedaron ocultos, no eliminados, para poder reactivarlos si hace falta;
+   - el boton principal de portada quedo orientado a `Destacados`;
+   - se corrigio el problema de hidratacion provocado por leer valores guardados antes de que React terminara de hidratar el cliente.
+
+2. Navegacion superior
+   - el menu quedo con accesos mas claros: Inicio, Todos los modelos, Ruleta y Nosotros;
+   - la lupa, carrito y controles generales existentes se mantuvieron;
+   - se creo una pagina temporal de Nosotros con una descripcion breve de marca y fondo visual.
+
+3. Ruleta
+   - la ruleta dejo de mostrar todas las imagenes de una prenda;
+   - ahora toma la imagen principal/de portada;
+   - el estado previo al sorteo muestra la prenda de fondo con opacidad y un signo de pregunta para que se entienda que ahi va a aparecer el resultado.
+
+4. Destacados de home
+   - se oculto el codigo/SKU en las tarjetas destacadas de inicio;
+   - el codigo se mantiene para vistas donde el cliente entra al detalle de la prenda.
+
+5. Correo y entregas
+   - se agrego la seccion de entregas debajo del proceso de pedido;
+   - se optimizaron imagenes de mapa/ciudad para uso web;
+   - se corrigio el uso del mapa para que funcione como fondo responsive;
+   - se quitaron temporalmente el cartel de envio gratis y la tabla de tiempos estimados;
+   - se elimino el bloque de dudas por WhatsApp porque ese canal no esta activo para atencion.
+
+6. Footer
+   - se reemplazo la imagen de ciudad por una imagen mas alineada a la marca;
+   - se optimizo la imagen para web;
+   - se quitaron accesos de WhatsApp;
+   - se agregaron iconos sociales para Instagram, Facebook, YouTube y TikTok;
+   - Instagram y Facebook apuntan por ahora a `https://www.instagram.com/roxwana.info/`;
+   - YouTube y TikTok quedan visibles como proximamente, sin enlace asociado todavia.
+
+7. Nueva seccion de redes
+   - se agrego `SocialFollowSection` debajo de Pared de Posters y antes de las secciones siguientes de home;
+   - se uso `final-redes.png` como collage principal;
+   - se generaron versiones WebP optimizadas y recortadas para eliminar espacio transparente excesivo;
+   - el diseno queda en blanco/negro con acentos ROXWANA;
+   - el encabezado dice `ROXWANA` y `ESTILO URBANO`;
+   - el llamado principal dice `SEGUINOS EN NUESTRAS REDES`;
+   - se agregaron iconos para Instagram, Facebook, YouTube y TikTok;
+   - Instagram y Facebook abren Instagram de ROXWANA;
+   - YouTube y TikTok quedan como iconos preparados, sin link activo.
+
+### Problemas y errores encontrados
+
+1. Hidratacion de React en portada
+   - Sintoma: Next.js aviso que el HTML del servidor tenia una opacidad distinta a la del cliente.
+   - Causa: la portada leia valores guardados en `localStorage` durante el primer render del cliente.
+   - Correccion: se dejo el render inicial igual al servidor y se cargan los valores guardados despues de montar el componente.
+
+2. Imagen de Nosotros mal encuadrada
+   - Sintoma: una imagen elegida no mostraba bien la cabeza/personaje.
+   - Correccion: se cambio la imagen y el posicionamiento para que la pagina no dependa de un recorte malo.
+
+3. Mapa de entregas poco responsive
+   - Sintoma: en resoluciones mas bajas el mapa quedaba cortado o se leia como una imagen flotante.
+   - Correccion: se paso a fondo responsive con capas y posicionamiento mas controlado.
+
+4. Seccion de redes con demasiado aire transparente
+   - Sintoma: la imagen original tenia mucho espacio vacio alrededor y empujaba el layout.
+   - Correccion: se generaron WebP optimizados y versiones recortadas para web.
+
+5. Canales sociales todavia incompletos
+   - Sintoma: YouTube y TikTok aun no existen como URLs definitivas.
+   - Decision: se muestran los iconos para dejar el diseno preparado, pero quedan sin enlace hasta que el usuario pase las URLs reales.
+
+### Archivos principales tocados
+
+- `app/page.tsx`
+- `app/nosotros/page.tsx`
+- `components/home/HeroCampaign.tsx`
+- `components/home/ProductPosterCard.tsx`
+- `components/home/RandomPrintTeaser.tsx`
+- `components/home/ShippingSection.tsx`
+- `components/home/SocialFollowSection.tsx`
+- `components/layout/Footer.tsx`
+- `components/layout/FooterBackground.tsx`
+- `components/layout/Header.tsx`
+- `components/layout/MobileMenu.tsx`
+- `components/ui/OpacityControl.tsx`
+- `public/images/nosotros/*`
+- `public/images/shipping/*`
+- `public/images/social/*`
+- `public/videos/*`
+
+### Validacion ejecutada
+
+```bash
+npm.cmd run lint
+npx.cmd tsc --noEmit --incremental false --pretty false
+npm.cmd run build
+```
+
+Resultado:
+
+- lint paso;
+- TypeScript paso;
+- build de Next.js paso correctamente;
+- se generaron 17 paginas estaticas/dinamicas sin errores de compilacion.
+
+### Estado GitHub
+
+- esta tanda se guarda como version super estable;
+- tag estable previsto: `roxwana-home-visual-redes-estable-2026-06-17`;
+- remoto: `origin https://github.com/Lucasleiva1/pagina-roxwana.git`;
+- la publicacion debe quedar en `main` para poder volver a este estado si algo se rompe;
+- no se registran claves privadas ni valores sensibles en esta documentacion.

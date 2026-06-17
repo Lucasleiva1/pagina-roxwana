@@ -4,13 +4,15 @@ import { HeroCampaign } from "@/components/home/HeroCampaign";
 import { OrderTimeline } from "@/components/home/OrderTimeline";
 import { PrintWallMarquee } from "@/components/home/PrintWallMarquee";
 import { RandomPrintTeaser } from "@/components/home/RandomPrintTeaser";
+import { ShippingSection } from "@/components/home/ShippingSection";
+import { SocialFollowSection } from "@/components/home/SocialFollowSection";
 import { getHomeSection, getHomeSections } from "@/lib/home/sections";
-import { getActiveProducts } from "@/lib/products/queries";
+import { getActiveProducts, getFeaturedProducts } from "@/lib/products/queries";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const [products, sections] = await Promise.all([getActiveProducts(), getHomeSections()]);
+  const [products, featuredProducts, sections] = await Promise.all([getActiveProducts(), getFeaturedProducts(10), getHomeSections()]);
   const dropSection = getHomeSection(sections, "featured_drop");
   const productsSection = getHomeSection(sections, "featured_products");
   const rendered: ReactNode[] = [];
@@ -23,11 +25,12 @@ export default async function Home() {
 
     if ((section.key === "featured_drop" || section.key === "featured_products") && !productBlockRendered) {
       productBlockRendered = true;
-      rendered.push(<GenderFilteredDrop key="featured-products" products={products} dropSection={dropSection} productsSection={productsSection} />);
+      rendered.push(<GenderFilteredDrop key="featured-products" products={featuredProducts} dropSection={dropSection} productsSection={productsSection} />);
     }
 
     if (section.key === "brand_statement") {
       rendered.push(<PrintWallMarquee key={section.key} products={products} />);
+      rendered.push(<SocialFollowSection key="social-follow" />);
     }
 
     if (section.key === "final_cta") {
@@ -36,6 +39,7 @@ export default async function Home() {
 
     if (section.key === "how_to_order") {
       rendered.push(<OrderTimeline key={section.key} section={section} />);
+      rendered.push(<ShippingSection key="shipping-section" />);
     }
   }
 

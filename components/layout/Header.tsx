@@ -9,10 +9,10 @@ import { MobileMenu } from "@/components/layout/MobileMenu";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 
 const navItems = [
-  { label: "Shop", href: "/productos" },
-  { label: "Colecciones", href: "/hombre" },
-  { label: "Lookbook", href: "/mujer" },
-  { label: "Nosotros", href: "/#ordenar" }
+  { label: "Inicio", href: "/" },
+  { label: "Todos los modelos", href: "/productos" },
+  { label: "Ruleta", href: "/random" },
+  { label: "Nosotros", href: "/nosotros" }
 ];
 
 export function Header() {
