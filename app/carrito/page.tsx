@@ -4,7 +4,7 @@ import { CartCountSync } from "@/components/cart/CartCountSync";
 import { CartCheckout } from "@/components/cart/CartCheckout";
 import { CartWhatsAppNotice } from "@/components/cart/CartWhatsAppNotice";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { removeCartItemAction, updateCartItemQuantityAction } from "@/lib/cart/actions";
+import { clearCartAction, removeCartItemAction, updateCartItemQuantityAction } from "@/lib/cart/actions";
 import { getCustomerCartPageData } from "@/lib/cart/queries";
 import { formatPrice } from "@/lib/products/formatPrice";
 
@@ -90,7 +90,14 @@ export default async function CartPage() {
           {items.length > 0 ? (
             <div className="flex items-center justify-between border border-roxgold/30 bg-charcoal p-4">
               <p className="text-xs font-bold uppercase tracking-rox text-steel">Total productos</p>
-              <p className="text-xl font-black text-roxgold">{formatPrice(cartTotal)}</p>
+              <div className="flex flex-wrap items-center justify-end gap-3">
+                <p className="text-xl font-black text-roxgold">{formatPrice(cartTotal)}</p>
+                <form action={clearCartAction}>
+                  <button type="submit" className="min-h-10 border border-bone/16 px-3 text-[10px] font-bold uppercase tracking-rox text-bone transition hover:border-roxgold hover:text-roxgold">
+                    Limpiar todo
+                  </button>
+                </form>
+              </div>
             </div>
           ) : null}
         </div>

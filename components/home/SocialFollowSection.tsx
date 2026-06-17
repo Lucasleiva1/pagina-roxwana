@@ -1,7 +1,9 @@
 import Image from "next/image";
-import { Facebook, Instagram, Music2, Youtube, Zap, type LucideIcon } from "lucide-react";
+import { Instagram, Music2, Youtube, Zap, type LucideIcon } from "lucide-react";
 
-const socialUrl = "https://www.instagram.com/roxwana.info/";
+const instagramUrl = "https://www.instagram.com/roxwana.info/";
+const youtubeUrl = "https://www.youtube.com/@ROXWANAINFO";
+const tiktokUrl = "https://www.tiktok.com/@roxwanainfo";
 
 type SocialLink = {
   label: string;
@@ -10,15 +12,14 @@ type SocialLink = {
 };
 
 const socialLinks: SocialLink[] = [
-  { label: "Instagram", icon: Instagram, href: socialUrl },
-  { label: "Facebook", icon: Facebook, href: socialUrl },
-  { label: "YouTube", icon: Youtube },
-  { label: "TikTok", icon: Music2 }
+  { label: "Instagram", icon: Instagram, href: instagramUrl },
+  { label: "YouTube", icon: Youtube, href: youtubeUrl },
+  { label: "TikTok", icon: Music2, href: tiktokUrl }
 ];
 
 export function SocialFollowSection() {
   return (
-    <section className="overflow-hidden bg-bone pb-16 pt-28 text-ink md:pb-20 md:pt-32">
+    <section id="redes" className="scroll-mt-24 overflow-hidden bg-bone pb-16 pt-28 text-ink md:pb-20 md:pt-32">
       <div className="rox-container">
         <div className="mx-auto flex max-w-5xl items-center justify-center gap-8 text-ink/30">
           <span className="h-px flex-1 bg-ink/20" />

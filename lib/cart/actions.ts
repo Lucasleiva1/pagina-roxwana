@@ -68,7 +68,7 @@ export async function addToCartAction(input: {
 
   if (existing) {
     const nextQuantity = clampQuantity(existing.quantity + quantity);
-    const { error } = await auth.supabase.from("cart_items").update({ quantity: nextQuantity }).eq("id", existing.id);
+    const { error } = await auth.supabase.from("cart_items").update({ quantity: nextQuantity, updated_at: new Date().toISOString() }).eq("id", existing.id);
 
     if (error) {
       return { ok: false, needsLogin: false, error: "No se pudo actualizar el carrito." };
@@ -104,7 +104,7 @@ export async function updateCartItemQuantityAction(formData: FormData) {
     throw new Error("No se pudo actualizar el item.");
   }
 
-  await auth.supabase.from("cart_items").update({ quantity }).eq("id", itemId);
+  await auth.supabase.from("cart_items").update({ quantity, updated_at: new Date().toISOString() }).eq("id", itemId);
   revalidatePath("/carrito");
 }
 
@@ -117,5 +117,21 @@ export async function removeCartItemAction(formData: FormData) {
   }
 
   await auth.supabase.from("cart_items").delete().eq("id", itemId);
+  revalidatePath("/carrito");
+}
+
+export async function clearCartAction() {
+  const auth = await getAuthenticatedUser();
+
+  if (!auth) {
+    throw new Error("No se pudo limpiar el carrito.");
+  }
+
+  const { data: cart } = await auth.supabase.from("carts").select("id").eq("user_id", auth.user.id).eq("status", "active").maybeSingle();
+
+  if (cart) {
+    await auth.supabase.from("cart_items").delete().eq("cart_id", cart.id);
+  }
+
   revalidatePath("/carrito");
 }

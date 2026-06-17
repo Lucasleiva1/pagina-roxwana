@@ -39,7 +39,7 @@ const infoItems = [
 
 export function ShippingSection() {
   return (
-    <section id="entregas" className="relative isolate overflow-hidden bg-ink py-20 md:py-24">
+    <section id="entregas" className="theme-force-dark relative isolate overflow-hidden bg-ink py-20 md:py-24">
       <div className="absolute inset-0 -z-20 bg-ink" />
       <Image
         src="/images/shipping/shipping-map-wide.webp"

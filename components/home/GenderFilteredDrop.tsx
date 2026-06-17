@@ -70,7 +70,7 @@ export function GenderFilteredDrop({ products, dropSection, productsSection }: {
                   key={item.gender}
                   type="button"
                   onClick={() => selectGender(item.gender)}
-                  className={`group relative min-h-[390px] overflow-hidden bg-ink text-left transition sm:min-h-[520px] md:min-h-[760px] ${
+                  className={`gender-entry-card group relative min-h-[390px] overflow-hidden bg-ink text-left transition sm:min-h-[520px] md:min-h-[760px] ${
                     active ? "border-2 border-roxred shadow-hard-red" : "border border-transparent hover:border-roxgold/60"
                   }`}
                   aria-pressed={active}
@@ -85,7 +85,7 @@ export function GenderFilteredDrop({ products, dropSection, productsSection }: {
                       className={`object-cover ${item.imagePosition} opacity-88 transition duration-700 group-hover:scale-105`}
                     />
                   </picture>
-                  <div className="absolute inset-0 bg-[linear-gradient(0deg,#080808_0%,rgba(8,8,8,0.16)_55%,rgba(8,8,8,0.34)_100%)]" />
+                  <div className="gender-entry-overlay absolute inset-0 bg-[linear-gradient(0deg,#080808_0%,rgba(8,8,8,0.16)_55%,rgba(8,8,8,0.34)_100%)]" />
                   <div className="absolute bottom-4 left-3 right-3 md:bottom-6 md:left-5 md:right-5">
                     <div className="inline-block rotate-[-2deg] bg-bone px-3 py-2 text-charcoal shadow-hard-red md:px-5 md:py-3">
                       <h3 className="headline text-4xl leading-none sm:text-6xl md:text-8xl">{item.label}</h3>

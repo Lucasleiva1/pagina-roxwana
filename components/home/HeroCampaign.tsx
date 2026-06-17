@@ -62,7 +62,7 @@ export function HeroCampaign({ section }: { section?: HomeSection | null }) {
   };
 
   return (
-    <section className="relative min-h-[94svh] overflow-hidden bg-ink pt-24 text-bone">
+    <section className="theme-force-dark relative min-h-[94svh] overflow-hidden bg-ink pt-24 text-bone">
       <div className="absolute inset-0">
         {reduceMotion ? (
           <Image

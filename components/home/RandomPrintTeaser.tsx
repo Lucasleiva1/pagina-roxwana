@@ -170,7 +170,7 @@ export function RandomPrintTeaser({ compact = false, products, section }: { comp
 
   if (products.length === 0) {
     return (
-      <section className={`theme-shop bg-ink ${compact ? "py-8" : "py-20"}`}>
+      <section className={`theme-shop theme-force-dark bg-ink ${compact ? "py-8" : "py-20"}`}>
         <div className="rox-container">
           <div className="border border-roxgold/24 bg-charcoal p-8 text-center">
             <p className="headline text-4xl text-bone">NO HAY PRENDAS CARGADAS</p>
@@ -182,7 +182,7 @@ export function RandomPrintTeaser({ compact = false, products, section }: { comp
   }
 
   return (
-    <section className={`theme-shop bg-ink ${compact ? "py-8" : "py-24"}`}>
+    <section className={`theme-shop theme-force-dark bg-ink ${compact ? "py-8" : "py-24"}`}>
       <div className="rox-container">
         <div className="paper-edge relative grid gap-8 overflow-hidden bg-charcoal/82 p-5 shadow-hard-red md:p-7 lg:grid-cols-[0.78fr_1.22fr] lg:items-start">
           <div className="pointer-events-none absolute right-8 top-6 hidden rotate-[6deg] border border-roxred/60 px-4 py-2 text-xs font-bold uppercase tracking-rox text-roxred md:block">
@@ -380,7 +380,8 @@ function PrizePanel({
         return;
       }
 
-      setMessage("Producto agregado al carrito.");
+      setMessage(null);
+      window.dispatchEvent(new CustomEvent("roxwana-cart-updated"));
       router.refresh();
     });
   };
@@ -449,9 +450,12 @@ function PrizePanel({
               data-prize-add
               onClick={addPrizeToCart}
               disabled={!canAdd || isPending}
-              className="min-h-10 border border-roxgold bg-roxgold px-4 py-2 text-xs font-bold uppercase tracking-rox text-charcoal transition hover:border-bone disabled:cursor-not-allowed disabled:border-bone/20 disabled:bg-bone/20 disabled:text-bone/40"
+              className={`relative min-h-10 overflow-hidden border px-4 py-2 text-xs font-bold uppercase tracking-rox transition hover:border-bone disabled:cursor-not-allowed ${
+                isPending ? "border-roxgold bg-charcoal text-bone" : "border-roxgold bg-roxgold text-charcoal disabled:border-bone/20 disabled:bg-bone/20 disabled:text-bone/40"
+              }`}
             >
-              {isPending ? "Agregando..." : "Agregar al carrito"}
+              {isPending ? <span className="rox-loading-button-bar absolute inset-y-0 left-0 w-full bg-roxgold/45" aria-hidden="true" /> : null}
+              <span className="relative z-10">{isPending ? "Agregando..." : "Agregar al carrito"}</span>
             </button>
             <a href="/carrito" className="inline-flex min-h-10 items-center justify-center border border-bone/45 px-4 py-2 text-xs font-bold uppercase tracking-rox text-bone">
               Ver carrito

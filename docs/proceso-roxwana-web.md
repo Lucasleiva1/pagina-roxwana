@@ -5408,3 +5408,199 @@ Resultado:
 - remoto: `origin https://github.com/Lucasleiva1/pagina-roxwana.git`;
 - la publicacion debe quedar en `main` para poder volver a este estado si algo se rompe;
 - no se registran claves privadas ni valores sensibles en esta documentacion.
+
+## Tanda 2026-06-17 - Carrito interactivo, catalogo final, navegacion y checkpoint super estable
+
+### Objetivo
+
+Registrar y guardar una version recuperable luego de una tanda larga de ajustes publicos de tienda. El foco fue mejorar la experiencia del cliente al navegar productos, agregar prendas al carrito, revisar rapidamente lo cargado, entrar a filtros Hombre/Mujer, usar enlaces sociales reales y corregir el comportamiento visual del modo claro sin romper la identidad oscura de ROXWANA.
+
+### Cambios implementados
+
+1. Proceso de pedido
+   - se extendio `components/home/OrderTimeline.tsx` de 4 a 5 pasos;
+   - se agrego el paso `Pagas y recibis seguimiento`;
+   - el texto final aprobado fue:
+     - `Te enviamos por WhatsApp el enlace de pago de Mercado Pago. Cuando se confirma, preparamos el envio y te pasamos el numero de seguimiento.`;
+   - se mantuvo la estetica original de tarjetas numeradas;
+   - la grilla desktop paso a 5 columnas para conservar la lectura horizontal.
+
+2. Navegacion superior
+   - se agrego `Ordenar` apuntando a `/#ordenar`;
+   - se agrego `Redes` apuntando a `/#redes`;
+   - se cambio `Todos los modelos` por `Producto`;
+   - se cambio `Como ordenar` por `Ordenar`;
+   - se agrego hover sutil a los links principales: cambio a dorado, leve desplazamiento y linea inferior;
+   - se corrigio la alineacion de `Producto` para que tenga la misma altura visual que Inicio, Ordenar, Redes, Ruleta y Nosotros;
+   - `Producto` ahora despliega en hover/focus dos opciones:
+     - `Hombre` -> `/productos?gender=hombre`;
+     - `Mujer` -> `/productos?gender=mujer`;
+   - el menu mobile tambien muestra Producto, Ordenar, Redes, Ruleta y Nosotros, con accesos Hombre/Mujer debajo de Producto.
+
+3. Redes sociales
+   - se elimino Facebook de la home y del footer porque no se va a usar;
+   - se mantuvieron Instagram, YouTube y TikTok;
+   - se asociaron los links reales:
+     - Instagram: `https://www.instagram.com/roxwana.info/`;
+     - YouTube: `https://www.youtube.com/@ROXWANAINFO`;
+     - TikTok: `https://www.tiktok.com/@roxwanainfo`;
+   - los iconos sociales de la seccion de redes y del footer ya abren las redes reales cuando corresponde.
+
+4. Sonido y reaccion de carrito
+   - se agrego el archivo `public/audio/cart-add.mp3` a partir del audio enviado por el usuario;
+   - el header reproduce ese sonido cuando un producto se agrega correctamente al carrito;
+   - se agrego animacion `rox-cart-add-react` para que el icono del carrito se infle y se sacuda sutilmente;
+   - se agrego `rox-cart-toast` para mostrar una confirmacion breve debajo del carrito con la prenda agregada;
+   - se agrego `rox-loading-button-bar` para reemplazar el estado gris de carga por una barra dorada interna en los botones que dicen `Agregando...`;
+   - se quitaron las leyendas duplicadas de exito bajo los botones, por ejemplo `Agregado al carrito.`, para que la confirmacion viva en el mini aviso del carrito.
+
+5. Mini-carrito en hover
+   - el icono del carrito del header ahora despliega un mini-carrito al hacer hover o foco;
+   - el panel se mantiene abierto al bajar el mouse desde el icono hacia el panel;
+   - el mini-carrito muestra:
+     - cantidad total;
+     - total estimado;
+     - hasta 4 productos recientes;
+     - imagen o fallback `RXW`;
+     - nombre, modelo, color, talle, cantidad y precio;
+   - se agregaron controles directos dentro del mini-carrito:
+     - sumar cantidad;
+     - restar cantidad;
+     - quitar producto;
+     - limpiar todo;
+     - ir a `Ver carrito`;
+   - se agregaron endpoints para soportar esas acciones sin entrar a la pagina completa:
+     - `app/api/cart/preview/route.ts`;
+     - `app/api/cart/items/[itemId]/route.ts`;
+     - `app/api/cart/clear/route.ts`;
+   - si el usuario esta en `/carrito`, las mutaciones desde el mini-carrito refrescan tambien la vista de fondo.
+
+6. Pagina de carrito
+   - se agrego el boton `Limpiar todo` en `/carrito`;
+   - se agrego `clearCartAction` en `lib/cart/actions.ts`;
+   - se actualizo `updated_at` al modificar cantidad para detectar correctamente el ultimo producto agregado o actualizado;
+   - se mantuvieron los controles previos de actualizar cantidad y quitar producto.
+
+7. Catalogo `Todos los modelos`
+   - se saco el codigo/SKU visible de arriba de las tarjetas;
+   - se sacaron los talles visibles en la tarjeta cerrada;
+   - se dejaron visibles los colores;
+   - se igualo la altura de tarjetas para que las acciones queden alineadas;
+   - `ProductCard` paso a ser interactiva como las tarjetas destacadas:
+     - usa galeria local;
+     - muestra flechas de imagen anterior/siguiente;
+     - muestra contador `1/N`;
+     - el hover prioriza imagen con `role=hover`, vista `03` o archivo `-03-desktop.webp`;
+     - permite recorrer todas las imagenes de la prenda antes de entrar al detalle;
+   - se mantuvo que los talles aparezcan solo al abrir el panel de agregar o al entrar a la ficha.
+
+8. Pared de posters
+   - cada poster ahora es un link a `/producto/[slug]`;
+   - el marquee se pausa al hover o al foco;
+   - se agrego indicador `Ver prenda`;
+   - se mantuvo Pared de Posters como bloque oscuro tambien en modo claro, por decision de identidad visual.
+
+9. Modo claro / modo oscuro
+   - se agrego `theme-home` a `app/page.tsx` para poder controlar la home en modo claro;
+   - se agrego `theme-force-dark` para secciones que deben conservar fondo oscuro;
+   - hubo una primera solucion incorrecta que aplicaba overlays blancos sobre imagenes de portada, Hombre/Mujer, Entregas, Ruleta y footer;
+   - esa solucion fue rechazada por el usuario porque lavaba imagenes importantes y se veia mal;
+   - correccion final:
+     - Portada queda intacta y oscura;
+     - Hombre/Mujer conserva sus imagenes normales, sin filtro blanco encima;
+     - Pared de Posters queda siempre oscura;
+     - Entregas queda oscura porque el mapa actual esta preparado para fondo negro y no se rehizo un asset blanco confiable;
+     - Ruleta queda oscura porque en blanco se leia mal con imagenes/producto;
+     - Footer queda oscuro como estaba;
+     - secciones de catalogo/destacados, redes y proceso de pedido quedan claras cuando el modo claro esta activo;
+   - esto evita el efecto de "capa blanca encima" y deja solo las secciones adecuadas en blanco.
+
+10. Correcciones de detalle
+   - se corrigio que el hover de `Producto` quedara desalineado respecto de los demas items del header;
+   - se midio la alineacion con navegador y todos los links quedaron con el mismo `y` y `height`;
+   - se mantuvo el dropdown Hombre/Mujer funcionando despues de esa correccion;
+   - se mantuvo el servidor local respondiendo en `http://127.0.0.1:3000/`.
+
+### Problemas encontrados y decisiones
+
+1. Modo claro mal resuelto en primer intento
+   - Sintoma: portada, Hombre/Mujer, Entregas, Ruleta y footer quedaban como imagenes oscuras con una capa blanca encima.
+   - Causa: se intento resolver el tema claro con reglas globales demasiado agresivas sobre imagenes y overlays.
+   - Correccion: se quitaron esos lavados, se devolvieron portada/footer/ruleta/entregas a oscuro y se dejo claro solo lo que se puede resolver bien sin rehacer assets.
+
+2. Entregas no tiene asset blanco confiable
+   - Sintoma: el mapa oscuro de fondo se veia mal bajo modo blanco.
+   - Decision: dejar Entregas oscura hasta que exista una version blanca del mapa/fondo preparada correctamente.
+
+3. Footer no necesitaba modo claro
+   - Sintoma: al convertirlo a blanco perdia identidad y se veia forzado.
+   - Correccion: footer vuelve a quedar como estaba.
+
+4. Header `Producto` quedo desalineado
+   - Sintoma: al convertirlo en dropdown, el link quedo a otra altura que Inicio/Ordenar/Redes/Ruleta/Nosotros.
+   - Correccion: se unifico la caja del link y se movio la animacion al wrapper correcto.
+
+5. Hover de Pared de Posters sobre elemento en movimiento
+   - Sintoma: solo CSS podia fallar o ser dificil de validar porque el marquee se mueve.
+   - Correccion: el componente ahora maneja estado `paused` en mouse/focus y aplica `rox-marquee-paused`.
+
+6. Mini-carrito necesitaba no cerrarse al bajar el mouse
+   - Sintoma: el usuario no podia bajar al panel para tocar `Ver carrito` o botones internos.
+   - Correccion: se agrego un wrapper con area continua entre icono y panel, y el cierre se maneja en `mouseleave`/`blur` del contenedor completo.
+
+### Archivos principales tocados
+
+- `app/page.tsx`
+- `app/carrito/page.tsx`
+- `app/globals.css`
+- `app/api/cart/preview/route.ts`
+- `app/api/cart/items/[itemId]/route.ts`
+- `app/api/cart/clear/route.ts`
+- `components/layout/Header.tsx`
+- `components/layout/MobileMenu.tsx`
+- `components/layout/Footer.tsx`
+- `components/home/OrderTimeline.tsx`
+- `components/home/PrintWallMarquee.tsx`
+- `components/home/GenderFilteredDrop.tsx`
+- `components/home/HeroCampaign.tsx`
+- `components/home/ShippingSection.tsx`
+- `components/home/RandomPrintTeaser.tsx`
+- `components/home/SocialFollowSection.tsx`
+- `components/product/ProductCard.tsx`
+- `components/product/ProductQuickActions.tsx`
+- `components/product/ProductSelector.tsx`
+- `lib/cart/actions.ts`
+- `public/audio/cart-add.mp3`
+
+### Validacion ejecutada
+
+```bash
+npm.cmd run lint
+npx.cmd tsc --noEmit --incremental false --pretty false
+Invoke-WebRequest -Uri http://127.0.0.1:3000/ -UseBasicParsing -TimeoutSec 15
+npm.cmd run build
+```
+
+Resultado:
+
+- lint paso;
+- TypeScript paso;
+- la home local respondio `200`;
+- build de Next.js paso correctamente;
+- Next genero 19 rutas/paginas durante el build;
+- se incluyeron las rutas nuevas `/api/cart/preview`, `/api/cart/items/[itemId]` y `/api/cart/clear`;
+- se verificaron con navegador checks locales en `.codex-checks`:
+  - hover/dropdown de Producto con Hombre/Mujer;
+  - alineacion de links del header;
+  - galeria de tarjetas de producto;
+  - pausa de Pared de Posters;
+  - mini-carrito con toast/preview;
+  - captura de modo claro corregido.
+
+### Estado GitHub previsto
+
+- esta tanda se guarda como version super estable posterior a `roxwana-home-visual-redes-estable-2026-06-17`;
+- tag estable previsto: `roxwana-carrito-catalogo-nav-estable-2026-06-17`;
+- remoto: `origin https://github.com/Lucasleiva1/pagina-roxwana.git`;
+- se publicara en `main` para poder volver a este estado exacto si algo se rompe;
+- este registro separa claramente el estado final de la solucion incorrecta inicial de modo claro.

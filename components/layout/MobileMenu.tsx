@@ -6,9 +6,27 @@ import { X } from "lucide-react";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { RoxButton } from "@/components/ui/RoxButton";
 
-const navItems = [
+type NavItem = {
+  label: string;
+  href: string;
+  children?: Array<{
+    label: string;
+    href: string;
+  }>;
+};
+
+const navItems: NavItem[] = [
   { label: "Inicio", href: "/" },
-  { label: "Todos los modelos", href: "/productos" },
+  {
+    label: "Producto",
+    href: "/productos",
+    children: [
+      { label: "Hombre", href: "/productos?gender=hombre" },
+      { label: "Mujer", href: "/productos?gender=mujer" }
+    ]
+  },
+  { label: "Ordenar", href: "/#ordenar" },
+  { label: "Redes", href: "/#redes" },
   { label: "Ruleta", href: "/random" },
   { label: "Nosotros", href: "/nosotros" }
 ];
@@ -44,18 +62,33 @@ export function MobileMenu({ isOpen, onClose, cartCount }: { isOpen: boolean; on
       <nav className="px-5 pt-10">
         <div className="space-y-4">
           {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={onClose}
-              className="headline block border-b border-bone/12 py-5 text-4xl text-bone"
-            >
-              {item.label}
-            </Link>
+            <div key={item.href}>
+              <Link
+                href={item.href}
+                onClick={onClose}
+                className="headline block border-b border-bone/12 py-5 text-4xl text-bone transition duration-300 hover:translate-x-1 hover:border-roxgold/55 hover:text-roxgold"
+              >
+                {item.label}
+              </Link>
+              {item.children ? (
+                <div className="grid grid-cols-2 gap-3 border-b border-bone/12 py-3">
+                  {item.children.map((child) => (
+                    <Link
+                      key={child.href}
+                      href={child.href}
+                      onClick={onClose}
+                      className="border border-roxgold/35 px-4 py-3 text-center text-xs font-black uppercase tracking-rox text-roxgold transition hover:bg-roxgold hover:text-charcoal"
+                    >
+                      {child.label}
+                    </Link>
+                  ))}
+                </div>
+              ) : null}
+            </div>
           ))}
         </div>
         <RoxButton href="/productos" variant="bone" className="mt-10 w-full" onClick={onClose}>
-          Todos los modelos
+          Producto
         </RoxButton>
         <div className="mt-4 grid grid-cols-2 gap-3">
           <RoxButton href="/login" variant="ghost" className="w-full" onClick={onClose}>

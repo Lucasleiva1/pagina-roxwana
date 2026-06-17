@@ -4,7 +4,8 @@ const steps = [
   { label: "Elegis modelo", copy: "Mirás la prenda, el codigo y las fotos del drop." },
   { label: "Seleccionas talle/color", copy: "Definis las opciones antes de agregarlo al carrito." },
   { label: "Agregas al carrito", copy: "Tu seleccion queda guardada para revisar el pedido." },
-  { label: "Completas entrega y WhatsApp", copy: "Cargas tus datos en el carrito y envias la peticion." }
+  { label: "Completas entrega y WhatsApp", copy: "Cargas tus datos en el carrito y envias la peticion." },
+  { label: "Pagas y recibis seguimiento", copy: "Te enviamos por WhatsApp el enlace de pago de Mercado Pago. Cuando se confirma, preparamos el envio y te pasamos el numero de seguimiento." }
 ];
 
 export function OrderTimeline({ section }: { section?: HomeSection | null }) {
@@ -17,7 +18,7 @@ export function OrderTimeline({ section }: { section?: HomeSection | null }) {
           <p className="mt-5 text-sm leading-7 text-bone/64">{section?.body || "Elegis la prenda, armas el carrito y mandas el pedido por WhatsApp con tus datos de entrega."}</p>
         </div>
 
-        <div className="relative mt-12 grid gap-5 md:grid-cols-4">
+        <div className="relative mt-12 grid gap-5 md:grid-cols-5">
           <div className="absolute left-0 right-0 top-12 hidden h-px bg-roxgold/26 md:block" />
           {steps.map((step, index) => (
             <article key={step.label} className={`paper-edge texture-panel relative bg-ink p-6 shadow-gold-soft ${index % 2 === 0 ? "md:mt-0" : "md:mt-10"}`}>

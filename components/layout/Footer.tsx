@@ -1,8 +1,10 @@
 import Link from "next/link";
-import { Facebook, Instagram, Music2, Youtube, type LucideIcon } from "lucide-react";
+import { Instagram, Music2, Youtube, type LucideIcon } from "lucide-react";
 import { FooterBackground } from "@/components/layout/FooterBackground";
 
-const socialUrl = "https://www.instagram.com/roxwana.info/";
+const instagramUrl = "https://www.instagram.com/roxwana.info/";
+const youtubeUrl = "https://www.youtube.com/@ROXWANAINFO";
+const tiktokUrl = "https://www.tiktok.com/@roxwanainfo";
 
 type SocialLink = {
   label: string;
@@ -11,10 +13,9 @@ type SocialLink = {
 };
 
 const socialLinks: SocialLink[] = [
-  { label: "Instagram", icon: Instagram, href: socialUrl },
-  { label: "Facebook", icon: Facebook, href: socialUrl },
-  { label: "YouTube", icon: Youtube },
-  { label: "TikTok", icon: Music2 }
+  { label: "Instagram", icon: Instagram, href: instagramUrl },
+  { label: "YouTube", icon: Youtube, href: youtubeUrl },
+  { label: "TikTok", icon: Music2, href: tiktokUrl }
 ];
 
 export function Footer() {
@@ -26,7 +27,7 @@ export function Footer() {
   ];
 
   return (
-    <footer className="relative isolate overflow-hidden border-t border-roxgold/20 bg-ink py-16">
+    <footer className="theme-footer relative isolate overflow-hidden border-t border-roxgold/20 bg-ink py-16">
       <FooterBackground />
       <div className="pointer-events-none absolute inset-0 opacity-10">
         <div className="h-full w-full bg-[repeating-linear-gradient(135deg,rgba(246,243,238,0.05)_0_1px,transparent_1px_10px)]" />

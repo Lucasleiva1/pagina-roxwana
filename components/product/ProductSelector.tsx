@@ -50,7 +50,7 @@ export function ProductSelector({
         return;
       }
 
-      setMessage("Producto agregado. Tu carrito quedo guardado.");
+      setMessage(null);
       window.dispatchEvent(new CustomEvent("roxwana-cart-updated"));
       router.refresh();
     });
@@ -111,9 +111,12 @@ export function ProductSelector({
           type="button"
           onClick={addToCart}
           disabled={!canAdd || isPending}
-          className="min-h-11 border border-roxgold bg-roxgold px-5 py-3 text-xs font-bold uppercase tracking-rox text-charcoal transition hover:border-bone disabled:cursor-not-allowed disabled:border-bone/20 disabled:bg-bone/20 disabled:text-bone/40"
+          className={`relative min-h-11 overflow-hidden border px-5 py-3 text-xs font-bold uppercase tracking-rox transition hover:border-bone disabled:cursor-not-allowed ${
+            isPending ? "border-roxgold bg-charcoal text-bone" : "border-roxgold bg-roxgold text-charcoal disabled:border-bone/20 disabled:bg-bone/20 disabled:text-bone/40"
+          }`}
         >
-          {isPending ? "Agregando..." : "Agregar al carrito"}
+          {isPending ? <span className="rox-loading-button-bar absolute inset-y-0 left-0 w-full bg-roxgold/45" aria-hidden="true" /> : null}
+          <span className="relative z-10">{isPending ? "Agregando..." : "Agregar al carrito"}</span>
         </button>
         <a href="/carrito" className="inline-flex min-h-11 items-center justify-center border border-bone/45 px-5 py-3 text-xs font-bold uppercase tracking-rox text-bone">
           Ver carrito

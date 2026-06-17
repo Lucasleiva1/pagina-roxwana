@@ -64,7 +64,7 @@ export function ProductQuickActions({ product, viewVariant = "bone", className =
         return;
       }
 
-      setMessage("Agregado al carrito.");
+      setMessage(null);
       window.dispatchEvent(new CustomEvent("roxwana-cart-updated"));
       router.refresh();
     });
@@ -153,11 +153,14 @@ export function ProductQuickActions({ product, viewVariant = "bone", className =
             type="button"
             onClick={addToCart}
             disabled={!canAdd || isPending}
-            className="mt-5 inline-flex min-h-10 w-full items-center justify-center gap-2 border border-roxgold bg-roxgold px-4 py-2 text-xs font-bold uppercase tracking-rox text-charcoal transition hover:border-bone disabled:cursor-not-allowed disabled:border-bone/20 disabled:bg-bone/20 disabled:text-bone/40"
+            className={`relative mt-5 inline-flex min-h-10 w-full items-center justify-center gap-2 overflow-hidden border px-4 py-2 text-xs font-bold uppercase tracking-rox transition hover:border-bone disabled:cursor-not-allowed ${
+              isPending ? "border-roxgold bg-charcoal text-bone" : "border-roxgold bg-roxgold text-charcoal disabled:border-bone/20 disabled:bg-bone/20 disabled:text-bone/40"
+            }`}
             data-quick-add-confirm={product.modelCode}
           >
-            <Check size={15} />
-            {isPending ? "Agregando..." : "Confirmar carrito"}
+            {isPending ? <span className="rox-loading-button-bar absolute inset-y-0 left-0 w-full bg-roxgold/45" aria-hidden="true" /> : null}
+            <Check size={15} className="relative z-10" />
+            <span className="relative z-10">{isPending ? "Agregando..." : "Confirmar carrito"}</span>
           </button>
 
           {message ? <p className="mt-3 border border-bone/12 bg-charcoal/80 px-3 py-2 text-xs leading-5 text-bone/72">{message}</p> : null}

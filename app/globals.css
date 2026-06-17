@@ -34,6 +34,14 @@ body {
   font-family: var(--font-body), Arial, sans-serif;
 }
 
+html[data-theme="light"] body {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(177, 18, 38, 0.06), transparent 34rem),
+    radial-gradient(circle at 88% 12%, rgba(200, 164, 106, 0.08), transparent 28rem),
+    #f6f3ee;
+  color: #111111;
+}
+
 body::before {
   pointer-events: none;
   content: "";
@@ -174,8 +182,85 @@ a {
   }
 }
 
+@keyframes rox-cart-add-react {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  18% {
+    transform: translate3d(0, -1px, 0) scale(1.12) rotate(-6deg);
+  }
+
+  36% {
+    transform: translate3d(3px, 0, 0) scale(1.08) rotate(6deg);
+  }
+
+  54% {
+    transform: translate3d(-3px, 0, 0) scale(1.06) rotate(-4deg);
+  }
+
+  72% {
+    transform: translate3d(2px, 0, 0) scale(1.03) rotate(3deg);
+  }
+
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes rox-cart-toast {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -8px, 0) scale(0.96);
+  }
+
+  14% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  82% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate3d(0, -6px, 0) scale(0.98);
+  }
+}
+
+@keyframes rox-button-progress {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  56% {
+    transform: translateX(-22%);
+  }
+
+  100% {
+    transform: translateX(0);
+  }
+}
+
 .random-print-selection-pop {
   animation: random-print-selection-pop 720ms ease-out;
+}
+
+.rox-cart-add-react {
+  animation: rox-cart-add-react 680ms cubic-bezier(0.2, 0.9, 0.25, 1);
+  transform-origin: center;
+  will-change: transform;
+}
+
+.rox-cart-toast {
+  animation: rox-cart-toast 2800ms ease-out forwards;
+  transform-origin: top right;
+}
+
+.rox-loading-button-bar {
+  animation: rox-button-progress 1200ms ease-out forwards;
 }
 
 .random-print-confetti-piece {
@@ -186,10 +271,24 @@ a {
   animation: rox-wall-marquee 38s linear infinite;
 }
 
+.rox-marquee-track:hover,
+.rox-marquee-track:focus-within,
+.rox-marquee-track:has(a:hover),
+.rox-marquee-track:has(a:focus-visible) {
+  animation-play-state: paused;
+}
+
+.rox-marquee-paused {
+  animation-play-state: paused;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .rox-marquee-track,
   .random-print-selection-pop,
-  .random-print-confetti-piece {
+  .random-print-confetti-piece,
+  .rox-cart-add-react,
+  .rox-cart-toast,
+  .rox-loading-button-bar {
     animation: none;
   }
 
@@ -296,4 +395,137 @@ html[data-theme="light"] .theme-shop textarea {
 html[data-theme="light"] .theme-shop input::placeholder,
 html[data-theme="light"] .theme-shop textarea::placeholder {
   color: rgba(21, 21, 21, 0.48);
+}
+
+html[data-theme="light"] .theme-home {
+  background: #f6f3ee;
+  color: #111111;
+}
+
+html[data-theme="light"] .theme-home section:not(.theme-force-dark),
+html[data-theme="light"] .theme-home .theme-shop,
+html[data-theme="light"] .theme-home .theme-shop.bg-ink,
+html[data-theme="light"] .theme-home .bg-ink,
+html[data-theme="light"] .theme-home .bg-charcoal {
+  background-color: #f6f3ee;
+}
+
+html[data-theme="light"] .theme-home .bg-charcoal\/78,
+html[data-theme="light"] .theme-home .bg-charcoal\/80,
+html[data-theme="light"] .theme-home .bg-charcoal\/82,
+html[data-theme="light"] .theme-home .bg-charcoal\/96,
+html[data-theme="light"] .theme-home .bg-ink\/45,
+html[data-theme="light"] .theme-home .bg-ink\/50,
+html[data-theme="light"] .theme-home .bg-ink\/62,
+html[data-theme="light"] .theme-home .bg-ink\/70,
+html[data-theme="light"] .theme-home .bg-ink\/72,
+html[data-theme="light"] .theme-home .bg-ink\/74,
+html[data-theme="light"] .theme-home .bg-ink\/76,
+html[data-theme="light"] .theme-home .bg-ink\/78 {
+  background-color: rgba(255, 255, 255, 0.86);
+}
+
+html[data-theme="light"] .theme-home .bg-bone {
+  background-color: #ffffff;
+}
+
+html[data-theme="light"] .theme-home .text-bone,
+html[data-theme="light"] .theme-home .text-bone\/58,
+html[data-theme="light"] .theme-home .text-bone\/62,
+html[data-theme="light"] .theme-home .text-bone\/64,
+html[data-theme="light"] .theme-home .text-bone\/66,
+html[data-theme="light"] .theme-home .text-bone\/68,
+html[data-theme="light"] .theme-home .text-bone\/70,
+html[data-theme="light"] .theme-home .text-bone\/72,
+html[data-theme="light"] .theme-home .text-bone\/74,
+html[data-theme="light"] .theme-home .text-bone\/76,
+html[data-theme="light"] .theme-home .text-bone\/78,
+html[data-theme="light"] .theme-home .text-ink,
+html[data-theme="light"] .theme-home .text-ink\/30,
+html[data-theme="light"] .theme-home .text-ink\/42,
+html[data-theme="light"] .theme-home .text-ink\/72 {
+  color: #151515;
+}
+
+html[data-theme="light"] .theme-home .text-bone\/38,
+html[data-theme="light"] .theme-home .text-bone\/40,
+html[data-theme="light"] .theme-home .text-bone\/50,
+html[data-theme="light"] .theme-home .text-bone\/52,
+html[data-theme="light"] .theme-home .text-bone\/54 {
+  color: rgba(21, 21, 21, 0.56);
+}
+
+html[data-theme="light"] .theme-home .text-charcoal {
+  color: #111111;
+}
+
+html[data-theme="light"] .theme-home .border-bone,
+html[data-theme="light"] .theme-home .border-bone\/10,
+html[data-theme="light"] .theme-home .border-bone\/12,
+html[data-theme="light"] .theme-home .border-bone\/14,
+html[data-theme="light"] .theme-home .border-bone\/16,
+html[data-theme="light"] .theme-home .border-bone\/18,
+html[data-theme="light"] .theme-home .border-bone\/20,
+html[data-theme="light"] .theme-home .border-bone\/24,
+html[data-theme="light"] .theme-home .border-bone\/28,
+html[data-theme="light"] .theme-home .border-bone\/30,
+html[data-theme="light"] .theme-home .border-bone\/35,
+html[data-theme="light"] .theme-home .border-bone\/40,
+html[data-theme="light"] .theme-home .border-bone\/45 {
+  border-color: rgba(17, 17, 17, 0.14);
+}
+
+html[data-theme="light"] .theme-home .shadow-gold-soft,
+html[data-theme="light"] .theme-home .shadow-hard-red {
+  box-shadow: 0 0 0 1px rgba(200, 164, 106, 0.18), 0 18px 42px rgba(17, 17, 17, 0.10);
+}
+
+html[data-theme="light"] .theme-home .texture-panel::before {
+  opacity: 0.18;
+  background:
+    linear-gradient(120deg, rgba(177, 18, 38, 0.05), transparent 42%),
+    repeating-linear-gradient(0deg, rgba(17, 17, 17, 0.025), rgba(17, 17, 17, 0.025) 1px, transparent 1px, transparent 7px);
+}
+
+html[data-theme="light"] .theme-home .gender-entry-card .text-bone\/74 {
+  color: rgba(246, 243, 238, 0.74);
+}
+
+html[data-theme="light"] .theme-home .theme-force-dark,
+html[data-theme="light"] .theme-home .theme-force-dark.bg-charcoal,
+html[data-theme="light"] .theme-home .theme-force-dark.bg-ink,
+html[data-theme="light"] .theme-home .theme-force-dark .bg-ink,
+html[data-theme="light"] .theme-home .theme-force-dark .bg-charcoal,
+html[data-theme="light"] .theme-home .theme-force-dark .bg-charcoal\/78,
+html[data-theme="light"] .theme-home .theme-force-dark .bg-charcoal\/80,
+html[data-theme="light"] .theme-home .theme-force-dark .bg-charcoal\/82,
+html[data-theme="light"] .theme-home .theme-force-dark .bg-charcoal\/96,
+html[data-theme="light"] .theme-home .theme-force-dark .bg-ink\/45,
+html[data-theme="light"] .theme-home .theme-force-dark .bg-ink\/50,
+html[data-theme="light"] .theme-home .theme-force-dark .bg-ink\/62,
+html[data-theme="light"] .theme-home .theme-force-dark .bg-ink\/70,
+html[data-theme="light"] .theme-home .theme-force-dark .bg-ink\/72,
+html[data-theme="light"] .theme-home .theme-force-dark .bg-ink\/74,
+html[data-theme="light"] .theme-home .theme-force-dark .bg-ink\/76,
+html[data-theme="light"] .theme-home .theme-force-dark .bg-ink\/78 {
+  background-color: #111111;
+  color: #f6f3ee;
+}
+
+html[data-theme="light"] .theme-home .theme-force-dark .text-bone,
+html[data-theme="light"] .theme-home .theme-force-dark .text-bone\/58,
+html[data-theme="light"] .theme-home .theme-force-dark .text-bone\/62,
+html[data-theme="light"] .theme-home .theme-force-dark .text-bone\/64,
+html[data-theme="light"] .theme-home .theme-force-dark .text-bone\/66,
+html[data-theme="light"] .theme-home .theme-force-dark .text-bone\/68,
+html[data-theme="light"] .theme-home .theme-force-dark .text-bone\/70,
+html[data-theme="light"] .theme-home .theme-force-dark .text-bone\/72,
+html[data-theme="light"] .theme-home .theme-force-dark .text-bone\/74,
+html[data-theme="light"] .theme-home .theme-force-dark .text-bone\/76,
+html[data-theme="light"] .theme-home .theme-force-dark .text-bone\/78 {
+  color: #f6f3ee;
+}
+
+html[data-theme="light"] .theme-home .theme-force-dark .text-charcoal {
+  color: #111111;
 }

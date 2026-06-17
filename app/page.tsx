@@ -43,5 +43,5 @@ export default async function Home() {
     }
   }
 
-  return <>{rendered}</>;
+  return <main className="theme-home">{rendered}</main>;
 }
