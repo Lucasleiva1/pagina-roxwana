@@ -12,7 +12,7 @@ import {
   X,
   type LucideIcon
 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useRef, type MouseEvent as ReactMouseEvent } from "react";
 import { ThemeLogoControl } from "@/components/layout/ThemeLogoControl";
 
 type NavItem = {
@@ -43,11 +43,29 @@ const navItems: NavItem[] = [
 ];
 
 export function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  const navigationStartedRef = useRef(false);
+
+  const handleNavigation = (event: ReactMouseEvent<HTMLAnchorElement>, href: string) => {
+    navigationStartedRef.current = true;
+
+    if (href === "/" && window.location.pathname === "/") {
+      event.preventDefault();
+      onClose();
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => window.scrollTo({ top: 0, left: 0, behavior: "auto" }));
+      });
+      return;
+    }
+
+    onClose();
+  };
+
   useEffect(() => {
     if (!isOpen) {
       return;
     }
 
+    navigationStartedRef.current = false;
     const scrollY = window.scrollY;
     const previousBodyStyles = {
       overflow: document.body.style.overflow,
@@ -78,9 +96,12 @@ export function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () =
       document.body.style.position = previousBodyStyles.position;
       document.body.style.top = previousBodyStyles.top;
       document.body.style.width = previousBodyStyles.width;
-      window.requestAnimationFrame(() => {
-        window.requestAnimationFrame(() => window.scrollTo(0, scrollY));
-      });
+
+      if (!navigationStartedRef.current) {
+        window.requestAnimationFrame(() => {
+          window.requestAnimationFrame(() => window.scrollTo(0, scrollY));
+        });
+      }
     };
   }, [isOpen, onClose]);
 
@@ -97,8 +118,14 @@ export function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () =
     >
       <div className="mobile-menu-header flex h-20 shrink-0 items-center justify-between border-b border-bone/12 px-5">
         <div className="flex items-center gap-3">
-          <ThemeLogoControl size={48} onNavigate={onClose} />
-          <Link href="/" onClick={onClose} aria-label="Ir al inicio">
+          <ThemeLogoControl
+            size={48}
+            onNavigate={() => {
+              navigationStartedRef.current = true;
+              onClose();
+            }}
+          />
+          <Link href="/" onClick={(event) => handleNavigation(event, "/")} aria-label="Ir al inicio">
             <span className="headline text-2xl text-bone">ROXWANA</span>
           </Link>
         </div>
@@ -122,7 +149,7 @@ export function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                 <div key={item.href} className="border-b border-bone/12 last:border-b-0">
                   <Link
                     href={item.href}
-                    onClick={onClose}
+                    onClick={(event) => handleNavigation(event, item.href)}
                     className="mobile-menu-link flex min-h-12 items-center gap-3 px-4 py-3 text-sm font-black uppercase tracking-rox text-bone transition hover:bg-roxgold/10 hover:text-roxgold"
                   >
                     <Icon className="h-[18px] w-[18px] shrink-0 text-roxgold" aria-hidden="true" />
@@ -134,7 +161,7 @@ export function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                         <Link
                           key={child.href}
                           href={child.href}
-                          onClick={onClose}
+                          onClick={(event) => handleNavigation(event, child.href)}
                           className="flex min-h-10 items-center justify-center rounded-md border border-roxgold/35 px-3 py-2 text-[11px] font-black uppercase tracking-rox text-roxgold transition hover:bg-roxgold hover:text-charcoal"
                         >
                           {child.label}
@@ -151,7 +178,7 @@ export function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () =
         <div className="mt-5">
           <Link
             href="/login"
-            onClick={onClose}
+            onClick={(event) => handleNavigation(event, "/login")}
             className="mobile-menu-action flex min-h-12 w-full items-center justify-center gap-2 rounded-md border border-bone/20 px-3 text-xs font-black uppercase tracking-rox text-bone transition hover:border-roxgold"
           >
             <CircleUserRound size={17} className="text-roxgold" aria-hidden="true" />
