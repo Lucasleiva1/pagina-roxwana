@@ -54,7 +54,7 @@ export function CartCheckout({ profile, latestAddress }: { profile: CustomerProf
   };
 
   return (
-    <form onSubmit={submit} className="grid gap-4 border border-roxgold/24 bg-charcoal p-5">
+    <form onSubmit={submit} className="cart-checkout-panel grid gap-4 border border-roxgold/24 bg-charcoal p-5">
       <div>
         <p className="text-xs font-bold uppercase tracking-rox text-roxgold">Datos de entrega</p>
         <h2 className="headline mt-2 text-4xl text-bone">CHECKOUT</h2>
@@ -103,7 +103,7 @@ export function CartCheckout({ profile, latestAddress }: { profile: CustomerProf
         {isPending ? "Guardando..." : "Enviar pedido por WhatsApp"}
       </button>
       {message ? (
-        <p className={`border p-3 text-sm leading-6 ${orderSent ? "border-roxred/50 bg-roxred/10 text-bone" : "border-roxgold/30 bg-roxgold/10 text-bone/78"}`}>
+        <p className={`cart-checkout-message border p-3 text-sm leading-6 ${orderSent ? "border-roxred/50 bg-roxred/10 text-bone" : "border-roxgold/30 bg-roxgold/10 text-bone/78"}`}>
           {message}
         </p>
       ) : null}

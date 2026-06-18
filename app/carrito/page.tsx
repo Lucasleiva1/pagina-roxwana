@@ -17,7 +17,7 @@ export default async function CartPage() {
   const cartTotal = items.reduce((total, item) => total + (item.priceSnapshot || 0) * item.quantity, 0);
 
   return (
-    <section className="min-h-screen bg-ink pb-20 pt-28">
+    <section className="theme-shop cart-page min-h-screen bg-ink pb-20 pt-28">
       <CartCountSync count={cartCount} />
       <div className="rox-container grid gap-8 lg:grid-cols-[1fr_420px] lg:items-start">
         <div className="grid gap-6">
@@ -26,9 +26,9 @@ export default async function CartPage() {
           {items.length > 0 ? (
             <div className="grid gap-3">
               {items.map((item) => (
-                <article key={item.id} className="grid gap-4 border border-bone/12 bg-charcoal p-4 md:grid-cols-[minmax(0,1fr)_auto]">
+                <article key={item.id} className="cart-item-card grid gap-4 border border-bone/12 bg-charcoal p-4 md:grid-cols-[minmax(0,1fr)_auto]">
                   <div className="grid min-w-0 grid-cols-[5.5rem_minmax(0,1fr)] gap-4 sm:grid-cols-[7rem_minmax(0,1fr)]">
-                    <div className="relative aspect-[3/4] overflow-hidden border border-bone/12 bg-bone">
+                    <div className="cart-item-media relative aspect-[3/4] overflow-hidden border border-bone/12 bg-charcoal">
                       {item.imageUrl ? (
                         <Image src={item.imageUrl} alt={item.productName} fill sizes="112px" className="object-contain object-center p-1.5" />
                       ) : (
@@ -80,7 +80,7 @@ export default async function CartPage() {
               ))}
             </div>
           ) : (
-            <div className="border border-bone/12 bg-charcoal p-6">
+            <div className="cart-empty-state border border-bone/12 bg-charcoal p-6">
               <p className="text-sm leading-6 text-bone/62">Todavia no agregaste productos al carrito.</p>
               <Link href="/productos" className="mt-5 inline-flex min-h-11 items-center border border-bone bg-bone px-5 text-xs font-bold uppercase tracking-rox text-charcoal">
                 Ver productos
@@ -88,7 +88,7 @@ export default async function CartPage() {
             </div>
           )}
           {items.length > 0 ? (
-            <div className="flex items-center justify-between border border-roxgold/30 bg-charcoal p-4">
+            <div className="cart-total-panel flex items-center justify-between border border-roxgold/30 bg-charcoal p-4">
               <p className="text-xs font-bold uppercase tracking-rox text-steel">Total productos</p>
               <div className="flex flex-wrap items-center justify-end gap-3">
                 <p className="text-xl font-black text-roxgold">{formatPrice(cartTotal)}</p>

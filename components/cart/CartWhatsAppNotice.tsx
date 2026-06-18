@@ -55,7 +55,7 @@ export function CartWhatsAppNotice({ initialNotice = null }: { initialNotice?: S
   }
 
   return (
-    <div className="border border-roxred/50 bg-roxred/10 p-4 text-sm leading-6 text-bone">
+    <div className="cart-whatsapp-notice border border-roxred/50 bg-roxred/10 p-4 text-sm leading-6 text-bone">
       <p>{notice.message}</p>
       <a href={notice.url} target="_blank" rel="noreferrer" className="mt-3 inline-flex min-h-10 items-center border border-roxred bg-roxred px-4 text-xs font-bold uppercase tracking-rox text-bone">
         Abrir WhatsApp

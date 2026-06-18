@@ -3,28 +3,22 @@ import Link from "next/link";
 
 export default function NosotrosPage() {
   return (
-    <section className="relative min-h-screen overflow-hidden bg-ink pt-24 text-bone">
-      <Image
-        src="/images/nosotros/nosotros-street-1920.webp"
-        alt=""
-        fill
-        priority
-        sizes="(min-width: 768px) 100vw, 0vw"
-        className="hidden object-cover object-[34%_center] opacity-68 md:block"
-      />
-      <Image
-        src="/images/nosotros/nosotros-street-768.webp"
-        alt=""
-        fill
-        priority
-        sizes="(min-width: 768px) 0vw, 100vw"
-        className="object-cover object-[35%_center] opacity-62 md:hidden"
-      />
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,#080808_0%,rgba(8,8,8,0.84)_40%,rgba(8,8,8,0.42)_100%)]" />
-      <div className="absolute inset-0 bg-[linear-gradient(0deg,#080808_0%,rgba(8,8,8,0)_42%,rgba(8,8,8,0.62)_100%)]" />
+    <section className="relative min-h-screen overflow-hidden bg-ink pt-20 text-bone md:pt-24">
+      <div className="relative aspect-[16/9] w-full border-b border-roxgold/18 md:absolute md:inset-0 md:aspect-auto md:border-0">
+        <Image
+          src="/images/nosotros/ntros.png"
+          alt="Modelo ROXWANA con remera negra de estilo urbano"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-center md:object-[center_center]"
+        />
+        <div className="absolute inset-0 bg-[linear-gradient(0deg,rgba(8,8,8,0.48)_0%,rgba(8,8,8,0)_52%)] md:bg-[linear-gradient(90deg,rgba(8,8,8,0.40)_0%,rgba(8,8,8,0.12)_50%,rgba(8,8,8,0.03)_100%)]" />
+      </div>
+      <div className="absolute inset-0 top-20 hidden bg-[linear-gradient(0deg,#080808_0%,rgba(8,8,8,0)_42%,rgba(8,8,8,0.28)_100%)] md:block" />
 
-      <div className="rox-container relative z-10 flex min-h-[calc(100vh-6rem)] items-center py-20">
-        <div className="max-w-3xl">
+      <div className="rox-container relative z-10 flex items-center py-14 md:min-h-[calc(100vh-6rem)] md:py-20">
+        <div className="max-w-2xl md:rounded-md md:bg-ink/18 md:p-6 md:backdrop-blur-[2px]">
           <p className="text-xs font-bold uppercase tracking-rox text-roxgold">Nosotros</p>
           <h1 className="headline mt-4 text-6xl leading-none text-bone md:text-9xl">ROXWANA</h1>
           <p className="headline mt-4 text-3xl leading-none text-bone/92 md:text-5xl">Street rock / graphic wear</p>

@@ -51,7 +51,7 @@ export function ProductCard({ product }: { product: Product }) {
 
   return (
     <article className="group relative flex h-full flex-col overflow-hidden border border-bone/12 bg-ink shadow-gold-soft" data-product-model={product.modelCode}>
-      <div className="relative aspect-[16/10] shrink-0 overflow-hidden bg-charcoal" onMouseEnter={() => setHoveringImage(true)} onMouseLeave={resetGallery}>
+      <div className="product-card-media relative aspect-[16/10] shrink-0 overflow-hidden bg-charcoal" onMouseEnter={() => setHoveringImage(true)} onMouseLeave={resetGallery}>
         <ProductResponsiveImage
           key={currentImage}
           src={currentImage}

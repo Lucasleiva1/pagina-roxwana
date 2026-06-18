@@ -6,7 +6,7 @@ import { Menu, Minus, Plus, Search, ShoppingCart, Trash2, User } from "lucide-re
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { MobileMenu } from "@/components/layout/MobileMenu";
-import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { ThemeLogoControl } from "@/components/layout/ThemeLogoControl";
 
 type NavItem = {
   label: string;
@@ -72,6 +72,7 @@ export function Header() {
   const cartToastTimeoutRef = useRef<number | null>(null);
   const pathname = usePathname();
   const router = useRouter();
+  const closeMobileMenu = useCallback(() => setMenuOpen(false), []);
 
   const refreshCartCount = useCallback(async () => {
     try {
@@ -243,17 +244,12 @@ export function Header() {
     <>
       <header className="site-header fixed inset-x-0 top-0 z-40 border-b border-bone/10 bg-ink/35 backdrop-blur-md">
         <div className="mx-auto flex h-20 w-[min(1220px,calc(100vw-28px))] items-center justify-between">
-          <Link href="/" className="flex items-center gap-3">
-            <Image
-              src="/brand/roxwana-logo-128.webp"
-              alt="ROXWANA"
-              width={44}
-              height={44}
-              className="h-11 w-11 shrink-0 rounded-full border border-roxgold/45 bg-bone object-contain shadow-gold-soft"
-              priority
-            />
-            <span className="headline text-2xl text-bone">ROXWANA</span>
-          </Link>
+          <div className="flex items-center gap-3">
+            <ThemeLogoControl />
+            <Link href="/" aria-label="Ir al inicio">
+              <span className="headline text-2xl text-bone">ROXWANA</span>
+            </Link>
+          </div>
           <nav className="hidden items-center gap-6 md:flex">
             {navItems.map((item) =>
               item.children ? (
@@ -263,12 +259,12 @@ export function Header() {
                     <span className="absolute inset-x-0 -bottom-0.5 h-px origin-center scale-x-0 bg-roxgold transition-transform duration-300 group-hover/nav:scale-x-100 group-focus-within/nav:scale-x-100" />
                   </Link>
                   <div className="pointer-events-none absolute left-1/2 top-full z-50 w-44 -translate-x-1/2 pt-3 opacity-0 transition duration-200 group-hover/nav:pointer-events-auto group-hover/nav:opacity-100 group-focus-within/nav:pointer-events-auto group-focus-within/nav:opacity-100">
-                    <div className="border border-roxgold/30 bg-[#050505] p-2 shadow-[0_18px_50px_rgba(0,0,0,0.56)]">
+                    <div className="nav-dropdown-panel border border-roxgold/30 bg-[#050505] p-2 shadow-[0_18px_50px_rgba(0,0,0,0.56)]">
                       {item.children.map((child) => (
                         <Link
                           key={child.href}
                           href={child.href}
-                          className="block border-b border-bone/10 px-3 py-3 text-xs font-black uppercase tracking-rox text-bone/72 transition last:border-b-0 hover:bg-roxgold hover:text-charcoal"
+                          className="nav-dropdown-link block border-b border-bone/10 px-3 py-3 text-xs font-black uppercase tracking-rox text-bone/72 transition last:border-b-0 hover:bg-roxgold hover:text-charcoal"
                         >
                           {child.label}
                         </Link>
@@ -289,7 +285,6 @@ export function Header() {
             )}
           </nav>
           <div className="hidden items-center gap-2 md:flex">
-            <ThemeToggle />
             {[
               { label: "Buscar", icon: Search, href: "/productos" },
               { label: "Usuario", icon: User, href: "/login" }
@@ -299,7 +294,7 @@ export function Header() {
                 <Link
                   key={item.label}
                   href={item.href}
-                  className="relative grid h-10 w-10 place-items-center border border-bone/12 text-bone/78 transition hover:border-roxgold hover:text-bone"
+                  className="header-tool-button relative grid h-10 w-10 place-items-center rounded-md border border-bone/12 text-bone/78 transition hover:border-roxgold hover:text-bone"
                   aria-label={item.label}
                   title={item.label}
                 >
@@ -326,7 +321,7 @@ export function Header() {
             >
               <Link
                 href="/carrito"
-                className={`relative grid h-10 w-10 place-items-center border border-bone/12 text-bone/78 transition hover:border-roxgold hover:text-bone ${
+                className={`header-tool-button relative grid h-10 w-10 place-items-center rounded-md border border-bone/12 text-bone/78 transition hover:border-roxgold hover:text-bone ${
                   cartReacting ? "rox-cart-add-react" : ""
                 }`}
                 aria-label={cartCount ? `Carrito: ${cartCount} productos` : "Carrito"}
@@ -334,7 +329,7 @@ export function Header() {
               >
                 <ShoppingCart size={18} />
                 {cartCount ? (
-                  <span className="absolute -right-2 -top-2 grid min-h-5 min-w-5 place-items-center border border-ink bg-roxred px-1 text-[10px] font-black leading-none text-bone">
+                  <span className="cart-count-badge absolute -right-2 -top-2 grid min-h-5 min-w-5 place-items-center border border-ink bg-roxred px-1 text-[10px] font-black leading-none text-bone">
                     {cartCount > 99 ? "99+" : cartCount}
                   </span>
                 ) : null}
@@ -342,7 +337,7 @@ export function Header() {
 
               {cartPreviewOpen ? (
                 <div className="absolute right-0 top-full z-50 w-80 pt-3">
-                  <div className="border border-roxgold/30 bg-[#050505] p-4 text-left shadow-[0_24px_70px_rgba(0,0,0,0.68)]">
+                  <div className="cart-preview-panel border border-roxgold/30 bg-[#050505] p-4 text-left shadow-[0_24px_70px_rgba(0,0,0,0.68)]">
                     <div className="flex items-start justify-between gap-4 border-b border-bone/10 pb-3">
                       <div>
                         <p className="text-[10px] font-bold uppercase tracking-rox text-roxgold">Carrito</p>
@@ -424,7 +419,7 @@ export function Header() {
                           type="button"
                           onClick={clearPreviewCart}
                           disabled={cartMutating}
-                          className="inline-flex min-h-9 w-full items-center justify-center border border-bone/16 px-4 text-[10px] font-black uppercase tracking-rox text-bone/72 transition hover:border-roxgold hover:text-roxgold disabled:cursor-not-allowed disabled:opacity-45"
+                          className="cart-clear-action inline-flex min-h-9 w-full items-center justify-center border border-bone/16 px-4 text-[10px] font-black uppercase tracking-rox text-bone/72 transition hover:border-roxgold hover:text-roxgold disabled:cursor-not-allowed disabled:opacity-45"
                         >
                           Limpiar todo
                         </button>
@@ -435,7 +430,7 @@ export function Header() {
               ) : null}
 
               {cartToastItem && !cartPreviewOpen ? (
-                <div className="rox-cart-toast absolute right-0 top-[calc(100%+14px)] z-50 w-72 border border-roxgold/35 bg-[#050505] p-3 text-left shadow-[0_18px_55px_rgba(0,0,0,0.62)]">
+                <div className="cart-toast-panel rox-cart-toast absolute right-0 top-[calc(100%+14px)] z-50 w-72 border border-roxgold/35 bg-[#050505] p-3 text-left shadow-[0_18px_55px_rgba(0,0,0,0.62)]">
                   <p className="text-[10px] font-black uppercase tracking-rox text-roxgold">Agregado al carrito</p>
                   <div className="mt-2 grid grid-cols-[46px_1fr] gap-3">
                     <div className="h-12 w-12 overflow-hidden border border-bone/10 bg-charcoal">
@@ -456,18 +451,58 @@ export function Header() {
               ) : null}
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => setMenuOpen(true)}
-            className="grid h-11 w-11 place-items-center border border-bone/20 text-bone md:hidden"
-            aria-label="Abrir menu"
-          >
-            <Menu size={22} />
-          </button>
+          <div className="flex items-center gap-2 md:hidden">
+            <div className="relative" data-mobile-cart>
+              <Link
+                href="/carrito"
+                className={`header-tool-button relative grid h-11 w-11 place-items-center rounded-md border border-bone/20 text-bone transition hover:border-roxgold ${
+                  cartReacting ? "rox-cart-add-react" : ""
+                }`}
+                aria-label={cartCount ? `Carrito: ${cartCount} productos` : "Carrito"}
+                title="Carrito"
+              >
+                <ShoppingCart size={20} />
+                {cartCount ? (
+                  <span className="cart-count-badge absolute -right-1.5 -top-1.5 grid min-h-5 min-w-5 place-items-center border border-ink bg-roxred px-1 text-[10px] font-black leading-none text-bone">
+                    {cartCount > 99 ? "99+" : cartCount}
+                  </span>
+                ) : null}
+              </Link>
+
+              {cartToastItem ? (
+                <div className="cart-toast-panel rox-cart-toast absolute right-0 top-[calc(100%+14px)] z-50 w-[min(18rem,calc(100vw-28px))] border border-roxgold/35 bg-[#050505] p-3 text-left shadow-[0_18px_55px_rgba(0,0,0,0.62)]">
+                  <p className="text-[10px] font-black uppercase tracking-rox text-roxgold">Agregado al carrito</p>
+                  <div className="mt-2 grid grid-cols-[46px_minmax(0,1fr)] gap-3">
+                    <div className="h-12 w-12 overflow-hidden border border-bone/10 bg-charcoal">
+                      {cartToastItem.imageUrl ? (
+                        <Image src={cartToastItem.imageUrl} alt={cartToastItem.productName} width={48} height={48} className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="grid h-full w-full place-items-center text-[10px] font-black text-roxgold">RXW</div>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-xs font-black uppercase tracking-rox text-bone">{cartToastItem.productName}</p>
+                      <p className="mt-1 text-[10px] font-bold uppercase tracking-rox text-bone/52">
+                        {cartToastItem.selectedColor} / {cartToastItem.selectedSize} / x{cartToastItem.quantity}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+            <button
+              type="button"
+              onClick={() => setMenuOpen(true)}
+              className="header-menu-button grid h-11 w-11 place-items-center rounded-md border border-bone/20 text-bone"
+              aria-label="Abrir menu"
+            >
+              <Menu size={22} />
+            </button>
+          </div>
         </div>
       </header>
       <audio ref={cartAudioRef} src="/audio/cart-add.mp3" preload="auto" aria-hidden="true" />
-      <MobileMenu isOpen={menuOpen} onClose={() => setMenuOpen(false)} cartCount={cartCount} />
+      <MobileMenu isOpen={menuOpen} onClose={closeMobileMenu} />
     </>
   );
 }

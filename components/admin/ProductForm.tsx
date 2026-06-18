@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 import type { Product, ProductOption } from "@/types/product";
 import { ImageUploader } from "@/components/admin/ImageUploader";
 
@@ -30,6 +30,7 @@ export function ProductForm({ product, options, action, submitLabel }: ProductFo
   const [name, setName] = useState(product?.name || "");
   const [slug, setSlug] = useState(product?.slug || "");
   const [slugTouched, setSlugTouched] = useState(Boolean(product?.slug));
+  const [saveError, setSaveError] = useState<string | null>(null);
   const selectedColors = useMemo(() => new Set(product?.colors.map((color) => color.code) || []), [product]);
   const selectedSizes = useMemo(() => new Set(product?.sizes || []), [product]);
   const variants = useMemo(
@@ -37,9 +38,35 @@ export function ProductForm({ product, options, action, submitLabel }: ProductFo
     [product]
   );
 
+  function validateBeforeSubmit(event: FormEvent<HTMLFormElement>) {
+    const formData = new FormData(event.currentTarget);
+    const status = String(formData.get("status") || "draft");
+
+    if (status !== "draft" && !formData.get("category_id")) {
+      event.preventDefault();
+      setSaveError("Para publicar o agotar el producto, elegí una categoría.");
+      return;
+    }
+
+    if (status !== "draft" && formData.getAll("color_ids").length === 0) {
+      event.preventDefault();
+      setSaveError("Para publicar o agotar el producto, elegí al menos un color.");
+      return;
+    }
+
+    if (status !== "draft" && formData.getAll("size_ids").length === 0) {
+      event.preventDefault();
+      setSaveError("Para publicar o agotar el producto, elegí al menos un talle.");
+      return;
+    }
+
+    setSaveError(null);
+  }
+
   return (
-    <form action={action} className="grid gap-5 border border-bone/12 bg-charcoal p-5">
+    <form action={action} onSubmit={validateBeforeSubmit} className="grid gap-5 border border-bone/12 bg-charcoal p-5">
       {product?.id ? <input type="hidden" name="id" value={product.id} /> : null}
+      {saveError ? <p className="border border-roxred/45 bg-roxred/10 p-3 text-sm font-bold text-roxred">{saveError}</p> : null}
       <div className="grid gap-4 md:grid-cols-2">
         <label className="grid gap-2 text-xs font-bold uppercase tracking-rox text-steel">
           Codigo modelo
@@ -167,10 +194,13 @@ export function ProductForm({ product, options, action, submitLabel }: ProductFo
         <textarea name="description_long" defaultValue={product?.descriptionLong || product?.description || ""} rows={6} className="border border-bone/12 bg-ink px-4 py-3 text-sm normal-case tracking-normal text-bone outline-none focus:border-roxgold" />
       </label>
 
-      <label className="flex items-center gap-3 text-xs font-bold uppercase tracking-rox text-bone/70">
-        <input type="checkbox" name="featured" defaultChecked={Boolean(product?.featured)} />
-        Destacado en home
-      </label>
+      <div className="grid gap-1">
+        <label className="flex items-center gap-3 text-xs font-bold uppercase tracking-rox text-bone/70">
+          <input type="checkbox" name="featured" defaultChecked={Boolean(product?.featured)} />
+          Destacado en home
+        </label>
+        <p className="text-[10px] uppercase tracking-rox text-bone/45">Sin límite. Recomendado: hasta 10 para una portada más breve.</p>
+      </div>
 
       <label className="grid gap-2 text-xs font-bold uppercase tracking-rox text-steel">
         Mensaje WhatsApp personalizado

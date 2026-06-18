@@ -170,7 +170,7 @@ export function RandomPrintTeaser({ compact = false, products, section }: { comp
 
   if (products.length === 0) {
     return (
-      <section className={`theme-shop theme-force-dark bg-ink ${compact ? "py-8" : "py-20"}`}>
+      <section className={`random-print-section theme-shop bg-ink ${compact ? "py-8" : "py-20"}`}>
         <div className="rox-container">
           <div className="border border-roxgold/24 bg-charcoal p-8 text-center">
             <p className="headline text-4xl text-bone">NO HAY PRENDAS CARGADAS</p>
@@ -182,10 +182,10 @@ export function RandomPrintTeaser({ compact = false, products, section }: { comp
   }
 
   return (
-    <section className={`theme-shop theme-force-dark bg-ink ${compact ? "py-8" : "py-24"}`}>
+    <section className={`random-print-section theme-shop bg-ink ${compact ? "py-8" : "py-24"}`}>
       <div className="rox-container">
-        <div className="paper-edge relative grid gap-8 overflow-hidden bg-charcoal/82 p-5 shadow-hard-red md:p-7 lg:grid-cols-[0.78fr_1.22fr] lg:items-start">
-          <div className="pointer-events-none absolute right-8 top-6 hidden rotate-[6deg] border border-roxred/60 px-4 py-2 text-xs font-bold uppercase tracking-rox text-roxred md:block">
+        <div className="random-print-shell paper-edge relative grid gap-8 overflow-hidden bg-charcoal/82 p-5 shadow-hard-red md:p-7 lg:grid-cols-[0.78fr_1.22fr] lg:items-start">
+          <div className="random-print-pass pointer-events-none absolute right-8 top-6 hidden rotate-[6deg] border border-roxred/60 px-4 py-2 text-xs font-bold uppercase tracking-rox text-roxred md:block">
             Backstage pass
           </div>
           <div>
@@ -208,8 +208,8 @@ export function RandomPrintTeaser({ compact = false, products, section }: { comp
                     data-random-gender={option.value}
                     disabled={wheelLocked}
                     onClick={() => selectGender(option.value)}
-                    className={`paper-edge min-h-[112px] border p-4 text-left transition disabled:cursor-not-allowed ${
-                      selected ? "border-roxgold bg-roxgold/12 text-bone shadow-gold-soft" : "border-bone/12 bg-ink/76 text-bone/64 hover:border-bone/40"
+                    className={`random-print-choice paper-edge min-h-[112px] border p-4 text-left transition disabled:cursor-not-allowed ${
+                      selected ? "random-print-choice-active border-roxgold bg-roxgold/12 text-bone shadow-gold-soft" : "border-bone/12 bg-ink/76 text-bone/64 hover:border-bone/40"
                     }`}
                   >
                     <span className="flex items-center gap-3 text-xs font-bold uppercase tracking-rox">
@@ -230,16 +230,16 @@ export function RandomPrintTeaser({ compact = false, products, section }: { comp
             data-random-spin
             onClick={startSpin}
             disabled={wheelLocked || !selectedGender || !hasCategoryProducts}
-            className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-3 border border-roxgold bg-roxgold px-5 py-3 text-xs font-bold uppercase tracking-rox text-charcoal transition hover:border-bone disabled:cursor-not-allowed disabled:border-bone/16 disabled:bg-bone/10 disabled:text-bone/38"
+            className="random-print-spin-button mt-6 inline-flex min-h-12 w-full items-center justify-center gap-3 border border-roxgold bg-roxgold px-5 py-3 text-xs font-bold uppercase tracking-rox text-charcoal transition hover:border-bone disabled:cursor-not-allowed disabled:border-bone/16 disabled:bg-bone/10 disabled:text-bone/38"
           >
             <Shuffle size={18} />
             {wheelLocked ? "Girando..." : phase === "winner" ? "Girar de nuevo" : "Girar ruleta"}
           </button>
 
-          <p className="mt-4 min-h-12 border border-bone/12 bg-charcoal/80 p-4 text-sm leading-6 text-bone/68">{hint}</p>
+          <p className="random-print-hint mt-4 min-h-12 border border-bone/12 bg-charcoal/80 p-4 text-sm leading-6 text-bone/68">{hint}</p>
         </div>
 
-        <div className={`paper-edge overflow-hidden bg-ink shadow-gold-soft ${phase === "winner" ? "random-print-selection-pop" : ""}`}>
+        <div className={`random-print-stage paper-edge overflow-hidden bg-ink shadow-gold-soft ${phase === "winner" ? "random-print-selection-pop" : ""}`}>
           <div className="relative min-h-[460px]">
             {displayProduct ? (
               <Image
@@ -249,15 +249,17 @@ export function RandomPrintTeaser({ compact = false, products, section }: { comp
                 fill
                 priority={compact}
                 sizes="(min-width: 1024px) 58vw, 100vw"
-                className={`object-cover transition duration-300 ${
+                className={`random-print-cover-image object-cover transition duration-300 ${
+                  awaitingSpin ? "random-print-cover-image-idle" : wheelLocked ? "random-print-cover-image-spinning" : "random-print-cover-image-ready"
+                } ${
                   awaitingSpin ? "scale-105 opacity-16 blur-[1px]" : wheelLocked ? "scale-105 opacity-70 blur-[1px]" : "scale-100 opacity-100 blur-0"
                 }`}
               />
             ) : null}
-            <div className={`absolute inset-0 bg-gradient-to-t from-ink via-transparent to-transparent ${awaitingSpin ? "opacity-95" : "opacity-100"}`} />
+            <div className={`random-print-stage-scrim absolute inset-0 bg-gradient-to-t from-ink via-transparent to-transparent ${awaitingSpin ? "opacity-95" : "opacity-100"}`} />
             {awaitingSpin ? (
-              <div className="absolute inset-0 z-10 grid place-items-center bg-ink/50">
-                <div className="grid h-40 w-40 place-items-center border border-roxgold/48 bg-ink/62 text-roxgold shadow-gold-soft backdrop-blur-sm md:h-52 md:w-52">
+              <div className="random-print-question-overlay absolute inset-0 z-10 grid place-items-center bg-ink/50">
+                <div className="random-print-question-card grid h-40 w-40 place-items-center border border-roxgold/48 bg-ink/62 text-roxgold shadow-gold-soft backdrop-blur-sm md:h-52 md:w-52">
                   <span className="text-[8rem] font-black leading-none md:text-[11rem]">?</span>
                 </div>
               </div>
@@ -284,12 +286,12 @@ export function RandomPrintTeaser({ compact = false, products, section }: { comp
               </div>
             ) : null}
 
-            <div className="absolute left-5 top-5 z-20 inline-flex items-center gap-2 border border-roxgold/45 bg-ink/72 px-3 py-2 text-xs font-bold uppercase tracking-rox text-roxgold backdrop-blur">
+            <div className="random-print-status-pill absolute left-5 top-5 z-20 inline-flex items-center gap-2 border border-roxgold/45 bg-ink/72 px-3 py-2 text-xs font-bold uppercase tracking-rox text-roxgold backdrop-blur">
               <Sparkles size={16} />
               {phase === "winner" ? "Estampa seleccionada" : wheelLocked ? "Eligiendo estampa" : "Seleccion sorpresa"}
             </div>
 
-            <div className="absolute bottom-5 left-5 right-5 z-20">
+            <div className="random-print-stage-copy absolute bottom-5 left-5 right-5 z-20">
               <p className="text-xs font-bold uppercase tracking-rox text-roxgold">{awaitingSpin ? "ROXWANA" : displayProduct?.modelCode || "ROXWANA"}</p>
               <h3 className="headline mt-2 text-4xl leading-none text-bone md:text-5xl">{awaitingSpin ? "Prenda sorpresa" : displayProduct?.name || "Random print"}</h3>
             </div>
@@ -329,7 +331,7 @@ function PrizePanel({
 
   if (!selectedGender) {
     return (
-      <div className="border-t border-bone/12 bg-charcoal/96 p-5">
+      <div className="random-print-prize-panel border-t border-bone/12 bg-charcoal/96 p-5">
         <p className="text-xs font-bold uppercase tracking-rox text-roxgold">Primero elegi categoria</p>
         <p className="mt-2 text-sm leading-6 text-bone/66">Marca Hombre o Mujer para activar la ruleta.</p>
       </div>
@@ -338,7 +340,7 @@ function PrizePanel({
 
   if (!hasCategoryProducts) {
     return (
-      <div className="border-t border-bone/12 bg-charcoal/96 p-5">
+      <div className="random-print-prize-panel border-t border-bone/12 bg-charcoal/96 p-5">
         <p className="text-xs font-bold uppercase tracking-rox text-roxgold">Sin prendas</p>
         <p className="mt-2 text-sm leading-6 text-bone/66">No hay prendas cargadas para esta categoria.</p>
       </div>
@@ -347,7 +349,7 @@ function PrizePanel({
 
   if (!product || phase !== "winner") {
     return (
-      <div className="border-t border-bone/12 bg-charcoal/96 p-5">
+      <div className="random-print-prize-panel border-t border-bone/12 bg-charcoal/96 p-5">
         <p className="text-xs font-bold uppercase tracking-rox text-roxgold">{phase === "slowing" ? "Casi esta" : "Seleccion pendiente"}</p>
         <p className="mt-2 text-sm leading-6 text-bone/66">Cuando la ruleta frene, aparecen color, talle y carrito dentro de esta misma ventana.</p>
       </div>
@@ -387,7 +389,7 @@ function PrizePanel({
   };
 
   return (
-    <div className="border-t border-roxgold/24 bg-charcoal/96 p-5">
+    <div className="random-print-prize-panel border-t border-roxgold/24 bg-charcoal/96 p-5">
       <div className="grid gap-5 xl:grid-cols-[0.78fr_1.22fr] xl:items-start">
         <div>
           <p className="text-xs font-bold uppercase tracking-rox text-roxgold">Estampa seleccionada</p>

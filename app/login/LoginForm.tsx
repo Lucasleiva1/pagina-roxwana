@@ -163,7 +163,7 @@ export function LoginForm({ returnUrl, error: initialError }: LoginFormProps) {
         type="button"
         onClick={signInWithGoogle}
         disabled={isGooglePending || isPending}
-        className="mt-5 flex min-h-12 w-full items-center justify-center gap-3 rounded-sm border border-[#dadce0] bg-white px-5 text-sm font-semibold normal-case tracking-normal text-[#3c4043] shadow-sm transition hover:bg-[#f8fafd] hover:shadow disabled:opacity-50"
+        className="mt-5 flex min-h-12 w-full items-center justify-center gap-3 rounded-md border border-[#dadce0] bg-white px-5 text-sm font-semibold normal-case tracking-normal text-[#3c4043] shadow-sm transition hover:bg-[#f8fafd] hover:shadow disabled:opacity-50"
       >
         <GoogleIcon />
         {isGooglePending ? "Abriendo Google..." : "Continuar con Google"}

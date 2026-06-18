@@ -104,7 +104,7 @@ export function AdminLoginForm({ returnUrl }: { returnUrl: string }) {
         type="button"
         onClick={signInWithGoogle}
         disabled={isGooglePending || isPending}
-        className="flex min-h-12 w-full items-center justify-center gap-3 rounded-sm border border-[#dadce0] bg-white px-5 text-sm font-semibold normal-case tracking-normal text-[#3c4043] shadow-sm transition hover:bg-[#f8fafd] hover:shadow disabled:opacity-50"
+        className="flex min-h-12 w-full items-center justify-center gap-3 rounded-md border border-[#dadce0] bg-white px-5 text-sm font-semibold normal-case tracking-normal text-[#3c4043] shadow-sm transition hover:bg-[#f8fafd] hover:shadow disabled:opacity-50"
       >
         <GoogleIcon />
         {isGooglePending ? "Abriendo Google..." : "Entrar con Google"}

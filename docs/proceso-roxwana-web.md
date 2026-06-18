@@ -5604,3 +5604,806 @@ Resultado:
 - remoto: `origin https://github.com/Lucasleiva1/pagina-roxwana.git`;
 - se publicara en `main` para poder volver a este estado exacto si algo se rompe;
 - este registro separa claramente el estado final de la solucion incorrecta inicial de modo claro.
+
+## Tanda 2026-06-17 - Version pre-final de modo claro, experiencia mobile y carrito
+
+### Objetivo de la tanda
+
+Preparar una version pre-final publicable de la tienda ROXWANA, tomando el modo claro como experiencia principal para clientes y conservando el modo oscuro como herramienta secundaria de trabajo.
+
+La tanda reunio ajustes realizados en varias conversaciones consecutivas:
+
+- correccion integral del modo claro en la home;
+- refinamiento de la ruleta en blanco;
+- correccion del proceso de pedido sobre fondo gris;
+- adaptacion de portada y botones para mobile;
+- eliminacion de parpadeos y estados hover impropios en pantallas tactiles;
+- adaptacion del agregado rapido al carrito;
+- correccion del CTA principal de portada;
+- limpieza del footer;
+- rediseño funcional del menu mobile;
+- adaptacion completa de `/carrito` al modo claro;
+- reemplazo del boton visible de tema por una pulsacion larga sobre el logo;
+- revision final de escritorio, mobile, rutas publicas, lint y build.
+
+### 1. Modo claro como tema principal
+
+Se cambio el tema inicial de la aplicacion:
+
+- `app/layout.tsx` ahora entrega `data-theme="light"` desde el servidor;
+- si no existe una preferencia guardada, la aplicacion usa modo claro;
+- el modo oscuro sigue disponible, pero no aparece como una accion visible para el cliente;
+- la preferencia se persiste en `localStorage` bajo `roxwana-theme`.
+
+La intencion comercial es que la tienda de ropa abra con una superficie blanca, limpia y legible. Las secciones editoriales que dependen de fotografia oscura pueden conservar su identidad cuando corresponde.
+
+### 2. Portada mobile
+
+Se reviso la portada en anchos de telefono y se corrigio:
+
+- el video/fondo se encuadra dentro de una capa mobile especifica;
+- el encuadre usa una altura estable para mostrar mejor a los dos modelos;
+- se ajustaron los overlays horizontal y vertical para conservar contraste;
+- el titulo usa tamaños que no desbordan pantallas angostas;
+- el CTA `Destacados` queda centrado en mobile;
+- el CTA tiene esquinas levemente redondeadas para probar una direccion menos rigida;
+- en desktop conserva alineacion a la izquierda.
+
+El CTA tambien recibio una correccion funcional:
+
+- cuando apunta a un ancla interna, busca el destino real;
+- ejecuta `scrollIntoView`;
+- actualiza el hash;
+- puede usarse repetidas veces sin dejar de responder.
+
+### 3. Botones y estados tactiles
+
+Se agregaron reglas especificas para dispositivos sin hover o con puntero grueso:
+
+- se elimina el relleno animado de hover persistente en botones `RoxButton`;
+- un toque no deja un parpadeo visual largo;
+- los controles usan `touch-action: manipulation`;
+- la respuesta activa es corta y usa una escala sutil;
+- los botones del header y menu tienen radio de 6px;
+- el carrito, usuario, busqueda y menu conservan dimensiones estables.
+
+En mobile, los botones de accion de prendas destacadas quedan dorados desde el estado inicial:
+
+- no esperan un hover inexistente;
+- texto e iconos quedan negros;
+- el estado activo usa un dorado apenas mas oscuro;
+- este cambio se limita a mobile para conservar el comportamiento desktop.
+
+### 4. Agregado rapido desde prendas destacadas
+
+El panel que sube desde la tarjeta al tocar `Agregar` fue adaptado al modo claro:
+
+- fondo blanco casi opaco;
+- borde dorado controlado;
+- nombre de producto negro;
+- boton de cerrar blanco con texto negro;
+- talles blancos con borde gris;
+- talle seleccionado dorado con texto negro;
+- mensajes sobre una superficie gris clara;
+- sombra superior mas suave.
+
+Se agregaron clases semanticas para evitar depender de selectores genericos:
+
+- `quick-add-panel`;
+- `quick-add-surface`;
+- `quick-add-header`;
+- `quick-add-product-name`;
+- `quick-add-close`;
+- `quick-add-size`;
+- `quick-add-message`.
+
+### 5. Ruleta de prendas en modo claro
+
+La primera version clara de la ruleta tenia poco contraste y ocultaba la prenda de fondo. La solucion final reorganizo sus superficies y estados:
+
+- se agrego `random-print-section` y clases por cada parte de la ruleta;
+- el contenedor usa una superficie clara con volumen;
+- las opciones Hombre/Mujer tienen fondo blanco y seleccionado dorado;
+- la imagen de la prenda mantiene visibilidad en reposo, giro y resultado;
+- la capa inferior clara permite leer el texto sin borrar la imagen;
+- la pregunta central usa una tarjeta blanca translucida;
+- el estado y premio usan paneles claros;
+- los botones habilitados son dorados;
+- los botones deshabilitados usan gris legible sin bajar demasiado la opacidad.
+
+La ruleta conserva su logica de seleccion, giro y agregado al carrito.
+
+### 6. Proceso de pedido
+
+La seccion `Ordenar` mantiene el fondo gris solicitado, pero fue corregida para modo claro:
+
+- titulo, subtitulo y texto introductorio pasan a negro;
+- las tarjetas usan fondo claro;
+- titulos de tarjetas en negro;
+- descripciones en gris oscuro;
+- el contenido deja de usar texto blanco sobre gris.
+
+Se agregaron las clases:
+
+- `order-timeline`;
+- `order-timeline-intro`;
+- `order-timeline-card`.
+
+### 7. Mini-carrito, dropdown y avisos del header
+
+El mini-carrito y los paneles del header fueron adaptados al modo claro:
+
+- dropdown de Producto blanco;
+- mini-carrito blanco;
+- aviso de agregado blanco;
+- textos principales negros;
+- textos secundarios grises;
+- imagenes/fallback sobre superficie clara;
+- hover de acciones con contraste correcto;
+- contador del carrito conserva texto blanco sobre rojo.
+
+Se mantuvieron las acciones:
+
+- sumar;
+- restar;
+- quitar;
+- limpiar;
+- abrir carrito.
+
+### 8. Footer
+
+Se retiraron textos que no pertenecian a la version final:
+
+- `Wear it loud`;
+- `Street rock / graphic wear. Hecho para la calle.`.
+
+El footer queda con:
+
+- ROXWANA;
+- ESTILO URBANO;
+- Productos;
+- Hombre;
+- Mujer;
+- Random;
+- Instagram, YouTube y TikTok.
+
+El footer conserva fondo fotografico oscuro tanto en modo claro como oscuro.
+
+### 9. Menu mobile
+
+Se reemplazo el menu de titulos grandes por una interfaz compacta y utilizable:
+
+- tipografia de navegacion de 14px;
+- iconos Lucide pequeños;
+- filas con altura estable;
+- Hombre/Mujer dentro del bloque Producto;
+- accesos compactos a Cuenta y Carrito;
+- bordes y radios discretos;
+- compatibilidad con modo claro;
+- cierre con Escape;
+- rol de dialogo y `aria-modal`.
+
+Se corrigio el desplazamiento:
+
+- al abrir, se bloquea `html` y `body`;
+- `body` queda fijo en la posicion previa;
+- el contenido interno usa `overflow-y-auto`;
+- el fondo no se desplaza al intentar bajar el menu;
+- al cerrar, se restauran estilos y posicion de scroll.
+
+Cuando todo el contenido entra en la pantalla, el scroller no necesita recorrido adicional. En pantallas mas bajas mantiene la capacidad de desplazarse internamente.
+
+### 10. Control oculto de modo claro/oscuro
+
+Se elimino por completo el boton visible con luna/sol:
+
+- se retiro del header desktop;
+- se retiro del menu mobile;
+- se elimino `components/layout/ThemeToggle.tsx`.
+
+Se creo `components/layout/ThemeLogoControl.tsx`.
+
+Comportamiento:
+
+- un toque corto sobre el icono circular ROXWANA conserva su funcion de volver al inicio;
+- mantener presionado durante 3 segundos alterna el tema;
+- claro pasa a oscuro;
+- oscuro pasa a claro;
+- la ruta actual no cambia al completar la pulsacion larga;
+- el modo elegido queda guardado;
+- en dispositivos compatibles se dispara una vibracion breve;
+- durante la espera aparece un aro dorado de progreso y el logo reduce levemente su escala;
+- funciona con mouse, teclado y eventos tactiles reales.
+
+El mismo control se usa:
+
+- en el header principal;
+- dentro del encabezado del menu mobile.
+
+### 11. Carrito completo en modo claro
+
+La pagina `/carrito` estaba fuera del alcance de `.theme-shop` y por eso seguia mostrando fondos negros y texto blanco. Se corrigio la pagina completa:
+
+- `cart-page` queda dentro de `theme-shop`;
+- fondo general claro;
+- tarjetas de producto blancas;
+- textos negros;
+- metadatos grises;
+- total sobre panel blanco;
+- estado vacio claro;
+- checkout blanco;
+- campos claros con texto negro;
+- avisos de checkout y WhatsApp legibles;
+- bordes dorados y grises con contraste moderado;
+- sombras suaves para separar superficies.
+
+Se agregaron clases semanticas:
+
+- `cart-page`;
+- `cart-item-card`;
+- `cart-item-media`;
+- `cart-empty-state`;
+- `cart-total-panel`;
+- `cart-checkout-panel`;
+- `cart-checkout-message`;
+- `cart-whatsapp-notice`.
+
+### 12. Marco de imagen del carrito
+
+La miniatura de la prenda usaba `bg-bone`. En modo claro esa clase se invertia a negro y generaba un marco muy pesado.
+
+La correccion final:
+
+- elimina el marco negro;
+- usa la misma superficie clara de las tarjetas del catalogo;
+- aplica un degradado gris muy suave;
+- usa un borde fino;
+- agrega sombra interior discreta;
+- aplica `drop-shadow` a la prenda;
+- mantiene `object-contain` para no recortar el producto.
+
+Esto alinea visualmente la miniatura del carrito con prendas destacadas y tarjetas de venta.
+
+### 13. Archivos principales modificados
+
+- `app/layout.tsx`;
+- `app/globals.css`;
+- `app/carrito/page.tsx`;
+- `components/cart/CartCheckout.tsx`;
+- `components/cart/CartWhatsAppNotice.tsx`;
+- `components/home/HeroCampaign.tsx`;
+- `components/home/OrderTimeline.tsx`;
+- `components/home/ProductPosterCard.tsx`;
+- `components/home/RandomPrintTeaser.tsx`;
+- `components/layout/Footer.tsx`;
+- `components/layout/Header.tsx`;
+- `components/layout/MobileMenu.tsx`;
+- `components/layout/ThemeLogoControl.tsx`;
+- `components/layout/ThemeToggle.tsx`, eliminado;
+- `components/product/ProductCard.tsx`;
+- `components/product/ProductQuickActions.tsx`;
+- `components/ui/RoxButton.tsx`.
+
+### 14. Verificacion tactil real del cambio de tema
+
+Se uso Chromium mobile con viewport `390x844`, emulacion tactil y eventos CDP `Input.dispatchTouchEvent`.
+
+Resultados:
+
+- pulsacion de 900ms:
+  - tema siguio en `light`;
+  - no se produjo un cambio accidental;
+- pulsacion de 3250ms en el logo del header:
+  - tema cambio a `dark`;
+  - `localStorage` guardo `dark`;
+  - la ruta siguio en `/productos`;
+- pulsacion de 3250ms en el logo dentro del menu:
+  - tema cambio a `light`;
+  - `localStorage` guardo `light`;
+  - la ruta siguio en `/productos`;
+  - el menu continuo abierto;
+- no hubo errores ni warnings de consola durante esta prueba.
+
+Evidencia local:
+
+- `.codex-checks/mobile-theme-touch-dark.png`;
+- `.codex-checks/mobile-theme-touch-light-menu.png`;
+- `.codex-checks/check-mobile-theme-touch.mjs`.
+
+### 15. Verificacion del carrito
+
+Se uso una cuenta tecnica de prueba, sin registrar credenciales en el repositorio.
+
+Procedimiento:
+
+- iniciar sesion;
+- abrir `/carrito`;
+- agregar una prenda temporal si el carrito estaba vacio;
+- verificar producto, total y checkout;
+- cambiar viewport de desktop a mobile;
+- capturar evidencia;
+- limpiar el carrito tecnico al finalizar.
+
+Resultado desktop:
+
+- tema `light`;
+- pagina `rgb(246, 243, 238)`;
+- tarjeta de producto blanca;
+- checkout blanco;
+- inputs claros con texto oscuro;
+- total blanco;
+- producto y checkout visibles.
+
+Resultado mobile:
+
+- viewport `390px`;
+- ancho del documento `390px`;
+- no existe desborde horizontal;
+- checkout debajo de la tarjeta;
+- marco de producto claro y coherente;
+- todos los campos se mantienen dentro de su contenedor.
+
+Evidencia local:
+
+- `.codex-checks/cart-light-desktop.png`;
+- `.codex-checks/cart-light-mobile.png`;
+- `.codex-checks/check-cart-light.mjs`.
+
+### 16. Verificaciones de regresion
+
+Se revisaron:
+
+1. CTA de portada
+   - dos activaciones consecutivas;
+   - hash `#drop-01`;
+   - scroll al bloque correcto.
+
+2. Agregado rapido
+   - panel abre;
+   - colores claros correctos;
+   - talle seleccionado dorado;
+   - panel cierra;
+   - sin errores de consola.
+
+3. Menu mobile
+   - fondo bloqueado;
+   - `body` fijo;
+   - `html` sin scroll;
+   - tipografia de 14px;
+   - iconos visibles;
+   - restauracion al cerrar;
+   - sin errores de consola.
+
+4. Portada y botones mobile
+   - CTA centrado;
+   - boton con radio de 6px;
+   - controles desktop con radio de 6px;
+   - reglas para puntero tactil activas;
+   - el hover no expande el relleno del boton en mobile.
+
+5. Ruleta y proceso de pedido
+   - secciones localizadas;
+   - capturas en modo claro;
+   - sin errores de consola.
+
+6. Footer mobile
+   - texto final:
+     - ROXWANA;
+     - ESTILO URBANO;
+     - Productos;
+     - Hombre;
+     - Mujer;
+     - Random;
+   - no aparecen los textos eliminados.
+
+7. Rutas publicas
+   - `/` -> 200;
+   - `/productos` -> 200;
+   - `/hombre` -> 200;
+   - `/mujer` -> 200;
+   - `/random` -> 200;
+   - `/nosotros` -> 200;
+   - `/login` -> 200.
+
+### 17. Validaciones tecnicas finales
+
+Comandos usados:
+
+```powershell
+npm.cmd run lint
+npm.cmd run build
+git diff --check
+Invoke-WebRequest http://127.0.0.1:3000/
+```
+
+Resultado:
+
+- ESLint paso;
+- TypeScript paso dentro del build;
+- build de produccion paso;
+- Next.js genero las rutas estaticas y dinamicas sin errores;
+- la home local respondio `200`;
+- `/carrito` redirige a login con `307` cuando no hay sesion, como corresponde;
+- `git diff --check` no encontro errores de whitespace;
+- no se detectaron errores de pagina o consola en los flujos principales.
+
+### 18. Observacion no bloqueante
+
+Next.js emitio una advertencia de LCP para la imagen de fondo del footer durante algunas capturas:
+
+- desktop: `footer-roxwana-city-1920.webp`;
+- mobile: `footer-roxwana-city-768.webp`.
+
+No es un error funcional ni de compilacion. La pagina carga y las rutas responden correctamente. Puede optimizarse en una tanda posterior si las metricas reales de produccion lo justifican.
+
+### 19. Estado pre-final previsto
+
+Esta tanda se considera pre-final y apta para ser usada como base de la primera publicacion.
+
+Publicacion prevista:
+
+- rama: `main`;
+- remoto: `https://github.com/Lucasleiva1/pagina-roxwana.git`;
+- tag: `roxwana-prefinal-modo-claro-2026-06-17`;
+- mensaje de commit: `Prepare light storefront pre-final release`.
+
+El modo claro es el estado principal. El modo oscuro se conserva mediante pulsacion larga del logo para mantenimiento y programacion.
+
+## Tanda 2026-06-18 - Ajustes finales de interfaz, mobile, admin y control de destacados
+
+### Objetivo de la tanda
+
+Esta tanda continuo sobre la version pre-final del 17 de junio sin restaurar archivos ni reemplazar el estado local existente.
+
+El trabajo reunio los pedidos realizados en la conversacion posterior a esa entrega:
+
+- unificar la curva visual de los botones;
+- mantener el carrito visible en mobile;
+- compactar las tarjetas destacadas en telefonos;
+- mejorar los hovers del header y las redes;
+- volver completamente secreto el cambio de tema;
+- refinar la seccion social y el bloque de pedido;
+- agregar un boton Volver persistente;
+- actualizar la pagina Nosotros;
+- corregir el destino del acceso Redes;
+- completar el modo claro del admin;
+- permitir una cantidad libre de productos destacados;
+- evitar la pantalla roja al validar productos;
+- agregar un interruptor visible de destacado directamente en las tarjetas del dashboard.
+
+### 1. Curva comun para botones y acciones
+
+Se extendio la curva sutil de la portada al resto de la aplicacion.
+
+Decision visual:
+
+- radio comun de `6px`;
+- se evita el aspecto de pastilla;
+- se mantienen redondos los controles que representan iconos circulares, colores, redes y logo;
+- el cambio alcanza botones y enlaces de accion de tienda, tarjetas, carrito, talles, cantidades, login y admin.
+
+Archivos principales:
+
+- `app/globals.css`;
+- `app/login/LoginForm.tsx`;
+- `components/admin/AdminLoginForm.tsx`.
+
+La verificacion en navegador confirmo que portada, tarjetas y accesos aplican el radio, mientras los controles circulares conservan su forma.
+
+### 2. Carrito visible en el header mobile
+
+Problema:
+
+- el carrito estaba dentro del menu acordeon;
+- el indicador reactivo del header quedaba oculto en telefonos;
+- al agregar un producto no se aprovechaban correctamente el contador, el movimiento, el sonido y el aviso temporal.
+
+Solucion:
+
+- el carrito se retiro del acordeon mobile;
+- se agrego como control siempre visible junto al boton de menu;
+- se reutilizo el mismo estado reactivo del carrito desktop;
+- no se duplico el enlace dentro del menu;
+- la version de escritorio no cambio.
+
+Archivos:
+
+- `components/layout/Header.tsx`;
+- `components/layout/MobileMenu.tsx`.
+
+Se comprobo en viewport mobile que el carrito no comprime el logo, que desaparece del acordeon y que conserva el contador y la reaccion visual.
+
+### 3. Tarjetas destacadas compactas en mobile
+
+Problema:
+
+- la tarjeta de destacado era demasiado vertical;
+- en un telefono era necesario bajar para llegar a las acciones y volver a subir para revisar el producto;
+- la composicion se comportaba mas como un poster largo que como una tarjeta de compra.
+
+Solucion mobile:
+
+- se redujo la altura visible de la imagen sin perder su presencia;
+- se compacto el espaciado interno;
+- se oculto solamente la descripcion secundaria;
+- se conservaron nombre, tipo, precio y botones;
+- tablet y escritorio mantienen la composicion vertical amplia.
+
+Archivo:
+
+- `components/home/ProductPosterCard.tsx`.
+
+La medicion realizada en un viewport de `390x844` dio una altura aproximada de `451px` para la tarjeta completa.
+
+### 4. Hovers elegantes del header y redes
+
+Controles superiores:
+
+- Buscar, Usuario y Carrito elevan aproximadamente `2px`;
+- reciben un halo dorado tenue;
+- el icono cambia de color con una transicion suave;
+- no se alteran enlaces ni comportamiento.
+
+Redes:
+
+- Instagram usa degradado y brillo de marca;
+- YouTube usa rojo luminoso;
+- TikTok usa negro con acentos cian y rosa;
+- el icono queda blanco para mantener contraste;
+- el lenguaje visual tambien se aplico a los accesos sociales del footer.
+
+Archivos:
+
+- `app/globals.css`;
+- `components/home/SocialFollowSection.tsx`;
+- `components/layout/Footer.tsx`.
+
+Los estados se verificaron con hover real y lectura de estilos computados.
+
+### 5. Cambio de tema completamente oculto
+
+La version pre-final mostraba un aro de progreso y una leve contraccion del logo durante la pulsacion larga.
+
+Por pedido posterior, ese feedback se elimino:
+
+- no aparece barra ni aro;
+- no se muestra progreso;
+- el logo no se contrae;
+- la pulsacion larga sigue esperando tres segundos;
+- el cambio claro/oscuro y la persistencia continúan funcionando.
+
+Archivos:
+
+- `app/globals.css`;
+- `components/layout/ThemeLogoControl.tsx`.
+
+Esta decision reemplaza el feedback visual documentado en la tanda anterior: el mecanismo ahora es deliberadamente secreto.
+
+### 6. Redes sin rayo inferior y fondo degradado de pedido
+
+En la seccion social principal:
+
+- se quitaron los rayos que aparecian debajo de cada icono;
+- se conservaron logos, colores, brillo y hover;
+- la decoracion general del titulo no se modifico;
+- los iconos del footer se mantuvieron como estaban.
+
+En `Del modelo al pedido`:
+
+- el gris plano se reemplazo por un degradado horizontal;
+- comienza mas claro a la izquierda;
+- se profundiza suavemente hacia la derecha;
+- las tarjetas blancas y el texto conservan contraste.
+
+Archivos:
+
+- `app/globals.css`;
+- `components/home/SocialFollowSection.tsx`.
+
+### 7. Boton Volver persistente
+
+Detalle de producto:
+
+- el boton original permanece en su posicion normal al inicio;
+- cuando sale por la parte superior aparece una version flotante;
+- la version flotante acompaña el scroll;
+- al volver arriba y reaparecer el boton original, el flotante desaparece;
+- nunca quedan dos botones visibles al mismo tiempo.
+
+Ruleta:
+
+- se agrego un boton Volver flotante;
+- permanece fijo durante todo el recorrido.
+
+Se creo un componente reutilizable:
+
+- `components/ui/BackButton.tsx`.
+
+Integraciones:
+
+- `components/product/ProductDetailClient.tsx`;
+- `app/random/page.tsx`.
+
+La primera prueba automatizada tuvo un fallo en una expresion usada para medir la posicion del elemento, no en la interfaz. Se corrigio el script de comprobacion y la segunda pasada confirmo ambos comportamientos.
+
+### 8. Nueva imagen responsive en Nosotros
+
+Se incorporo:
+
+- `public/images/nosotros/ntros.png`.
+
+Comportamiento:
+
+- escritorio: imagen panoramica y texto sobre la zona oscura izquierda;
+- mobile: imagen completa arriba y contenido debajo;
+- sin deformacion;
+- sin desborde horizontal;
+- el modelo conserva visibilidad.
+
+Archivo:
+
+- `app/nosotros/page.tsx`.
+
+### 9. Correccion del ancla Redes
+
+Problema:
+
+- el acceso `Redes` llegaba al inicio general de la seccion;
+- el usuario quedaba demasiado arriba y no veia directamente los botones.
+
+Solucion:
+
+- el destino `#redes` se movio al bloque que contiene titulo y accesos sociales;
+- se agrego margen de scroll para que el header fijo no tape el contenido.
+
+Archivo:
+
+- `components/home/SocialFollowSection.tsx`.
+
+La navegacion a `/#redes` se verifico comprobando que los botones quedaran dentro del viewport.
+
+### 10. Modo claro del admin
+
+Problema:
+
+- el admin usaba superficies oscuras y clases como `bg-ink`, `bg-charcoal` y `text-bone`;
+- parte del texto heredaba colores del tema claro;
+- el resultado tenia fondos oscuros con textos de bajo contraste.
+
+Solucion:
+
+- se agrego el contenedor comun `admin-surface`;
+- el tema claro usa fondo marfil;
+- paneles y formularios usan blanco;
+- textos principales usan negro;
+- textos secundarios usan grises legibles;
+- campos, selects, tablas y bordes tienen contraste propio;
+- dorado y rojo de marca se conservan;
+- el modo oscuro mantiene sus valores originales.
+
+Archivos:
+
+- `app/admin/login/page.tsx`;
+- `app/globals.css`.
+
+La cobertura comun alcanza login, dashboard, productos, tablas, Product Studio, formularios, previsualizaciones y controles internos.
+
+La autenticacion local guardada de una etapa anterior ya no era valida con la configuracion actual. No se modifico la autenticacion para forzar la entrada. El login se verifico visualmente y las superficies internas quedaron cubiertas desde el contenedor compartido.
+
+### 11. Destacados sin limite rigido
+
+Problema:
+
+- la home llamaba `getFeaturedProducts(10)`;
+- la consulta aplicaba ademas un `slice`;
+- aunque se marcaran mas productos, la portada solo mostraba los primeros diez.
+
+Solucion:
+
+- `getFeaturedProducts()` ya no recibe un limite;
+- se retiro el recorte por `slice`;
+- la home renderiza todos los productos publicados que tengan `featured=true`;
+- diez queda solamente como recomendacion visual, no como restriccion.
+
+Archivos:
+
+- `app/page.tsx`;
+- `lib/products/queries.ts`;
+- `components/admin/ProductForm.tsx`;
+- `components/admin/product-studio/ProductStudio.tsx`.
+
+Resultado:
+
+- se pueden destacar 10, 20 o la cantidad necesaria;
+- un producto destacado tambien continúa apareciendo en el catalogo general;
+- la nota del admin recomienda hasta diez para mantener una portada breve, pero no bloquea.
+
+### 12. Validacion de producto dentro del formulario
+
+Problema:
+
+- al guardar un producto publicado como destacado sin categoria valida, el servidor lanzaba una excepcion;
+- Next.js mostraba su pantalla roja;
+- el usuario perdia el contexto de lo que faltaba completar.
+
+Solucion:
+
+- Product Studio valida antes de enviar;
+- el formulario simple aplica la misma barrera;
+- para publicar o agotar se exige:
+  - categoria;
+  - al menos un color;
+  - al menos un talle;
+- si falta un dato, el guardado se frena;
+- el mensaje aparece dentro del admin;
+- el contenido del formulario se conserva.
+
+La validacion del servidor se mantiene como segunda barrera. La correccion de interfaz no debilita las reglas de integridad del catalogo.
+
+### 13. Interruptor directo de destacado en dashboard
+
+Se agrego un control visible en cada tarjeta de producto renderizada por el dashboard.
+
+Estado apagado:
+
+- texto `No destacado`;
+- fondo y borde rojos;
+- estrella sin relleno;
+- `aria-pressed=false`.
+
+Estado encendido:
+
+- texto `Destacado`;
+- fondo y borde dorados;
+- estrella rellena;
+- `aria-pressed=true`.
+
+Funcionamiento:
+
+- al presionarlo envia el valor contrario al estado actual;
+- si estaba apagado guarda `featured=true`;
+- si estaba encendido guarda `featured=false`;
+- la accion revalida home, catalogos y admin;
+- el producto aparece o desaparece de Destacados sin dejar de pertenecer al catalogo general;
+- el acceso duplicado que estaba escondido dentro de `Mas` se retiro para dejar una sola accion clara.
+
+El mismo componente de tarjeta tambien se usa en `/admin/productos`, por lo que el control directo queda disponible en el dashboard y en la lista completa del catalogo.
+
+Archivos:
+
+- `components/admin/AdminProductRow.tsx`;
+- `lib/products/mutations.ts`.
+
+La mutacion solicita el `id` de la fila actualizada y comprueba tanto el error como la existencia del resultado antes de revalidar las superficies.
+
+### 14. Verificaciones de esta tanda
+
+Durante las conversaciones se realizaron:
+
+- verificaciones visuales desktop y mobile;
+- hovers reales;
+- medicion de tarjeta destacada;
+- comprobacion del header mobile;
+- scroll del detalle de producto y la ruleta;
+- revision responsive de Nosotros;
+- navegacion a `#redes`;
+- contraste claro/oscuro del login del admin;
+- lint despues de cada grupo de cambios;
+- TypeScript despues del cambio de validacion y destacados.
+
+Los artefactos temporales de comprobacion creados dentro de `.codex-checks` se eliminaron cuando terminaron las pruebas.
+
+### 15. Estado y alcance final
+
+Esta tanda documenta el estado local posterior a la version pre-final del 17 de junio.
+
+No forma parte de este pedido:
+
+- crear commit;
+- crear tag;
+- hacer push;
+- publicar una nueva version;
+- modificar autenticacion;
+- cambiar el criterio comercial de diez destacados recomendados.
+
+El alcance solicitado termina en el control directo rojo/dorado, la verificacion correspondiente y este registro detallado.

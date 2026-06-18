@@ -9,17 +9,18 @@ type SocialLink = {
   label: string;
   icon: LucideIcon;
   href?: string;
+  tone: "instagram" | "youtube" | "tiktok";
 };
 
 const socialLinks: SocialLink[] = [
-  { label: "Instagram", icon: Instagram, href: instagramUrl },
-  { label: "YouTube", icon: Youtube, href: youtubeUrl },
-  { label: "TikTok", icon: Music2, href: tiktokUrl }
+  { label: "Instagram", icon: Instagram, href: instagramUrl, tone: "instagram" },
+  { label: "YouTube", icon: Youtube, href: youtubeUrl, tone: "youtube" },
+  { label: "TikTok", icon: Music2, href: tiktokUrl, tone: "tiktok" }
 ];
 
 export function SocialFollowSection() {
   return (
-    <section id="redes" className="scroll-mt-24 overflow-hidden bg-bone pb-16 pt-28 text-ink md:pb-20 md:pt-32">
+    <section className="overflow-hidden bg-bone pb-16 pt-28 text-ink md:pb-20 md:pt-32">
       <div className="rox-container">
         <div className="mx-auto flex max-w-5xl items-center justify-center gap-8 text-ink/30">
           <span className="h-px flex-1 bg-ink/20" />
@@ -43,7 +44,7 @@ export function SocialFollowSection() {
           />
         </div>
 
-        <div className="mx-auto mt-7 max-w-3xl text-center md:mt-9">
+        <div id="redes" className="mx-auto mt-7 max-w-3xl scroll-mt-28 text-center md:mt-9">
           <h2 className="headline text-5xl leading-[0.94] text-ink md:text-7xl">
             SEGUINOS EN <span className="block">NUESTRAS <span className="text-roxred">REDES</span></span>
           </h2>
@@ -59,12 +60,7 @@ export function SocialFollowSection() {
           <div className="mt-8 flex items-center justify-center gap-5">
             {socialLinks.map((item) => {
               const Icon = item.icon;
-              const iconContent = (
-                <>
-                  <Icon className="h-6 w-6" aria-hidden="true" />
-                  <Zap className="absolute -bottom-2 h-4 w-4 fill-roxgold text-roxgold opacity-0 transition group-hover:opacity-100" aria-hidden="true" />
-                </>
-              );
+              const iconContent = <Icon className="h-6 w-6" aria-hidden="true" />;
 
               return item.href ? (
                 <a
@@ -73,7 +69,7 @@ export function SocialFollowSection() {
                   target="_blank"
                   rel="noreferrer"
                   aria-label={item.label}
-                  className="group relative grid h-14 w-14 place-items-center rounded-full border border-ink/28 bg-bone text-ink transition hover:border-roxgold hover:bg-ink hover:text-bone"
+                  className={`social-brand-link social-${item.tone} group relative grid h-14 w-14 place-items-center rounded-full border border-ink/28 bg-bone text-ink`}
                 >
                   {iconContent}
                 </a>

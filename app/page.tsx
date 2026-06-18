@@ -12,7 +12,7 @@ import { getActiveProducts, getFeaturedProducts } from "@/lib/products/queries";
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const [products, featuredProducts, sections] = await Promise.all([getActiveProducts(), getFeaturedProducts(10), getHomeSections()]);
+  const [products, featuredProducts, sections] = await Promise.all([getActiveProducts(), getFeaturedProducts(), getHomeSections()]);
   const dropSection = getHomeSection(sections, "featured_drop");
   const productsSection = getHomeSection(sections, "featured_products");
   const rendered: ReactNode[] = [];

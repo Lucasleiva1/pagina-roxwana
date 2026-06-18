@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 import { OpacityControl } from "@/components/ui/OpacityControl";
 import { RoxButton } from "@/components/ui/RoxButton";
 import { TextureOverlay } from "@/components/ui/TextureOverlay";
@@ -61,40 +61,58 @@ export function HeroCampaign({ section }: { section?: HomeSection | null }) {
     window.setTimeout(() => setSaveStatus(""), 1800);
   };
 
+  const handleCtaClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (!ctaUrl.startsWith("#")) {
+      return;
+    }
+
+    const target = document.querySelector(ctaUrl);
+
+    if (!target) {
+      return;
+    }
+
+    event.preventDefault();
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+    window.history.replaceState(null, "", ctaUrl);
+  };
+
   return (
     <section className="theme-force-dark relative min-h-[94svh] overflow-hidden bg-ink pt-24 text-bone">
-      <div className="absolute inset-0">
-        {reduceMotion ? (
-          <Image
-            src="/videos/roxwana-portada-poster.jpg"
-            alt=""
-            fill
-            priority
-            sizes="100vw"
-            style={{ opacity: mediaOpacity / 100 }}
-            className="object-cover object-[72%_center] md:object-center"
-          />
-        ) : (
-          <video
-            aria-hidden="true"
-            autoPlay
-            className="h-full w-full object-cover object-[72%_center] md:object-center"
-            loop
-            muted
-            playsInline
-            poster="/videos/roxwana-portada-poster.jpg"
-            preload="metadata"
-            style={{ opacity: mediaOpacity / 100 }}
-          >
-            {heroVideoSources.flatMap((source) => [
-              <source key={`${source.webm}-${source.media || "base"}`} src={source.webm} type="video/webm" media={source.media} />,
-              <source key={`${source.mp4}-${source.media || "base"}`} src={source.mp4} type="video/mp4" media={source.media} />
-            ])}
-          </video>
-        )}
+      <div className="hero-media-layer absolute inset-0">
+        <div className="hero-media-visual absolute inset-0">
+          {reduceMotion ? (
+            <Image
+              src="/videos/roxwana-portada-poster.jpg"
+              alt=""
+              fill
+              priority
+              sizes="100vw"
+              style={{ opacity: mediaOpacity / 100 }}
+              className="hero-campaign-media object-cover object-center"
+            />
+          ) : (
+            <video
+              aria-hidden="true"
+              autoPlay
+              className="hero-campaign-media h-full w-full object-cover object-center"
+              loop
+              muted
+              playsInline
+              poster="/videos/roxwana-portada-poster.jpg"
+              preload="metadata"
+              style={{ opacity: mediaOpacity / 100 }}
+            >
+              {heroVideoSources.flatMap((source) => [
+                <source key={`${source.webm}-${source.media || "base"}`} src={source.webm} type="video/webm" media={source.media} />,
+                <source key={`${source.mp4}-${source.media || "base"}`} src={source.mp4} type="video/mp4" media={source.media} />
+              ])}
+            </video>
+          )}
+        </div>
         <div className="absolute inset-0" style={{ opacity: darkLayerOpacity / 100 }}>
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,#080808_0%,rgba(8,8,8,0.78)_34%,rgba(8,8,8,0.18)_100%)]" />
-          <div className="absolute inset-0 bg-[linear-gradient(0deg,#080808_0%,rgba(8,8,8,0)_42%,rgba(8,8,8,0.58)_100%)]" />
+          <div className="hero-overlay-horizontal absolute inset-0 bg-[linear-gradient(90deg,#080808_0%,rgba(8,8,8,0.78)_34%,rgba(8,8,8,0.18)_100%)]" />
+          <div className="hero-overlay-vertical absolute inset-0 bg-[linear-gradient(0deg,#080808_0%,rgba(8,8,8,0)_42%,rgba(8,8,8,0.58)_100%)]" />
         </div>
       </div>
 
@@ -102,21 +120,16 @@ export function HeroCampaign({ section }: { section?: HomeSection | null }) {
 
       <div className="rox-container relative z-10 flex min-h-[calc(94svh-6rem)] items-end pb-12 md:items-center md:pb-0">
         <motion.div
-          className="max-w-3xl"
+          className="w-full max-w-3xl"
           initial={reduceMotion ? false : { opacity: 0, y: 22 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: "easeOut" }}
         >
-          <div className="mb-5 inline-flex items-center gap-4 border-y border-roxgold/40 py-2 text-xs font-bold uppercase tracking-rox text-roxgold">
-            <span>Drop editorial</span>
-            <span className="h-px w-12 bg-roxred" />
-            <span>Graphic wear</span>
-          </div>
-          <h1 className="headline max-w-[11ch] text-7xl leading-[0.82] text-bone drop-shadow-2xl md:text-9xl lg:text-[9.4rem]">{title}</h1>
+          <h1 className="headline max-w-[11ch] text-[3.5rem] leading-[0.82] text-bone drop-shadow-2xl min-[360px]:text-7xl md:text-9xl lg:text-[9.4rem]">{title}</h1>
           <p className="headline mt-4 text-3xl leading-none text-bone md:text-6xl">{subtitle}</p>
           <p className="mt-5 max-w-xl text-base leading-8 text-bone/76 md:text-lg">{body}</p>
-          <div className="mt-8 grid gap-3 sm:flex">
-            <RoxButton href={ctaUrl} variant="bone">
+          <div className="mt-8 flex justify-center md:justify-start">
+            <RoxButton href={ctaUrl} variant="bone" className="hero-primary-cta min-w-[13rem] rounded-md px-8" onClick={handleCtaClick}>
               {ctaLabel}
             </RoxButton>
           </div>

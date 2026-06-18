@@ -15,12 +15,12 @@ export function RoxButton({ href, children, variant = "ghost", className = "", .
   };
 
   const isExternal = href.startsWith("http");
-  const classes = `group relative inline-flex min-h-11 items-center justify-center overflow-hidden border px-5 py-3 text-xs font-bold uppercase tracking-rox transition duration-300 ${variants[variant]} ${className}`;
+  const classes = `rox-button rox-button-${variant} group relative inline-flex min-h-11 items-center justify-center overflow-hidden border px-5 py-3 text-xs font-bold uppercase tracking-rox transition duration-300 ${variants[variant]} ${className}`;
   const content = (
     <>
-      <span className="absolute inset-y-0 left-0 w-1 bg-roxgold transition-all duration-300 group-hover:w-full" />
-      <span className="relative z-10 flex items-center gap-3 transition group-hover:text-charcoal">
-        <span className="text-roxgold transition group-hover:text-charcoal">/</span>
+      <span className="rox-button-fill absolute inset-y-0 left-0 w-1 bg-roxgold transition-all duration-300 group-hover:w-full" />
+      <span className="rox-button-content relative z-10 flex items-center gap-3 transition group-hover:text-charcoal">
+        <span className="rox-button-mark text-roxgold transition group-hover:text-charcoal">/</span>
         {children}
       </span>
     </>

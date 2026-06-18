@@ -10,12 +10,13 @@ type SocialLink = {
   label: string;
   icon: LucideIcon;
   href?: string;
+  tone: "instagram" | "youtube" | "tiktok";
 };
 
 const socialLinks: SocialLink[] = [
-  { label: "Instagram", icon: Instagram, href: instagramUrl },
-  { label: "YouTube", icon: Youtube, href: youtubeUrl },
-  { label: "TikTok", icon: Music2, href: tiktokUrl }
+  { label: "Instagram", icon: Instagram, href: instagramUrl, tone: "instagram" },
+  { label: "YouTube", icon: Youtube, href: youtubeUrl, tone: "youtube" },
+  { label: "TikTok", icon: Music2, href: tiktokUrl, tone: "tiktok" }
 ];
 
 export function Footer() {
@@ -34,10 +35,8 @@ export function Footer() {
       </div>
       <div className="rox-container relative z-10 grid gap-12 lg:grid-cols-[1fr_0.52fr] lg:items-end">
         <div>
-          <p className="text-xs font-bold uppercase tracking-rox text-roxgold">Wear it loud</p>
-          <div className="headline mt-3 text-7xl leading-none text-bone md:text-9xl">ROXWANA</div>
+          <div className="headline text-7xl leading-none text-bone md:text-9xl">ROXWANA</div>
           <p className="headline mt-4 max-w-3xl text-3xl leading-none text-bone/90 md:text-5xl">ESTILO URBANO</p>
-          <p className="mt-5 max-w-xl text-sm uppercase tracking-rox text-bone/62">Street rock / graphic wear. Hecho para la calle.</p>
         </div>
 
         <div className="grid gap-7 text-xs font-bold uppercase tracking-rox text-bone/70 sm:grid-cols-2 lg:text-right">
@@ -52,7 +51,7 @@ export function Footer() {
             {socialLinks.map((item) => {
               const Icon = item.icon;
               const className =
-                "grid h-10 w-10 place-items-center rounded-full border border-bone/24 bg-ink/45 text-bone/72 transition";
+                `social-brand-link social-${item.tone} grid h-10 w-10 place-items-center rounded-full border border-bone/24 bg-ink/45 text-bone/72`;
 
               return item.href ? (
                 <a
@@ -62,7 +61,7 @@ export function Footer() {
                   rel="noreferrer"
                   aria-label={item.label}
                   title={item.label}
-                  className={`${className} hover:border-roxgold hover:text-bone`}
+                  className={className}
                 >
                   <Icon className="h-5 w-5" aria-hidden="true" />
                 </a>

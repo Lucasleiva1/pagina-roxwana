@@ -26,6 +26,14 @@ function actionButtonClass(tone: "primary" | "neutral" = "neutral") {
     : "inline-flex min-h-9 items-center justify-center border border-bone/14 px-3 text-[10px] font-bold uppercase tracking-rox text-bone transition hover:border-roxgold hover:text-roxgold";
 }
 
+function featuredButtonClass(featured: boolean) {
+  const shared = "inline-flex min-h-9 w-full items-center justify-center border px-3 text-[10px] font-black uppercase tracking-rox transition";
+
+  return featured
+    ? `${shared} !border-roxgold !bg-roxgold !text-charcoal hover:!border-bone hover:!text-charcoal`
+    : `${shared} !border-roxred !bg-roxred !text-bone hover:!border-bone hover:!text-bone`;
+}
+
 export function AdminProductRow({ product }: { product: Product }) {
   const productId = product.id;
   const productImages = getProductImages(product);
@@ -65,7 +73,7 @@ export function AdminProductRow({ product }: { product: Product }) {
           </div>
 
           <div className="grid content-between gap-3">
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+            <div className="grid grid-cols-2 gap-2">
               <Link href={`/admin/productos/${productId}`} className={actionButtonClass("primary")}>
                 Studio
               </Link>
@@ -78,6 +86,21 @@ export function AdminProductRow({ product }: { product: Product }) {
                   <input type="hidden" name="status" value={nextPrimaryStatus(product.status)} />
                   <button type="submit" className={`${actionButtonClass()} w-full`}>
                     {primaryStatusLabel(product.status)}
+                  </button>
+                </form>
+              ) : null}
+              {productId ? (
+                <form action={toggleFeaturedProductAction}>
+                  <input type="hidden" name="id" value={productId} />
+                  <input type="hidden" name="featured" value={product.featured ? "false" : "true"} />
+                  <button
+                    type="submit"
+                    aria-pressed={product.featured}
+                    aria-label={product.featured ? `Quitar ${product.name} de destacados` : `Marcar ${product.name} como destacado`}
+                    className={featuredButtonClass(product.featured)}
+                  >
+                    <Star size={13} fill={product.featured ? "currentColor" : "none"} className="mr-1.5" />
+                    {product.featured ? "Destacado" : "No destacado"}
                   </button>
                 </form>
               ) : null}
@@ -95,13 +118,6 @@ export function AdminProductRow({ product }: { product: Product }) {
                       <input type="hidden" name="status" value="sold_out" />
                       <button type="submit" className={`${actionButtonClass()} w-full justify-start`}>
                         <Flame size={13} className="mr-1.5" /> Agotar
-                      </button>
-                    </form>
-                    <form action={toggleFeaturedProductAction}>
-                      <input type="hidden" name="id" value={productId} />
-                      <input type="hidden" name="featured" value={product.featured ? "false" : "true"} />
-                      <button type="submit" className={`${actionButtonClass()} w-full justify-start`}>
-                        <Star size={13} className="mr-1.5" /> {product.featured ? "Quitar destacado" : "Destacar"}
                       </button>
                     </form>
                     <form action={duplicateProductAction}>

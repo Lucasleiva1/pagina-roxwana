@@ -423,7 +423,12 @@ export async function toggleFeaturedProductAction(formData: FormData) {
     throw new Error("No se pudo cambiar destacado.");
   }
 
-  await supabase.from("products").update({ featured }).eq("id", id);
+  const { data, error } = await supabase.from("products").update({ featured }).eq("id", id).select("id").single();
+
+  if (error || !data) {
+    throw new Error("No se pudo cambiar destacado.");
+  }
+
   revalidateProductSurfaces();
 }
 

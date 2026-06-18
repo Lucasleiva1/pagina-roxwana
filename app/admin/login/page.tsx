@@ -13,7 +13,7 @@ export default async function AdminLoginPage({ searchParams }: AdminLoginPagePro
   const safeReturnUrl = getSafeReturnPath(rawReturnUrl, "/admin").startsWith("/admin") ? getSafeReturnPath(rawReturnUrl, "/admin") : "/admin";
 
   return (
-    <section className="min-h-screen bg-ink pb-20 pt-32">
+    <section className="admin-surface min-h-screen bg-ink pb-20 pt-32">
       <div className="rox-container grid gap-8 lg:grid-cols-[0.9fr_0.75fr] lg:items-center">
         <div>
           <p className="text-xs font-bold uppercase tracking-rox text-roxgold">Acceso interno</p>

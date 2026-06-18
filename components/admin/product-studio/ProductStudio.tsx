@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, useMemo, useState, useTransition } from "react";
+import { ChangeEvent, FormEvent, useMemo, useState, useTransition } from "react";
 import { AlertTriangle, ArrowDown, ArrowUp, CheckCircle2, ClipboardPaste, FileText, Image as ImageIcon, RotateCcw, Save, Trash2, UploadCloud } from "lucide-react";
 import type { Product } from "@/types/product";
 import { extractProductSheetPdfText } from "@/lib/product-studio/actions";
@@ -117,6 +117,7 @@ export function ProductStudio({ mode, product, options, action, submitLabel }: P
   const [draft, setDraft] = useState<ProductStudioDraft>(() => productToStudioDraft(product, options));
   const [sheetText, setSheetText] = useState(buildProductSheetExample());
   const [importNotices, setImportNotices] = useState<StudioNotice[]>([]);
+  const [saveError, setSaveError] = useState<StudioNotice | null>(null);
   const [uploadedImages, setUploadedImages] = useState<UploadImageDraft[]>([]);
   const [imageInputIds, setImageInputIds] = useState([INITIAL_IMAGE_INPUT_ID]);
   const [activeImageInputId, setActiveImageInputId] = useState(INITIAL_IMAGE_INPUT_ID);
@@ -143,13 +144,29 @@ export function ProductStudio({ mode, product, options, action, submitLabel }: P
     () => validateProductStudioDraft(draft, options, activeUploadedImages.length, activeExistingImages.length),
     [activeExistingImages.length, activeUploadedImages.length, draft, options]
   );
-  const allNotices = [...validationNotices, ...importNotices];
+  const allNotices = [...validationNotices, ...importNotices, ...(saveError ? [saveError] : [])];
   const errorCount = allNotices.filter((notice) => notice.level === "error").length;
   const coverPreview = activeUploadedImages.find((image) => image.role === "cover")?.previewUrl || activeExistingImages.find((image) => image.role === "cover")?.url || product?.image || "";
   const hoverPreview = activeUploadedImages.find((image) => image.role === "hover")?.previewUrl || activeExistingImages.find((image) => image.role === "hover")?.url || "";
 
   function updateDraft(patch: Partial<ProductStudioDraft>) {
+    setSaveError(null);
     setDraft((current) => mergeStudioDraft(current, patch));
+  }
+
+  function validateBeforeSubmit(event: FormEvent<HTMLFormElement>) {
+    const firstError = validationNotices.find((notice) => notice.level === "error");
+
+    if (!firstError) {
+      setSaveError(null);
+      return;
+    }
+
+    event.preventDefault();
+    setSaveError({
+      level: "error",
+      message: `No se guardó: ${firstError.message}`
+    });
   }
 
   function applyImport(text: string, fileName = "ficha.txt") {
@@ -300,7 +317,7 @@ export function ProductStudio({ mode, product, options, action, submitLabel }: P
   }
 
   return (
-    <form action={action} className="grid gap-4">
+    <form action={action} onSubmit={validateBeforeSubmit} className="grid gap-4">
       {product?.id ? <input type="hidden" name="id" value={product.id} /> : null}
       <input type="hidden" name="primary_image_id" value={primaryTarget.startsWith("existing:") ? primaryTarget.replace("existing:", "") : ""} />
       <input type="hidden" name="primary_new_image_index" value={primaryNewImageIndex >= 0 ? String(primaryNewImageIndex) : ""} />
@@ -458,10 +475,13 @@ export function ProductStudio({ mode, product, options, action, submitLabel }: P
                     {fieldLabel("Orden visual")}
                     <input name="sort_order" type="number" step={1} value={draft.sortOrder} onChange={(event) => updateDraft({ sortOrder: event.target.value })} className={inputClass} />
                   </label>
-                  <label className="flex items-center gap-3 border border-bone/10 p-2 text-[10px] font-bold uppercase tracking-rox text-bone/72">
-                    <input type="checkbox" name="featured" checked={draft.featured} onChange={(event) => updateDraft({ featured: event.target.checked })} />
-                    Destacado en home
-                  </label>
+                  <div className="grid gap-1 border border-bone/10 p-2">
+                    <label className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-rox text-bone/72">
+                      <input type="checkbox" name="featured" checked={draft.featured} onChange={(event) => updateDraft({ featured: event.target.checked })} />
+                      Destacado en home
+                    </label>
+                    <p className="text-[9px] uppercase tracking-rox text-bone/45">Sin límite. Recomendado: hasta 10.</p>
+                  </div>
                 </div>
               </div>
 
