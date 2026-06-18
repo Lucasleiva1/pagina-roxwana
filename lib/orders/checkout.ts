@@ -50,6 +50,41 @@ function buildAddressLine(address: {
   return `${address.street} ${address.streetNumber}${apartment}, ${address.city}, ${address.province}, CP ${address.postalCode}`;
 }
 
+function getPublicOrigin(sourceUrl: string | null) {
+  for (const candidate of [sourceUrl, process.env.NEXT_PUBLIC_SITE_URL]) {
+    if (!candidate) continue;
+
+    try {
+      return new URL(candidate).origin;
+    } catch {
+      // Try the next configured origin.
+    }
+  }
+
+  return null;
+}
+
+function buildLightweightImageUrl(imageUrl: string | null, sourceUrl: string | null) {
+  if (!imageUrl) return null;
+
+  const origin = getPublicOrigin(sourceUrl);
+
+  if (!origin) {
+    return imageUrl.startsWith("http://") || imageUrl.startsWith("https://") ? imageUrl : null;
+  }
+
+  try {
+    const absoluteImageUrl = new URL(imageUrl, origin).toString();
+    const optimizedImageUrl = new URL("/_next/image", origin);
+    optimizedImageUrl.searchParams.set("url", imageUrl.startsWith("/") ? imageUrl : absoluteImageUrl);
+    optimizedImageUrl.searchParams.set("w", "384");
+    optimizedImageUrl.searchParams.set("q", "40");
+    return optimizedImageUrl.toString();
+  } catch {
+    return imageUrl.startsWith("http://") || imageUrl.startsWith("https://") ? imageUrl : null;
+  }
+}
+
 export async function checkoutCartAction(formData: FormData) {
   const auth = await getAuthenticatedUser();
 
@@ -176,13 +211,17 @@ export async function checkoutCartAction(formData: FormData) {
     deliveryNotes ? `Notas de envio: ${deliveryNotes}` : null,
     "",
     "Productos:",
-    ...cart.items.map(
-      (item, index) => {
-        const unitPrice = item.priceSnapshot ? formatPrice(item.priceSnapshot) : "Sin precio";
-        const subtotal = item.priceSnapshot ? formatPrice(item.priceSnapshot * item.quantity) : "Sin precio";
-        return `${index + 1}. ${item.productName} | Modelo: ${item.modelCode} | SKU: ${item.sku} | Color: ${item.selectedColor} | Talle: ${item.selectedSize} | Cantidad: ${item.quantity} | Unitario: ${unitPrice} | Subtotal: ${subtotal}`;
-      }
-    ),
+    ...cart.items.flatMap((item, index) => {
+      const unitPrice = item.priceSnapshot ? formatPrice(item.priceSnapshot) : "Sin precio";
+      const subtotal = item.priceSnapshot ? formatPrice(item.priceSnapshot * item.quantity) : "Sin precio";
+      const imageUrl = buildLightweightImageUrl(item.imageUrl, sourceUrl);
+
+      return [
+        `${index + 1}. ${item.productName} | Modelo: ${item.modelCode} | SKU: ${item.sku} | Color: ${item.selectedColor} | Talle: ${item.selectedSize} | Cantidad: ${item.quantity} | Unitario: ${unitPrice} | Subtotal: ${subtotal}`,
+        imageUrl ? `Foto frontal: ${imageUrl}` : null,
+        ""
+      ];
+    }),
     `Total productos: ${formatPrice(productsTotal)}`,
     "",
     "Me confirmas disponibilidad, envio y link de pago?"

@@ -7,6 +7,8 @@ const nextConfig = {
   },
   images: {
     formats: ["image/avif", "image/webp"],
+    qualities: [40, 75],
+    contentDispositionType: "inline",
     remotePatterns: [
       {
         protocol: "https",

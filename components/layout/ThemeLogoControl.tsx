@@ -6,15 +6,9 @@ import { useEffect, useRef } from "react";
 
 type Theme = "dark" | "light";
 
-const STORAGE_KEY = "roxwana-theme";
 const HOLD_DURATION_MS = 3000;
 
-function getStoredTheme(): Theme {
-  return window.localStorage.getItem(STORAGE_KEY) === "dark" ? "dark" : "light";
-}
-
 function applyTheme(theme: Theme) {
-  window.localStorage.setItem(STORAGE_KEY, theme);
   document.documentElement.dataset.theme = theme;
   document.documentElement.style.colorScheme = theme;
 }
@@ -42,7 +36,8 @@ export function ThemeLogoControl({
     cancelHold();
     completedRef.current = false;
     timerRef.current = window.setTimeout(() => {
-      applyTheme(getStoredTheme() === "light" ? "dark" : "light");
+      const currentTheme: Theme = document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+      applyTheme(currentTheme === "light" ? "dark" : "light");
       completedRef.current = true;
       timerRef.current = null;
       if ("vibrate" in navigator) {
@@ -64,7 +59,8 @@ export function ThemeLogoControl({
   };
 
   useEffect(() => {
-    applyTheme(getStoredTheme());
+    window.localStorage.removeItem("roxwana-theme");
+    applyTheme("light");
 
     return () => {
       if (timerRef.current) {

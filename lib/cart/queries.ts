@@ -12,48 +12,87 @@ import { buildWhatsAppUrl } from "@/lib/whatsapp/buildWhatsAppUrl";
 type CartRow = Database["public"]["Tables"]["carts"]["Row"];
 type CartItemRow = Database["public"]["Tables"]["cart_items"]["Row"];
 type AddressRow = Database["public"]["Tables"]["customer_addresses"]["Row"];
-type ProductImageRow = Pick<Database["public"]["Tables"]["product_images"]["Row"], "product_id" | "url" | "path" | "bucket" | "is_primary" | "sort_order">;
+type ProductImageRow = Pick<
+  Database["public"]["Tables"]["product_images"]["Row"],
+  "product_id" | "url" | "path" | "bucket" | "alt" | "is_primary" | "sort_order" | "image_role" | "view_number" | "color_code" | "device_variant" | "original_filename"
+>;
 type ProductMainImageRow = Pick<Database["public"]["Tables"]["products"]["Row"], "id" | "main_image_path">;
 
 function productImageUrl(image: ProductImageRow) {
   return image.url || getPublicMediaUrl(image.path, image.bucket || "product-images");
 }
 
+function cartItemImageKey(productId: string, colorCode: string) {
+  return `${productId}:${colorCode.trim().toUpperCase()}`;
+}
+
+function imageText(image: ProductImageRow) {
+  return `${image.original_filename || ""} ${image.path || ""} ${image.url || ""} ${image.alt || ""}`.toLowerCase();
+}
+
+function imagePriority(image: ProductImageRow, selectedColor: string) {
+  const colorCode = image.color_code?.trim().toUpperCase() || null;
+  const text = imageText(image);
+  let score = 0;
+
+  if (colorCode === selectedColor) score += 1_000;
+  else if (!colorCode) score += 150;
+
+  if (image.is_primary) score += 600;
+  if (image.image_role === "cover") score += 500;
+  if (image.view_number === "01" || image.view_number === "1") score += 350;
+  if (/(^|[-_\s])(shirt|remera|producto)([-_\s.]|$)/.test(text)) score += 250;
+  if (/(^|[-_\s])(front|frente)([-_\s.]|$)/.test(text)) score += 180;
+  if (image.device_variant === "mobile") score += 30;
+  if (image.device_variant === "base") score += 20;
+
+  return score;
+}
+
 async function getCartItemImageMap(supabase: SupabaseClient<Database>, items: CartItemRow[]) {
   const productIds = Array.from(new Set(items.map((item) => item.product_id).filter((id): id is string => Boolean(id))));
-  const imageByProductId = new Map<string, string>();
+  const imageByCartItem = new Map<string, string>();
 
   if (productIds.length === 0) {
-    return imageByProductId;
+    return imageByCartItem;
   }
 
   const [imagesResult, productsResult] = await Promise.all([
-    supabase.from("product_images").select("product_id, url, path, bucket, is_primary, sort_order").in("product_id", productIds).order("sort_order", { ascending: true }),
+    supabase
+      .from("product_images")
+      .select("product_id, url, path, bucket, alt, is_primary, sort_order, image_role, view_number, color_code, device_variant, original_filename")
+      .in("product_id", productIds)
+      .order("sort_order", { ascending: true }),
     supabase.from("products").select("id, main_image_path").in("id", productIds)
   ]);
 
-  const images = ((imagesResult.data || []) as ProductImageRow[]).sort((a, b) => Number(b.is_primary) - Number(a.is_primary) || a.sort_order - b.sort_order);
-
-  for (const image of images) {
-    const url = productImageUrl(image);
-
-    if (url && !imageByProductId.has(image.product_id)) {
-      imageByProductId.set(image.product_id, url);
-    }
-  }
+  const images = (imagesResult.data || []) as ProductImageRow[];
+  const mainImageByProductId = new Map<string, string>();
 
   for (const product of (productsResult.data || []) as ProductMainImageRow[]) {
     const url = getPublicMediaUrl(product.main_image_path, "product-images");
-
-    if (url && !imageByProductId.has(product.id)) {
-      imageByProductId.set(product.id, url);
+    if (url) {
+      mainImageByProductId.set(product.id, url);
     }
   }
 
-  return imageByProductId;
+  for (const item of items) {
+    if (!item.product_id) continue;
+
+    const selectedColor = item.selected_color.trim().toUpperCase();
+    const preferredImage = images
+      .filter((image) => image.product_id === item.product_id)
+      .sort((a, b) => imagePriority(b, selectedColor) - imagePriority(a, selectedColor) || a.sort_order - b.sort_order)
+      .find((image) => Boolean(productImageUrl(image)));
+    const url = preferredImage ? productImageUrl(preferredImage) : mainImageByProductId.get(item.product_id) || null;
+
+    if (url) imageByCartItem.set(cartItemImageKey(item.product_id, selectedColor), url);
+  }
+
+  return imageByCartItem;
 }
 
-function mapCartItem(row: CartItemRow, imageByProductId: Map<string, string>): CartItem {
+function mapCartItem(row: CartItemRow, imageByCartItem: Map<string, string>): CartItem {
   return {
     id: row.id,
     cartId: row.cart_id,
@@ -65,18 +104,18 @@ function mapCartItem(row: CartItemRow, imageByProductId: Map<string, string>): C
     quantity: row.quantity,
     sku: row.sku,
     priceSnapshot: row.price_snapshot,
-    imageUrl: row.product_id ? imageByProductId.get(row.product_id) || null : null,
+    imageUrl: row.product_id ? imageByCartItem.get(cartItemImageKey(row.product_id, row.selected_color)) || null : null,
     createdAt: row.created_at,
     updatedAt: row.updated_at
   };
 }
 
-function mapCart(row: CartRow, items: CartItemRow[], imageByProductId: Map<string, string>): Cart {
+function mapCart(row: CartRow, items: CartItemRow[], imageByCartItem: Map<string, string>): Cart {
   return {
     id: row.id,
     userId: row.user_id,
     status: row.status,
-    items: items.map((item) => mapCartItem(item, imageByProductId)),
+    items: items.map((item) => mapCartItem(item, imageByCartItem)),
     createdAt: row.created_at,
     updatedAt: row.updated_at
   };
