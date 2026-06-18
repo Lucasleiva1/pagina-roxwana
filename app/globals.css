@@ -280,6 +280,7 @@ a {
 
 .headline {
   font-family: var(--font-display), Impact, "Arial Narrow", sans-serif;
+  font-weight: 900;
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }

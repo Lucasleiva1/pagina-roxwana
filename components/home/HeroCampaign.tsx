@@ -118,17 +118,21 @@ export function HeroCampaign({ section }: { section?: HomeSection | null }) {
 
       <TextureOverlay intensity="strong" />
 
-      <div className="rox-container relative z-10 flex min-h-[calc(94svh-6rem)] items-end pb-12 md:items-center md:pb-0">
+      <div className="rox-container relative z-10 flex min-h-[calc(94svh-6rem)] items-end pb-10 min-[380px]:pb-12 md:items-center md:pb-0">
         <motion.div
           className="w-full max-w-3xl"
           initial={reduceMotion ? false : { opacity: 0, y: 22 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: "easeOut" }}
         >
-          <h1 className="headline max-w-[11ch] text-[3.5rem] leading-[0.82] text-bone drop-shadow-2xl min-[360px]:text-7xl md:text-9xl lg:text-[9.4rem]">{title}</h1>
-          <p className="headline mt-4 text-3xl leading-none text-bone md:text-6xl">{subtitle}</p>
-          <p className="mt-5 max-w-xl text-base leading-8 text-bone/76 md:text-lg">{body}</p>
-          <div className="mt-8 flex justify-center md:justify-start">
+          <h1 className="headline max-w-full text-[clamp(2.7rem,14.5vw,4rem)] leading-[0.88] tracking-[0.06em] text-bone drop-shadow-2xl md:max-w-[11ch] md:text-9xl md:tracking-[0.14em] lg:text-[9.4rem]">
+            {title}
+          </h1>
+          <p className="headline mt-3 text-[clamp(1.4rem,7.5vw,1.875rem)] leading-none tracking-[0.1em] text-bone min-[380px]:mt-4 md:text-6xl md:tracking-[0.14em]">
+            {subtitle}
+          </p>
+          <p className="mt-4 max-w-xl text-sm leading-6 text-bone/76 min-[380px]:mt-5 min-[380px]:text-base min-[380px]:leading-8 md:text-lg">{body}</p>
+          <div className="mt-6 flex justify-center min-[380px]:mt-8 md:justify-start">
             <RoxButton href={ctaUrl} variant="bone" className="hero-primary-cta min-w-[13rem] rounded-md px-8" onClick={handleCtaClick}>
               {ctaLabel}
             </RoxButton>

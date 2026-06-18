@@ -244,10 +244,10 @@ export function Header() {
     <>
       <header className="site-header fixed inset-x-0 top-0 z-40 border-b border-bone/10 bg-ink/35 backdrop-blur-md">
         <div className="mx-auto flex h-20 w-[min(1220px,calc(100vw-28px))] items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-center gap-2 min-[360px]:gap-3">
             <ThemeLogoControl />
             <Link href="/" aria-label="Ir al inicio">
-              <span className="headline text-2xl text-bone">ROXWANA</span>
+              <span className="headline whitespace-nowrap text-[1.15rem] tracking-[0.08em] text-bone min-[360px]:text-2xl min-[360px]:tracking-[0.14em]">ROXWANA</span>
             </Link>
           </div>
           <nav className="hidden items-center gap-6 md:flex">
