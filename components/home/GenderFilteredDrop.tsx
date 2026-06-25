@@ -86,9 +86,9 @@ export function GenderFilteredDrop({ products, dropSection, productsSection }: {
                     />
                   </picture>
                   <div className="gender-entry-overlay absolute inset-0 bg-[linear-gradient(0deg,#080808_0%,rgba(8,8,8,0.16)_55%,rgba(8,8,8,0.34)_100%)]" />
-                  <div className="absolute bottom-4 left-3 right-3 md:bottom-6 md:left-5 md:right-5">
-                    <div className="inline-block rotate-[-2deg] bg-bone px-3 py-2 text-charcoal shadow-hard-red md:px-5 md:py-3">
-                      <h3 className="headline text-4xl leading-none sm:text-6xl md:text-8xl">{item.label}</h3>
+                  <div className="absolute bottom-4 left-2 right-2 md:bottom-6 md:left-5 md:right-5">
+                    <div className="block w-full rotate-[-2deg] bg-bone px-2 py-2 text-center text-charcoal shadow-hard-red sm:inline-block sm:w-auto sm:px-3 md:px-5 md:py-3">
+                      <h3 className="gender-entry-title headline whitespace-nowrap leading-none sm:text-6xl sm:tracking-[0.14em] md:text-8xl">{item.label}</h3>
                     </div>
                     <p className="mt-3 hidden max-w-md text-sm leading-7 text-bone/74 sm:block md:mt-5">{item.copy}</p>
                     <span className="mt-3 inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-rox text-roxgold md:mt-5 md:gap-3 md:text-xs">

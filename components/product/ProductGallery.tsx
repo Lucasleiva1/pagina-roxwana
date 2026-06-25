@@ -27,15 +27,34 @@ function ProductGalleryFrame({ product, images }: { product: Product; images: Pr
   };
 
   return (
-    <div className="grid gap-4">
-      <div className="relative aspect-[3/4] overflow-hidden border border-bone/12 bg-charcoal shadow-hard-red" data-product-gallery>
+    <div className="grid gap-3 lg:grid-cols-[4.5rem_minmax(0,1fr)] lg:items-start">
+      <div className="order-2 grid grid-cols-3 gap-3 lg:order-1 lg:max-h-[clamp(28rem,calc(100svh-12rem),38rem)] lg:grid-cols-1 lg:overflow-y-auto lg:pr-1">
+        {images.slice(0, 6).map((image, index) => (
+          <button
+            key={`${image.url}-${index}`}
+            type="button"
+            onClick={() => setActiveIndex(index)}
+            className={`relative aspect-[3/4] overflow-hidden border bg-ink transition ${
+              index === activeIndex ? "border-roxgold" : "border-bone/12 hover:border-roxgold"
+            }`}
+            aria-label={`Ver imagen ${index + 1} de ${product.name}`}
+          >
+            <Image src={image.url} alt={image.alt || `${product.name} vista ${index + 1}`} fill sizes="96px" className="object-cover" />
+          </button>
+        ))}
+      </div>
+
+      <div
+        className="relative order-1 h-[clamp(28rem,118vw,38rem)] overflow-hidden border border-bone/12 bg-charcoal shadow-hard-red lg:order-2 lg:h-[clamp(28rem,calc(100svh-12rem),38rem)]"
+        data-product-gallery
+      >
         <ProductResponsiveImage
           key={activeImage.url}
           src={activeImage.url}
           alt={activeImage.alt || product.name}
           priority
-          sizes="(min-width: 1024px) 50vw, 100vw"
-          className="object-contain object-center p-2"
+          sizes="(min-width: 1024px) 55vw, 100vw"
+          className="object-contain object-center p-2 sm:p-3"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-ink/55 to-transparent" />
         {hasMultipleImages ? (
@@ -63,21 +82,6 @@ function ProductGalleryFrame({ product, images }: { product: Product; images: Pr
             </div>
           </>
         ) : null}
-      </div>
-      <div className="grid grid-cols-3 gap-4">
-        {images.slice(0, 6).map((image, index) => (
-          <button
-            key={`${image.url}-${index}`}
-            type="button"
-            onClick={() => setActiveIndex(index)}
-            className={`relative aspect-[3/4] overflow-hidden border bg-ink transition ${
-              index === activeIndex ? "border-roxgold" : "border-bone/12 hover:border-roxgold"
-            }`}
-            aria-label={`Ver imagen ${index + 1} de ${product.name}`}
-          >
-            <Image src={image.url} alt={image.alt || `${product.name} vista ${index + 1}`} fill sizes="180px" className="object-cover" />
-          </button>
-        ))}
       </div>
     </div>
   );

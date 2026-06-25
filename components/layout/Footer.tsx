@@ -35,8 +35,10 @@ export function Footer() {
       </div>
       <div className="rox-container relative z-10 grid gap-12 lg:grid-cols-[1fr_0.52fr] lg:items-end">
         <div>
-          <div className="headline text-7xl leading-none text-bone md:text-9xl">ROXWANA</div>
-          <p className="headline mt-4 max-w-3xl text-3xl leading-none text-bone/90 md:text-5xl">ESTILO URBANO</p>
+          <div className="footer-brand-title headline max-w-full leading-none text-bone md:text-9xl md:tracking-[0.14em]">ROXWANA</div>
+          <p className="footer-brand-subtitle headline mt-3 max-w-full leading-none text-bone/90 md:mt-4 md:text-5xl md:tracking-[0.14em]">
+            ESTILO URBANO
+          </p>
         </div>
 
         <div className="grid gap-7 text-xs font-bold uppercase tracking-rox text-bone/70 sm:grid-cols-2 lg:text-right">

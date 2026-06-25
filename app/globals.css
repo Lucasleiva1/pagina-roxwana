@@ -285,6 +285,29 @@ a {
   text-transform: uppercase;
 }
 
+.gender-entry-title {
+  font-size: clamp(1.3rem, 6.5vw, 1.85rem);
+  letter-spacing: 0.02em;
+}
+
+.footer-brand-title {
+  font-size: clamp(2.7rem, 13.5vw, 4.5rem);
+  letter-spacing: 0.055em;
+}
+
+.footer-brand-subtitle {
+  font-size: clamp(1.4rem, 6.8vw, 1.875rem);
+  letter-spacing: 0.075em;
+}
+
+@media (min-width: 640px) {
+  .gender-entry-title,
+  .footer-brand-title,
+  .footer-brand-subtitle {
+    letter-spacing: 0.14em;
+  }
+}
+
 .texture-panel {
   position: relative;
   isolation: isolate;
