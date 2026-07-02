@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { requireStaff } from "@/lib/auth/requireAdmin";
@@ -17,6 +18,20 @@ const PRODUCT_STATUSES: ProductStatus[] = ["draft", "published", "sold_out"];
 function value(formData: FormData, key: string) {
   const item = formData.get(key);
   return typeof item === "string" ? item.trim() : "";
+}
+
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error && error.message ? error.message : fallback;
+}
+
+function getErrorReturnUrl(formData: FormData, fallback: string) {
+  const raw = value(formData, "return_error_url") || fallback;
+  return raw.startsWith("/admin/productos") ? raw : fallback;
+}
+
+function appendErrorParam(path: string, message: string) {
+  const separator = path.includes("?") ? "&" : "?";
+  return `${path}${separator}error=${encodeURIComponent(message)}`;
 }
 
 function nullableValue(formData: FormData, key: string) {
@@ -65,6 +80,29 @@ function safeSegment(input: string, fallback: string) {
 function isMissingStudioImageColumn(error: { message?: string; code?: string } | null | undefined) {
   const message = error?.message || "";
   return error?.code === "42703" || /image_role|view_number|color_code|device_variant|original_filename/i.test(message);
+}
+
+function getMutationErrorMessage(error: { message?: string; code?: string } | null | undefined, fallback: string) {
+  const message = error?.message || "";
+  const normalized = message.toLowerCase();
+
+  if (error?.code === "23505" || normalized.includes("duplicate key")) {
+    return `${fallback} Ya existe un producto con ese codigo modelo o slug.`;
+  }
+
+  if (normalized.includes("row-level security") || normalized.includes("permission denied")) {
+    return `${fallback} Tu usuario no tiene permiso de admin/editor en Supabase.`;
+  }
+
+  if (normalized.includes("bucket not found")) {
+    return `${fallback} No existe el bucket product-images en Supabase Storage.`;
+  }
+
+  if (normalized.includes("payload") || normalized.includes("too large")) {
+    return `${fallback} Las imagenes son demasiado pesadas para enviarlas juntas.`;
+  }
+
+  return message ? `${fallback} Detalle: ${message}` : fallback;
 }
 
 function getStudioImageMetadata(formData: FormData, index: number, fileName: string) {
@@ -225,7 +263,7 @@ async function uploadImages(supabase: SupabaseClient<Database>, productId: strin
     });
 
     if (uploadError) {
-      throw new Error("No se pudo subir una imagen del producto.");
+      throw new Error(getMutationErrorMessage(uploadError, "No se pudo subir una imagen del producto."));
     }
 
     const { data } = supabase.storage.from(IMAGE_BUCKET).getPublicUrl(path);
@@ -352,53 +390,74 @@ async function createProductMutationClient() {
 }
 
 export async function createProductAction(formData: FormData) {
-  const supabase = await createProductMutationClient();
+  let destination = "/admin/productos";
 
-  const { payload, colorIds, sizeIds, variants } = validateProductForm(formData);
-  const { data, error } = await supabase.from("products").insert(payload).select("id, slug").single();
+  try {
+    const supabase = await createProductMutationClient();
 
-  if (error || !data) {
-    throw new Error("No se pudo crear el producto.");
+    const { payload, colorIds, sizeIds, variants } = validateProductForm(formData);
+    const { data, error } = await supabase.from("products").insert(payload).select("id, slug").single();
+
+    if (error || !data) {
+      throw new Error(getMutationErrorMessage(error, "No se pudo crear el producto."));
+    }
+
+    await replaceRelations(supabase, data.id, colorIds, sizeIds);
+    await replaceVariants(supabase, data.id, variants);
+    await uploadImages(supabase, data.id, payload.slug, payload.name, formData);
+    await syncPrimaryImage(supabase, data.id, value(formData, "primary_image_id") || null);
+    revalidateProductSurfaces(data.slug);
+  } catch (error) {
+    if (isRedirectError(error)) {
+      throw error;
+    }
+
+    destination = appendErrorParam(getErrorReturnUrl(formData, "/admin/productos/nuevo"), getErrorMessage(error, "No se pudo crear el producto."));
   }
 
-  await replaceRelations(supabase, data.id, colorIds, sizeIds);
-  await replaceVariants(supabase, data.id, variants);
-  await uploadImages(supabase, data.id, payload.slug, payload.name, formData);
-  await syncPrimaryImage(supabase, data.id, value(formData, "primary_image_id") || null);
-  revalidateProductSurfaces(data.slug);
-  redirect("/admin/productos");
+  redirect(destination);
 }
 
 export async function updateProductAction(formData: FormData) {
-  const supabase = await createProductMutationClient();
-
   const id = value(formData, "id");
-  const { payload, colorIds, sizeIds, variants } = validateProductForm(formData);
+  let destination = "/admin/productos";
 
-  if (!id) {
-    throw new Error("Falta el producto a editar.");
+  try {
+    const supabase = await createProductMutationClient();
+    const { payload, colorIds, sizeIds, variants } = validateProductForm(formData);
+
+    if (!id) {
+      throw new Error("Falta el producto a editar.");
+    }
+
+    const deleteImageIds = values(formData, "delete_image_ids");
+
+    if (deleteImageIds.length > 0) {
+      await deleteImages(supabase, deleteImageIds);
+    }
+
+    await updateExistingImageMetadata(supabase, id, formData, deleteImageIds);
+
+    const { error } = await supabase.from("products").update(payload).eq("id", id);
+
+    if (error) {
+      throw new Error(getMutationErrorMessage(error, "No se pudo actualizar el producto."));
+    }
+
+    await replaceRelations(supabase, id, colorIds, sizeIds);
+    await replaceVariants(supabase, id, variants);
+    await uploadImages(supabase, id, payload.slug, payload.name, formData);
+    await syncPrimaryImage(supabase, id, value(formData, "primary_image_id") || null);
+    revalidateProductSurfaces(payload.slug);
+  } catch (error) {
+    if (isRedirectError(error)) {
+      throw error;
+    }
+
+    destination = appendErrorParam(getErrorReturnUrl(formData, id ? `/admin/productos/${id}` : "/admin/productos"), getErrorMessage(error, "No se pudo actualizar el producto."));
   }
 
-  const deleteImageIds = values(formData, "delete_image_ids");
-
-  if (deleteImageIds.length > 0) {
-    await deleteImages(supabase, deleteImageIds);
-  }
-
-  await updateExistingImageMetadata(supabase, id, formData, deleteImageIds);
-
-  const { error } = await supabase.from("products").update(payload).eq("id", id);
-
-  if (error) {
-    throw new Error("No se pudo actualizar el producto.");
-  }
-
-  await replaceRelations(supabase, id, colorIds, sizeIds);
-  await replaceVariants(supabase, id, variants);
-  await uploadImages(supabase, id, payload.slug, payload.name, formData);
-  await syncPrimaryImage(supabase, id, value(formData, "primary_image_id") || null);
-  revalidateProductSurfaces(payload.slug);
-  redirect("/admin/productos");
+  redirect(destination);
 }
 
 export async function changeProductStatusAction(formData: FormData) {

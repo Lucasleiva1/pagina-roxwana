@@ -10,6 +10,7 @@ export async function proxy(request: NextRequest) {
   const config = getSupabasePublicConfig();
   const pathname = request.nextUrl.pathname;
   const hasDevAdmin = isDevAdminEnabled() && request.cookies.get(DEV_ADMIN_COOKIE)?.value === "1";
+  const isPublicAdminPath = pathname.startsWith("/admin/login") || pathname.startsWith("/admin/dev-login");
 
   if (pathname.startsWith("/admin-login")) {
     const redirectUrl = new URL("/admin/login", request.url);
@@ -26,7 +27,7 @@ export async function proxy(request: NextRequest) {
   }
 
   if (!config) {
-    if (pathname.startsWith("/admin") && !pathname.startsWith("/admin/login") && !hasDevAdmin) {
+    if (pathname.startsWith("/admin") && !isPublicAdminPath && !hasDevAdmin) {
       const redirectUrl = new URL("/admin/login", request.url);
       redirectUrl.searchParams.set("returnUrl", pathname + request.nextUrl.search);
       return NextResponse.redirect(redirectUrl);
@@ -52,7 +53,7 @@ export async function proxy(request: NextRequest) {
     data: { user }
   } = await supabase.auth.getUser();
 
-  if (pathname.startsWith("/admin") && !pathname.startsWith("/admin/login") && !user && !hasDevAdmin) {
+  if (pathname.startsWith("/admin") && !isPublicAdminPath && !user && !hasDevAdmin) {
     const redirectUrl = new URL("/admin/login", request.url);
     redirectUrl.searchParams.set("returnUrl", pathname + request.nextUrl.search);
     return NextResponse.redirect(redirectUrl);

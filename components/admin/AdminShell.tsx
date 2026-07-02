@@ -19,6 +19,7 @@ const navItems = [
 
 export function AdminShell({ children, profile }: { children: ReactNode; profile: AdminProfile }) {
   const visibleItems = navItems.filter((item) => !item.adminOnly || profile.role === "admin");
+  const isLocalDevAdmin = profile.userId === "dev-admin";
 
   return (
     <section className="admin-surface min-h-screen bg-ink pb-20 pt-28">
@@ -30,7 +31,17 @@ export function AdminShell({ children, profile }: { children: ReactNode; profile
             <p>{profile.name || "Acceso interno"}</p>
             <p className="mt-1 text-roxgold">{profile.role}</p>
           </div>
-          <nav className="mt-6 grid gap-2">
+          {isLocalDevAdmin ? (
+            <details className="mt-3 border border-roxred/35 bg-roxred/8 text-roxred">
+              <summary className="cursor-pointer px-3 py-2 text-[10px] font-bold uppercase tracking-rox">
+                Acceso local
+              </summary>
+              <p className="border-t border-roxred/25 px-3 py-2 text-[10px] font-bold uppercase leading-5 tracking-rox">
+                Sirve para revisar el panel, pero no guarda productos reales. Entra con tu usuario admin de Supabase.
+              </p>
+            </details>
+          ) : null}
+          <nav className="mt-4 grid gap-2">
             {visibleItems.map((item) => (
               <Link key={item.href} href={item.href} className="border border-bone/10 px-3 py-3 text-xs font-bold uppercase tracking-rox text-bone/68 transition hover:border-roxgold hover:text-bone">
                 {item.label}

@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { getSafeReturnPath } from "@/lib/auth/redirects";
+import { buildAuthCallbackUrl, getSafeReturnPath } from "@/lib/auth/redirects";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type AuthMode = "login" | "register";
@@ -121,7 +121,7 @@ export function LoginForm({ returnUrl, error: initialError }: LoginFormProps) {
         return;
       }
 
-      const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(safeReturnUrl)}`;
+      const redirectTo = buildAuthCallbackUrl(safeReturnUrl, window.location.origin);
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {

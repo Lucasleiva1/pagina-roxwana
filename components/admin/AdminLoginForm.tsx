@@ -4,7 +4,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-import { getSafeReturnPath } from "@/lib/auth/redirects";
+import { buildAuthCallbackUrl, getSafeReturnPath } from "@/lib/auth/redirects";
 
 function GoogleIcon() {
   return (
@@ -17,35 +17,75 @@ function GoogleIcon() {
   );
 }
 
-export function AdminLoginForm({ returnUrl }: { returnUrl: string }) {
+export function AdminLoginForm({ returnUrl, error: initialError }: { returnUrl: string; error?: string | null }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(initialError || null);
   const [isPending, startTransition] = useTransition();
   const [isGooglePending, startGoogleTransition] = useTransition();
   const supabase = createSupabaseBrowserClient();
   const normalizedReturn = getSafeReturnPath(returnUrl, "/admin");
-  const safeReturnUrl = normalizedReturn.startsWith("/admin") && !normalizedReturn.startsWith("/admin/login") ? normalizedReturn : "/admin";
+  const safeReturnUrl =
+    normalizedReturn.startsWith("/admin") &&
+    !normalizedReturn.startsWith("/admin/login") &&
+    !normalizedReturn.startsWith("/admin/dev-login")
+      ? normalizedReturn
+      : "/admin";
+
+  async function tryDevAdminLogin(cleanEmail: string) {
+    const localHostnames = new Set(["127.0.0.1", "localhost", "::1"]);
+
+    if (!localHostnames.has(window.location.hostname)) {
+      return false;
+    }
+
+    const response = await fetch("/api/auth/dev-admin-login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        email: cleanEmail,
+        password,
+        returnUrl: safeReturnUrl
+      })
+    });
+
+    if (!response.ok) {
+      return false;
+    }
+
+    const result = (await response.json().catch(() => ({}))) as { returnUrl?: string };
+    router.replace(getSafeReturnPath(result.returnUrl, "/admin"));
+    router.refresh();
+    return true;
+  }
 
   const submit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
 
-    if (!supabase) {
-      setError("Supabase no esta configurado. Completa las variables de entorno primero.");
-      return;
-    }
-
     startTransition(async () => {
+      const cleanEmail = email.trim().toLowerCase();
+
+      if (await tryDevAdminLogin(cleanEmail)) {
+        return;
+      }
+
+      if (!supabase) {
+        setError("Supabase no esta configurado. Completa las variables de entorno primero.");
+        return;
+      }
+
       const { error: loginError } = await supabase.auth.signInWithPassword({
-        email: email.trim().toLowerCase(),
+        email: cleanEmail,
         password
       });
 
       if (loginError) {
-        setError("Credenciales invalidas.");
+        setError("Credenciales invalidas. Para local usa el acceso de desarrollo; para operar productos usa tu usuario real de Supabase.");
         return;
       }
 
@@ -80,7 +120,7 @@ export function AdminLoginForm({ returnUrl }: { returnUrl: string }) {
     }
 
     startGoogleTransition(async () => {
-      const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(safeReturnUrl)}`;
+      const redirectTo = buildAuthCallbackUrl(safeReturnUrl, window.location.origin);
       const { error: googleError } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
@@ -93,7 +133,7 @@ export function AdminLoginForm({ returnUrl }: { returnUrl: string }) {
       });
 
       if (googleError) {
-        setError("No se pudo abrir el acceso con Google.");
+        setError("No se pudo abrir el acceso con Google. Revisa la configuracion OAuth y las Redirect URLs en Supabase.");
       }
     });
   };

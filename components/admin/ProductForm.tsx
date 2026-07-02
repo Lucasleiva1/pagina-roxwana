@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
+import { usePathname } from "next/navigation";
 import type { Product, ProductOption } from "@/types/product";
 import { ImageUploader } from "@/components/admin/ImageUploader";
 
@@ -27,6 +28,7 @@ function slugify(value: string) {
 }
 
 export function ProductForm({ product, options, action, submitLabel }: ProductFormProps) {
+  const pathname = usePathname();
   const [name, setName] = useState(product?.name || "");
   const [slug, setSlug] = useState(product?.slug || "");
   const [slugTouched, setSlugTouched] = useState(Boolean(product?.slug));
@@ -66,6 +68,7 @@ export function ProductForm({ product, options, action, submitLabel }: ProductFo
   return (
     <form action={action} onSubmit={validateBeforeSubmit} className="grid gap-5 border border-bone/12 bg-charcoal p-5">
       {product?.id ? <input type="hidden" name="id" value={product.id} /> : null}
+      <input type="hidden" name="return_error_url" value={pathname} />
       {saveError ? <p className="border border-roxred/45 bg-roxred/10 p-3 text-sm font-bold text-roxred">{saveError}</p> : null}
       <div className="grid gap-4 md:grid-cols-2">
         <label className="grid gap-2 text-xs font-bold uppercase tracking-rox text-steel">
