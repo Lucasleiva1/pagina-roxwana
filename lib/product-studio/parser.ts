@@ -1,5 +1,5 @@
 import type { ProductGender, ProductStatus } from "@/types/product";
-import { expectedImageFromFileName, findOptionByCodeNameOrId, slugifyStudioValue, textToVariants, type ProductStudioDraft, type ProductStudioOptions, type StudioNotice } from "@/lib/product-studio/schema";
+import { buildStudioSlug, expectedImageFromFileName, findOptionByCodeNameOrId, slugifyStudioValue, textToVariants, type ProductStudioDraft, type ProductStudioOptions, type StudioNotice } from "@/lib/product-studio/schema";
 import { normalizeColorCode } from "@/lib/product-studio/imageRules";
 
 export type ProductStudioImportFormat = "text" | "markdown" | "json" | "csv" | "pdf";
@@ -16,6 +16,9 @@ const FIELD_ALIASES: Record<string, keyof ProductStudioDraft | "drop" | "descrip
   modelocode: "modelCode",
   modelcode: "modelCode",
   modelo: "modelCode",
+  codigoproducto: "modelCode",
+  productcode: "modelCode",
+  productid: "modelCode",
   sku: "modelCode",
   nombre: "name",
   name: "name",
@@ -277,7 +280,7 @@ function parseStructuredText(input: string, options?: ProductStudioOptions): Pro
   flushBlock();
 
   if (!draft.slug && draft.name) {
-    draft.slug = slugifyStudioValue(draft.name);
+    draft.slug = buildStudioSlug(draft.name, draft.modelCode);
   }
 
   return { draft, notices, format: "text" };
@@ -313,7 +316,7 @@ function coerceRecordToDraft(record: Record<string, unknown>, options?: ProductS
   }
 
   if (!draft.slug && draft.name) {
-    draft.slug = slugifyStudioValue(draft.name);
+    draft.slug = buildStudioSlug(draft.name, draft.modelCode);
   }
 
   return { draft, notices, format: "json" };

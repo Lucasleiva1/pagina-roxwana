@@ -82,12 +82,27 @@ function isMissingStudioImageColumn(error: { message?: string; code?: string } |
   return error?.code === "42703" || /image_role|view_number|color_code|device_variant|original_filename/i.test(message);
 }
 
+function extractDuplicateColumnValue(message: string, column: string) {
+  const match = message.match(new RegExp(`Key \\(${column}\\)=\\(([^)]+)\\)`, "i"));
+  return match?.[1] || "";
+}
+
 function getMutationErrorMessage(error: { message?: string; code?: string } | null | undefined, fallback: string) {
   const message = error?.message || "";
   const normalized = message.toLowerCase();
 
   if (error?.code === "23505" || normalized.includes("duplicate key")) {
-    return `${fallback} Ya existe un producto con ese codigo modelo o slug.`;
+    if (normalized.includes("model_code")) {
+      const modelCode = extractDuplicateColumnValue(message, "model_code");
+      return `${fallback} Ya existe otro producto con ese codigo modelo${modelCode ? `: ${modelCode}` : ""}.`;
+    }
+
+    if (normalized.includes("slug")) {
+      const slug = extractDuplicateColumnValue(message, "slug");
+      return `${fallback} Ya existe otro producto con ese slug${slug ? `: ${slug}` : ""}.`;
+    }
+
+    return `${fallback} Ya existe otro producto con un dato unico repetido.`;
   }
 
   if (normalized.includes("row-level security") || normalized.includes("permission denied")) {

@@ -97,6 +97,10 @@ export function slugifyStudioValue(value: string) {
     .replace(/^-+|-+$/g, "");
 }
 
+export function buildStudioSlug(name: string, modelCode?: string) {
+  return slugifyStudioValue([name, modelCode].filter(Boolean).join(" "));
+}
+
 function normalizeLookup(value: string) {
   return value
     .toLowerCase()
@@ -191,12 +195,21 @@ export function productToStudioDraft(product: Product | undefined, options: Prod
 
 export function mergeStudioDraft(base: ProductStudioDraft, patch: Partial<ProductStudioDraft>): ProductStudioDraft {
   const nextName = patch.name ?? base.name;
-  const nextSlug = patch.slug ?? base.slug;
+  const nextModelCode = patch.modelCode ?? base.modelCode;
+  const baseAutoSlug = buildStudioSlug(base.name, base.modelCode);
+  const legacyBaseAutoSlug = base.name ? slugifyStudioValue(base.name) : "";
+  const shouldRegenerateSlug = Boolean(
+    nextName &&
+      patch.slug === undefined &&
+      (patch.name !== undefined || patch.modelCode !== undefined) &&
+      (!base.slug || base.slug === baseAutoSlug || base.slug === legacyBaseAutoSlug)
+  );
+  const nextSlug = patch.slug !== undefined ? patch.slug || buildStudioSlug(nextName, nextModelCode) : shouldRegenerateSlug ? buildStudioSlug(nextName, nextModelCode) : base.slug;
 
   return {
     ...base,
     ...patch,
-    slug: nextSlug || (nextName ? slugifyStudioValue(nextName) : base.slug)
+    slug: nextSlug || (nextName ? buildStudioSlug(nextName, nextModelCode) : base.slug)
   };
 }
 

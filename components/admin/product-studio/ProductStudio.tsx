@@ -7,7 +7,7 @@ import type { Product } from "@/types/product";
 import { extractProductSheetPdfText } from "@/lib/product-studio/actions";
 import { inferImportFormat, parseProductStudioSheet } from "@/lib/product-studio/parser";
 import {
-  buildProductSheetExample,
+  EMPTY_PRODUCT_STUDIO_DRAFT,
   mergeStudioDraft,
   productToStudioDraft,
   textToVariants,
@@ -218,7 +218,7 @@ async function collectDroppedFiles(dataTransfer: DataTransfer) {
 export function ProductStudio({ mode, product, options, action, submitLabel }: ProductStudioProps) {
   const pathname = usePathname();
   const [draft, setDraft] = useState<ProductStudioDraft>(() => productToStudioDraft(product, options));
-  const [sheetText, setSheetText] = useState(buildProductSheetExample());
+  const [sheetText, setSheetText] = useState("");
   const [importNotices, setImportNotices] = useState<StudioNotice[]>([]);
   const [saveError, setSaveError] = useState<StudioNotice | null>(null);
   const [uploadedImages, setUploadedImages] = useState<UploadImageDraft[]>([]);
@@ -295,7 +295,8 @@ export function ProductStudio({ mode, product, options, action, submitLabel }: P
   function applyImport(text: string, fileName = "ficha.txt") {
     const format = inferImportFormat(fileName);
     const result = parseProductStudioSheet(text, format === "pdf" ? "text" : format, options);
-    setDraft((current) => mergeStudioDraft(current, result.draft));
+    const baseDraft = mode === "edit" ? productToStudioDraft(product, options) : EMPTY_PRODUCT_STUDIO_DRAFT;
+    setDraft(mergeStudioDraft(baseDraft, result.draft));
     setImportNotices(result.notices.length > 0 ? result.notices : [{ level: "info", message: "Ficha importada al borrador Studio." }]);
   }
 
@@ -656,7 +657,13 @@ export function ProductStudio({ mode, product, options, action, submitLabel }: P
                   </label>
                 </div>
               </div>
-              <textarea value={sheetText} onChange={(event) => setSheetText(event.target.value)} rows={3} className={`${textareaClass} mt-2 max-h-28 min-h-20 w-full resize-y font-mono text-[11px] leading-5`} />
+              <textarea
+                value={sheetText}
+                onChange={(event) => setSheetText(event.target.value)}
+                rows={3}
+                placeholder="Pega aca la ficha real del Product Manager. El Studio solo va a usar esos datos."
+                className={`${textareaClass} mt-2 max-h-28 min-h-20 w-full resize-y font-mono text-[11px] leading-5`}
+              />
               {draft.expectedImages.length > 0 ? (
                 <div className="mt-2 grid gap-1 border border-bone/10 p-2 sm:grid-cols-2">
                   {draft.expectedImages.slice(0, 6).map((image) => (
