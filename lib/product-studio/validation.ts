@@ -20,8 +20,12 @@ export function validateProductStudioDraft(draft: ProductStudioDraft, options: P
     notices.push({ level: "error", field: "slug", message: "Falta slug publico." });
   }
 
-  if (!draft.garmentTypeId || !options.garmentTypes.some((item) => item.id === draft.garmentTypeId)) {
-    notices.push({ level: "error", field: "garmentTypeId", message: "Falta elegir prenda valida." });
+  if (!draft.categoryId || !options.categories.some((item) => item.id === draft.categoryId)) {
+    notices.push({ level: "error", field: "categoryId", message: "Falta elegir categoria valida." });
+  }
+
+  if (draft.categoryId && (!draft.garmentTypeId || !options.garmentTypes.some((item) => item.id === draft.garmentTypeId))) {
+    notices.push({ level: "error", field: "categoryId", message: "La categoria elegida no esta configurada para guardar productos." });
   }
 
   if (!hasPositiveNumber(draft.price)) {

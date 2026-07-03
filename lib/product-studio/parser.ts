@@ -1,5 +1,5 @@
 import type { ProductGender, ProductStatus } from "@/types/product";
-import { buildStudioSlug, expectedImageFromFileName, findOptionByCodeNameOrId, slugifyStudioValue, textToVariants, type ProductStudioDraft, type ProductStudioOptions, type StudioNotice } from "@/lib/product-studio/schema";
+import { buildStudioSlug, expectedImageFromFileName, findOptionByCodeNameOrId, findProductOptionByKind, slugifyStudioValue, textToVariants, type ProductStudioDraft, type ProductStudioOptions, type StudioNotice } from "@/lib/product-studio/schema";
 import { normalizeColorCode } from "@/lib/product-studio/imageRules";
 
 export type ProductStudioImportFormat = "text" | "markdown" | "json" | "csv" | "pdf";
@@ -29,6 +29,9 @@ const FIELD_ALIASES: Record<string, keyof ProductStudioDraft | "drop" | "descrip
   garment: "garmentTypeCode",
   garmenttype: "garmentTypeCode",
   tipoprenda: "garmentTypeCode",
+  tipodeprenda: "garmentTypeCode",
+  tipoproducto: "garmentTypeCode",
+  tipodeproducto: "garmentTypeCode",
   genero: "gender",
   gender: "gender",
   estado: "status",
@@ -202,14 +205,28 @@ function applyField(target: Partial<ProductStudioDraft>, key: string, rawValue: 
   }
 
   if (field === "garmentTypeCode") {
-    target.garmentTypeCode = value.toUpperCase();
-    target.garmentTypeId = options ? findOptionByCodeNameOrId(options.garmentTypes, value)?.id || "" : "";
+    const garment = options ? findProductOptionByKind(options.garmentTypes, value) : null;
+    const category = options ? findProductOptionByKind(options.categories, value) || findProductOptionByKind(options.categories, garment?.name || garment?.code) : null;
+    target.garmentTypeCode = garment?.code || value.toUpperCase();
+    target.garmentTypeId = garment?.id || "";
+
+    if (category) {
+      target.categoryCode = category.code;
+      target.categoryId = category.id;
+    }
     return;
   }
 
   if (field === "categoryCode") {
-    target.categoryCode = value;
-    target.categoryId = options ? findOptionByCodeNameOrId(options.categories, value)?.id || "" : "";
+    const category = options ? findProductOptionByKind(options.categories, value) : null;
+    const garment = options ? findProductOptionByKind(options.garmentTypes, value) || findProductOptionByKind(options.garmentTypes, category?.name || category?.code) : null;
+    target.categoryCode = category?.code || value;
+    target.categoryId = category?.id || "";
+
+    if (garment) {
+      target.garmentTypeCode = garment.code;
+      target.garmentTypeId = garment.id;
+    }
     return;
   }
 

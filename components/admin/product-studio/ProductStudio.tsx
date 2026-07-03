@@ -8,6 +8,7 @@ import { extractProductSheetPdfText } from "@/lib/product-studio/actions";
 import { inferImportFormat, parseProductStudioSheet } from "@/lib/product-studio/parser";
 import {
   EMPTY_PRODUCT_STUDIO_DRAFT,
+  findProductOptionByKind,
   mergeStudioDraft,
   productToStudioDraft,
   textToVariants,
@@ -300,14 +301,29 @@ export function ProductStudio({ mode, product, options, action, submitLabel }: P
     setImportNotices(result.notices.length > 0 ? result.notices : [{ level: "info", message: "Ficha importada al borrador Studio." }]);
   }
 
-  function findCategoryForGarment(garment?: ProductStudioOptions["garmentTypes"][number]) {
-    if (!garment) {
+  async function handlePasteToStudio() {
+    const currentText = sheetText.trim();
+
+    if (currentText) {
+      applyImport(currentText);
+      return;
+    }
+
+    try {
+      const clipboardText = await navigator.clipboard.readText();
+      setSheetText(clipboardText);
+      applyImport(clipboardText);
+    } catch {
+      setImportNotices([{ level: "warning", message: "No pude leer el portapapeles. Pegalo en el cuadro y apreta Pegar al Studio." }]);
+    }
+  }
+
+  function findGarmentForCategory(category?: ProductStudioOptions["categories"][number]) {
+    if (!category) {
       return null;
     }
 
-    const garmentCode = garment.code.toLowerCase();
-    const garmentName = garment.name.toLowerCase();
-    return options.categories.find((category) => category.code.toLowerCase() === garmentCode || category.name.toLowerCase() === garmentName) || null;
+    return findProductOptionByKind(options.garmentTypes, category.code) || findProductOptionByKind(options.garmentTypes, category.name);
   }
 
   async function handleSheetFile(event: ChangeEvent<HTMLInputElement>) {
@@ -404,7 +420,7 @@ export function ProductStudio({ mode, product, options, action, submitLabel }: P
 
     const activeCount = activeUploadedImages.length + activeExistingImages.length;
     const hasCover = activeUploadedImages.some((image) => image.role === "cover") || activeExistingImages.some((image) => image.role === "cover");
-    const batchId = typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const batchId = `${inputId}-${nextImageInputIndex}`;
     const images = files.map<UploadImageDraft>((file, index) => {
       const parsed = parseProductImageName(file.name);
       const fallbackPosition = activeCount + index + 1;
@@ -582,7 +598,7 @@ export function ProductStudio({ mode, product, options, action, submitLabel }: P
     <form action={action} onSubmit={validateBeforeSubmit} className="grid gap-4">
       {product?.id ? <input type="hidden" name="id" value={product.id} /> : null}
       <input type="hidden" name="return_error_url" value={pathname} />
-      <input type="hidden" name="category_id" value={draft.categoryId} />
+      <input type="hidden" name="garment_type_id" value={draft.garmentTypeId} />
       <input type="hidden" name="primary_image_id" value={primaryTarget.startsWith("existing:") ? primaryTarget.replace("existing:", "") : ""} />
       <input type="hidden" name="primary_new_image_index" value={primaryNewImageIndex >= 0 ? String(primaryNewImageIndex) : ""} />
       {draft.colorIds.map((id) => (
@@ -646,7 +662,7 @@ export function ProductStudio({ mode, product, options, action, submitLabel }: P
                   <p className="text-[10px] font-bold uppercase tracking-rox">Ficha tecnica</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <button type="button" onClick={() => applyImport(sheetText)} className="min-h-8 border border-roxgold bg-roxgold px-3 text-[10px] font-bold uppercase tracking-rox text-charcoal transition hover:border-bone">
+                  <button type="button" onClick={handlePasteToStudio} className="min-h-8 border border-roxgold bg-roxgold px-3 text-[10px] font-bold uppercase tracking-rox text-charcoal transition hover:border-bone">
                     Pegar al Studio
                   </button>
                   <label className="grid min-h-8 cursor-pointer place-items-center border border-bone/14 px-3 text-[10px] font-bold uppercase tracking-rox text-bone/74 transition hover:border-roxgold hover:text-bone">
@@ -909,25 +925,25 @@ export function ProductStudio({ mode, product, options, action, submitLabel }: P
 
                 <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-2">
                   <label className="grid gap-2">
-                    {fieldLabel("Prenda")}
+                    {fieldLabel("Categoria")}
                     <select
-                      name="garment_type_id"
+                      name="category_id"
                       required
-                      value={draft.garmentTypeId}
+                      value={draft.categoryId}
                       onChange={(event) => {
-                        const option = options.garmentTypes.find((item) => item.id === event.target.value);
-                        const category = findCategoryForGarment(option);
+                        const option = options.categories.find((item) => item.id === event.target.value);
+                        const garment = findGarmentForCategory(option);
                         updateDraft({
-                          garmentTypeId: event.target.value,
-                          garmentTypeCode: option?.code || "",
-                          categoryId: category?.id || draft.categoryId,
-                          categoryCode: category?.code || draft.categoryCode
+                          categoryId: event.target.value,
+                          categoryCode: option?.code || "",
+                          garmentTypeId: garment?.id || "",
+                          garmentTypeCode: garment?.code || ""
                         });
                       }}
                       className={selectClass}
                     >
                       <option value="">Seleccionar</option>
-                      {options.garmentTypes.map((item) => (
+                      {options.categories.map((item) => (
                         <option key={item.id} value={item.id}>
                           {item.name}
                         </option>

@@ -2,6 +2,8 @@ insert into public.garment_types (code, name)
 values
   ('REM', 'Remera'),
   ('BUZ', 'Buzo'),
+  ('GOR', 'Gorra'),
+  ('CAM', 'Campera'),
   ('MUS', 'Musculosa')
 on conflict (code) do update set name = excluded.name;
 
@@ -26,6 +28,17 @@ on conflict (code) do update set name = excluded.name, sort_order = excluded.sor
 insert into public.site_settings (whatsapp_number, whatsapp_label, whatsapp_enabled, fallback_contact, instagram_url, tiktok_url)
 select null, 'WhatsApp ROXWANA', true, 'Escribinos por Instagram y te respondemos con disponibilidad.', 'https://instagram.com', 'https://tiktok.com'
 where not exists (select 1 from public.site_settings);
+
+insert into public.categories (name, slug, description, sort_order)
+values
+  ('Remeras', 'remeras', 'Categoria para remeras ROXWANA.', 10),
+  ('Buzos', 'buzos', 'Categoria para buzos ROXWANA.', 20),
+  ('Gorras', 'gorras', 'Categoria para gorras ROXWANA.', 30),
+  ('Camperas', 'camperas', 'Categoria para camperas ROXWANA.', 40)
+on conflict (slug) do update set
+  name = excluded.name,
+  description = excluded.description,
+  sort_order = excluded.sort_order;
 
 with rem as (select id from public.garment_types where code = 'REM'),
      buz as (select id from public.garment_types where code = 'BUZ')

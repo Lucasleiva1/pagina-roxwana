@@ -109,6 +109,32 @@ function normalizeLookup(value: string) {
     .replace(/[^a-z0-9]+/g, "");
 }
 
+export function normalizeStudioProductKind(value?: string | null) {
+  const normalized = normalizeLookup(value || "");
+
+  if (["rem", "remera", "remeras", "camiseta", "camisetas", "shirt", "tshirt"].includes(normalized)) {
+    return "remera";
+  }
+
+  if (["buz", "buzo", "buzos", "hoodie", "hoodies", "sweater", "sweaters"].includes(normalized)) {
+    return "buzo";
+  }
+
+  if (["gor", "gorra", "gorras", "cap", "caps"].includes(normalized)) {
+    return "gorra";
+  }
+
+  if (["cam", "campera", "camperas", "chaqueta", "chaquetas", "jacket", "jackets"].includes(normalized)) {
+    return "campera";
+  }
+
+  if (["mus", "musculosa", "musculosas", "tank", "tanks", "tanktop", "tanktops"].includes(normalized)) {
+    return "musculosa";
+  }
+
+  return normalized;
+}
+
 export function findOptionByCodeNameOrId(options: ProductOption[], value?: string | null) {
   if (!value) {
     return null;
@@ -116,6 +142,17 @@ export function findOptionByCodeNameOrId(options: ProductOption[], value?: strin
 
   const normalized = normalizeLookup(value);
   return options.find((option) => option.id === value || normalizeLookup(option.code) === normalized || normalizeLookup(option.name) === normalized) || null;
+}
+
+export function findProductOptionByKind(options: ProductOption[], value?: string | null) {
+  const direct = findOptionByCodeNameOrId(options, value);
+
+  if (direct || !value) {
+    return direct;
+  }
+
+  const normalizedKind = normalizeStudioProductKind(value);
+  return options.find((option) => normalizeStudioProductKind(option.code) === normalizedKind || normalizeStudioProductKind(option.name) === normalizedKind) || null;
 }
 
 export function variantsToText(variants: StudioVariantDraft[]) {
