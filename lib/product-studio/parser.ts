@@ -10,7 +10,9 @@ export type ProductStudioImportResult = {
   format: ProductStudioImportFormat;
 };
 
-const FIELD_ALIASES: Record<string, keyof ProductStudioDraft | "drop" | "description" | "images" | "image" | "variants"> = {
+type ProductStudioImportField = keyof ProductStudioDraft | "drop" | "description" | "images" | "image" | "variants";
+
+const FIELD_ALIASES: Record<string, ProductStudioImportField> = {
   codigo: "modelCode",
   codigomodelo: "modelCode",
   modelocode: "modelCode",
@@ -51,14 +53,35 @@ const FIELD_ALIASES: Record<string, keyof ProductStudioDraft | "drop" | "descrip
   orden: "sortOrder",
   sortorder: "sortOrder",
   descripcioncorta: "descriptionShort",
+  descripcioncortaproducto: "descriptionShort",
+  descripcioncortadelproducto: "descriptionShort",
+  descripcionbreve: "descriptionShort",
+  descripcionbrevedelproducto: "descriptionShort",
   descriptionshort: "descriptionShort",
+  shortdescription: "descriptionShort",
+  shortdesc: "descriptionShort",
+  summary: "descriptionShort",
   resumen: "descriptionShort",
   bajada: "descriptionShort",
   descripcionlarga: "descriptionLong",
+  descripcionlargaproducto: "descriptionLong",
+  descripcionlargadelproducto: "descriptionLong",
+  descripciondetallada: "descriptionLong",
+  descripcionextendida: "descriptionLong",
   descriptionlong: "descriptionLong",
+  longdescription: "descriptionLong",
+  longdesc: "descriptionLong",
+  fulldescription: "descriptionLong",
+  detalle: "descriptionLong",
+  detalles: "descriptionLong",
+  story: "descriptionLong",
   descripcion: "description",
   description: "description",
   whatsapp: "whatsappMessage",
+  textowhatsapp: "whatsappMessage",
+  mensajewhatsapp: "whatsappMessage",
+  whatsapptext: "whatsappMessage",
+  whatsappcopy: "whatsappMessage",
   whatsappmessage: "whatsappMessage",
   colores: "colorCodes",
   colors: "colorCodes",
@@ -83,6 +106,35 @@ function normalizeKey(value: string) {
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]+/g, "");
+}
+
+function normalizeFieldLine(value: string) {
+  return value
+    .replace(/^#{1,6}\s*/, "")
+    .replace(/^[-*]\s+/, "")
+    .replace(/^\*\*(.+)\*\*$/, "$1")
+    .trim();
+}
+
+function getFieldForKey(key: string) {
+  return FIELD_ALIASES[normalizeKey(key)] || null;
+}
+
+function isMultilineImportField(field: ProductStudioImportField) {
+  return field === "descriptionShort" || field === "descriptionLong" || field === "description" || field === "variants" || field === "images" || field === "image";
+}
+
+function shouldStartBlock(field: ProductStudioImportField, value: string) {
+  return value.trim() === "|" || field === "variants" || field === "images" || field === "image" || ((field === "descriptionShort" || field === "descriptionLong" || field === "description") && !value.trim());
+}
+
+function looksLikeUnmappedHeading(value: string) {
+  const cleanValue = normalizeFieldLine(value);
+  if (!cleanValue || cleanValue.length > 80) {
+    return false;
+  }
+
+  return /^[A-Za-z0-9À-ÿ][A-Za-z0-9À-ÿ\s/#()-]*:\s*$/.test(cleanValue);
 }
 
 function splitList(value: string) {
@@ -138,7 +190,7 @@ function parseImageLine(line: string) {
 }
 
 function applyField(target: Partial<ProductStudioDraft>, key: string, rawValue: string, options?: ProductStudioOptions, notices: StudioNotice[] = []) {
-  const field = FIELD_ALIASES[normalizeKey(key)];
+  const field = getFieldForKey(key);
   const value = rawValue.trim();
 
   if (!field || !value) {
@@ -269,23 +321,50 @@ function parseStructuredText(input: string, options?: ProductStudioOptions): Pro
   for (const rawLine of lines) {
     const line = rawLine.trimEnd();
     const trimmed = line.trim();
+    const fieldLine = normalizeFieldLine(trimmed);
 
-    if (!trimmed || trimmed.startsWith("#") || trimmed === "ROXWANA Product Sheet v1") {
+    if (!trimmed) {
+      if (blockKey) {
+        blockLines.push("");
+      }
       continue;
     }
 
-    const match = trimmed.match(/^([^:=]+)\s*[:=]\s*(.*)$/);
+    if (!blockKey && (trimmed === "ROXWANA Product Sheet v1" || fieldLine === "ROXWANA Product Sheet v1")) {
+      continue;
+    }
 
-    if (match && FIELD_ALIASES[normalizeKey(match[1])]) {
+    const match = fieldLine.match(/^([^:=]+)\s*[:=]\s*(.*)$/);
+
+    if (match && getFieldForKey(match[1])) {
       flushBlock();
       const [, key, value] = match;
+      const field = getFieldForKey(key);
 
-      if (value.trim() === "|" || normalizeKey(key) === "variantes" || normalizeKey(key) === "variants" || normalizeKey(key) === "imagenes" || normalizeKey(key) === "images") {
+      if (field && shouldStartBlock(field, value)) {
         blockKey = key;
         blockLines = value.trim() === "|" ? [] : value ? [value] : [];
       } else {
         applyField(draft, key, value, options, notices);
       }
+      continue;
+    }
+
+    const standaloneField = getFieldForKey(fieldLine);
+
+    if (standaloneField && isMultilineImportField(standaloneField)) {
+      flushBlock();
+      blockKey = fieldLine;
+      blockLines = [];
+      continue;
+    }
+
+    if (blockKey && looksLikeUnmappedHeading(trimmed)) {
+      flushBlock();
+      continue;
+    }
+
+    if (!blockKey && trimmed.startsWith("#")) {
       continue;
     }
 
