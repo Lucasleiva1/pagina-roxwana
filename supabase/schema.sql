@@ -37,6 +37,8 @@ create table if not exists public.products (
   name text not null,
   slug text unique not null,
   garment_type_id uuid not null references public.garment_types(id),
+  parent_product_id uuid references public.products(id) on delete cascade,
+  family_color_id uuid references public.colors(id) on delete set null,
   gender text not null check (gender in ('hombre', 'mujer', 'unisex')),
   description text,
   status text not null default 'draft' check (status in ('draft', 'published', 'sold_out')),
@@ -110,6 +112,9 @@ create index if not exists products_slug_idx on public.products(slug);
 create index if not exists products_status_idx on public.products(status);
 create index if not exists products_featured_idx on public.products(featured);
 create index if not exists products_gender_idx on public.products(gender);
+create index if not exists products_parent_product_idx on public.products(parent_product_id);
+create index if not exists products_family_color_idx on public.products(family_color_id);
+create unique index if not exists products_family_child_color_unique on public.products(parent_product_id, family_color_id) where parent_product_id is not null and family_color_id is not null;
 create index if not exists product_images_product_idx on public.product_images(product_id, sort_order);
 create index if not exists product_images_product_role_idx on public.product_images(product_id, image_role, sort_order);
 create index if not exists product_images_product_color_idx on public.product_images(product_id, color_code, sort_order);

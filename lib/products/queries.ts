@@ -10,6 +10,8 @@ const PRODUCT_SELECT = `
   name,
   slug,
   garment_type_id,
+  parent_product_id,
+  family_color_id,
   gender,
   description,
   description_short,
@@ -34,7 +36,7 @@ const PRODUCT_SELECT = `
   product_variants(id, size, color, stock, sku, created_at, updated_at)
 `;
 
-const PRODUCT_SELECT_LEGACY = PRODUCT_SELECT.replace(
+const PRODUCT_SELECT_LEGACY = PRODUCT_SELECT.replace("  parent_product_id,\n  family_color_id,\n", "").replace(
   "product_images(id, url, path, bucket, alt, sort_order, is_primary, file_type, size, image_role, view_number, color_code, device_variant, original_filename, created_at)",
   "product_images(id, url, path, bucket, alt, sort_order, is_primary, file_type, size, created_at)"
 );
@@ -75,6 +77,47 @@ function filterProducts(products: Product[], filters: ProductFilters = {}) {
       product.model.toLowerCase().includes(q);
 
     return matchesGender && matchesGarment && matchesColor && matchesSize && matchesStatus && matchesQuery;
+  });
+}
+
+function productWithoutFamily(product: Product): Product {
+  const baseProduct = { ...product };
+  delete baseProduct.familyProducts;
+  return baseProduct;
+}
+
+function attachFamilyProducts(products: Product[]) {
+  const familyByRootId = new Map<string, Product[]>();
+  const roots: Product[] = [];
+
+  for (const product of products) {
+    const rootId = product.parentProductId || product.id;
+
+    if (!rootId) {
+      continue;
+    }
+
+    if (!product.parentProductId) {
+      roots.push(product);
+    }
+
+    const family = familyByRootId.get(rootId) || [];
+    family.push(productWithoutFamily(product));
+    familyByRootId.set(rootId, family);
+  }
+
+  return roots.map((root) => {
+    const family = familyByRootId.get(root.id || "") || [productWithoutFamily(root)];
+    const rootFirstFamily = family.sort((a, b) => {
+      if (!a.parentProductId && b.parentProductId) return -1;
+      if (a.parentProductId && !b.parentProductId) return 1;
+      return (a.sortOrder || 0) - (b.sortOrder || 0);
+    });
+
+    return {
+      ...root,
+      familyProducts: rootFirstFamily
+    };
   });
 }
 
@@ -119,11 +162,11 @@ async function getProductsFromSupabase(status?: ProductStatus) {
 }
 
 export async function getActiveProducts() {
-  return fallbackProducts(await getProductsFromSupabase("published"));
+  return fallbackProducts(attachFamilyProducts(await getProductsFromSupabase("published")));
 }
 
 export async function getFeaturedProducts() {
-  const products = fallbackProducts(await getProductsFromSupabase("published"));
+  const products = fallbackProducts(attachFamilyProducts(await getProductsFromSupabase("published")));
   return products.filter((product) => product.featured);
 }
 
@@ -155,7 +198,24 @@ export async function getProductBySlug(slug: string, includeHidden = false) {
       }
 
       if (!error && data) {
-        return normalizeProducts([data as ProductRecord])[0] || null;
+        const current = data as ProductRecord;
+        const rootId = current.parent_product_id || current.id;
+
+        if (rootId) {
+          let familyQuery = supabase.from("products").select(PRODUCT_SELECT).or(`id.eq.${rootId},parent_product_id.eq.${rootId}`).order("sort_order", { ascending: true }).order("created_at", { ascending: false });
+
+          if (!includeHidden) {
+            familyQuery = familyQuery.eq("status", "published");
+          }
+
+          const familyResult = await familyQuery;
+
+          if (!familyResult.error && familyResult.data?.length) {
+            return attachFamilyProducts(normalizeProducts(familyResult.data as unknown as ProductRecord[]))[0] || null;
+          }
+        }
+
+        return normalizeProducts([current])[0] || null;
       }
     }
   }
@@ -200,7 +260,7 @@ export async function getProductsForAdmin() {
     return canUseMockFallback() ? mockProducts : [];
   }
 
-  const products = await getProductsFromSupabase();
+  const products = attachFamilyProducts(await getProductsFromSupabase());
   return canUseMockFallback() && products.length === 0 ? mockProducts : products;
 }
 

@@ -63,6 +63,9 @@ export type Product = {
   categoryLabel?: string | null;
   collectionId?: string | null;
   collectionLabel?: string | null;
+  parentProductId?: string | null;
+  familyColorId?: string | null;
+  familyProducts?: Product[];
   sortOrder?: number;
   mainImagePath?: string | null;
   whatsappMessage?: string | null;

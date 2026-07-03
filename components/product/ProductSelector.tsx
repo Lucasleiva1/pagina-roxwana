@@ -10,11 +10,13 @@ import { ColorSwatch } from "@/components/product/ColorSwatch";
 
 export function ProductSelector({
   product,
+  colorOptions,
   selectedColor = "",
   onColorChange
 }: {
   product: Product;
   settings: SiteSettings;
+  colorOptions?: Product["colors"];
   selectedColor?: string;
   onColorChange?: (color: string) => void;
 }) {
@@ -24,6 +26,7 @@ export function ProductSelector({
   const [message, setMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const canAdd = Boolean(selectedColor && size && product.id);
+  const colors = colorOptions || product.colors;
 
   const addToCart = () => {
     if (!canAdd || !product.id) {
@@ -61,7 +64,7 @@ export function ProductSelector({
         <div className="grid grid-cols-[5rem_minmax(0,1fr)] items-center gap-3">
           <p className="text-[10px] font-bold uppercase tracking-rox text-steel">Color</p>
           <div className="flex flex-wrap gap-2">
-            {product.colors.map((item) => (
+            {colors.map((item) => (
               <ColorSwatch
                 key={item.code}
                 color={item}

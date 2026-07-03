@@ -47,6 +47,8 @@ export type Database = {
           name: string;
           slug: string;
           garment_type_id: string;
+          parent_product_id: string | null;
+          family_color_id: string | null;
           gender: ProductGender;
           description: string | null;
           description_short: string | null;
@@ -69,6 +71,8 @@ export type Database = {
           name: string;
           slug: string;
           garment_type_id: string;
+          parent_product_id?: string | null;
+          family_color_id?: string | null;
           gender: ProductGender;
           description?: string | null;
           description_short?: string | null;

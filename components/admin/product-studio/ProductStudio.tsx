@@ -58,6 +58,31 @@ type ExistingImageDraft = {
   delete: boolean;
 };
 
+type StudioFamilyDraft = {
+  clientId: string;
+  productId?: string;
+  colorId: string;
+  colorCode: string;
+  colorName: string;
+  colorHex?: string | null;
+  draft: ProductStudioDraft;
+  uploadedImages: UploadImageDraft[];
+  imageInputIds: string[];
+  activeImageInputId: string;
+  nextImageInputIndex: number;
+  existingImages: ExistingImageDraft[];
+  primaryTarget: string;
+  sheetText: string;
+  importNotices: StudioNotice[];
+  collapsed: boolean;
+  imageBoardExpanded: boolean;
+};
+
+type RemovedFamilyProduct = {
+  productId: string;
+  colorId: string;
+};
+
 type ImageControlsPatch = Partial<Pick<UploadImageDraft, "role" | "viewNumber" | "colorCode" | "deviceVariant" | "sortOrder">>;
 type DroppedFileSystemEntry = {
   isFile: boolean;
@@ -101,6 +126,144 @@ function makeExistingImageDrafts(product?: Product): ExistingImageDraft[] {
       delete: false
     };
   });
+}
+
+function getFamilyColorOption(product: Product, options: ProductStudioOptions) {
+  const explicitId = product.familyColorId || product.colors[0]?.id || "";
+  const explicitCode = product.colors[0]?.code || "";
+  return options.colors.find((color) => color.id === explicitId || color.code === explicitCode) || null;
+}
+
+function withCodeSuffix(value: string, colorCode: string) {
+  const suffix = colorCode.toUpperCase();
+  const base = value.trim().toUpperCase();
+  return base.endsWith(`-${suffix}`) ? base : `${base || "RXW"}-${suffix}`;
+}
+
+function withSlugSuffix(value: string, colorCode: string) {
+  const suffix = colorCode.toLowerCase();
+  const base = slugifyDraftValue(value || "producto");
+  return base.endsWith(`-${suffix}`) ? base : `${base}-${suffix}`;
+}
+
+function slugifyDraftValue(value: string) {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function withColorName(value: string, colorName: string) {
+  const normalizedName = value.toLowerCase();
+  const normalizedColor = colorName.toLowerCase();
+  return normalizedName.includes(normalizedColor) ? value : `${value || "Producto"} ${colorName}`.trim();
+}
+
+function cloneDraftForFamilyColor(base: ProductStudioDraft, color: ProductStudioOptions["colors"][number]) {
+  const colorCode = color.code.toUpperCase();
+  const modelCode = withCodeSuffix(base.modelCode, colorCode);
+  const sizeCodes = base.sizeCodes.length > 0 ? base.sizeCodes : base.variants.map((variant) => variant.size).filter(Boolean);
+  const variants =
+    base.variants.length > 0
+      ? base.variants.map((variant) => ({
+          ...variant,
+          color: colorCode,
+          sku: variant.sku ? withCodeSuffix(variant.sku.replace(/-[A-Z]{2,4}$/i, ""), colorCode) : [modelCode, variant.size, colorCode].filter(Boolean).join("-")
+        }))
+      : sizeCodes.map((size) => ({
+          sku: [modelCode, size, colorCode].filter(Boolean).join("-"),
+          size,
+          color: colorCode,
+          stock: 0
+        }));
+
+  return mergeStudioDraft(base, {
+    modelCode,
+    name: withColorName(base.name, color.name),
+    slug: withSlugSuffix(base.slug || base.name || modelCode, colorCode),
+    colorIds: [color.id],
+    colorCodes: [colorCode],
+    variants,
+    expectedImages: []
+  });
+}
+
+function makeFamilyDraftForColor(base: ProductStudioDraft, color: ProductStudioOptions["colors"][number], index: number): StudioFamilyDraft {
+  const inputId = `studio-family-${color.id}-${index}-image-input-0`;
+
+  return {
+    clientId: `new-${color.id}`,
+    colorId: color.id,
+    colorCode: color.code.toUpperCase(),
+    colorName: color.name,
+    colorHex: color.hex || null,
+    draft: cloneDraftForFamilyColor(base, color),
+    uploadedImages: [],
+    imageInputIds: [inputId],
+    activeImageInputId: inputId,
+    nextImageInputIndex: 1,
+    existingImages: [],
+    primaryTarget: "",
+    sheetText: "",
+    importNotices: [],
+    collapsed: true,
+    imageBoardExpanded: false
+  };
+}
+
+function makeFamilyDraftFromProduct(product: Product, options: ProductStudioOptions, index: number): StudioFamilyDraft | null {
+  const color = getFamilyColorOption(product, options);
+
+  if (!color) {
+    return null;
+  }
+
+  const inputId = `studio-family-${product.id || color.id}-${index}-image-input-0`;
+  const primary = product.images.find((image) => image.isPrimary && image.id);
+
+  return {
+    clientId: product.id || `existing-${color.id}`,
+    productId: product.id,
+    colorId: color.id,
+    colorCode: color.code.toUpperCase(),
+    colorName: color.name,
+    colorHex: color.hex || null,
+    draft: mergeStudioDraft(productToStudioDraft(product, options), {
+      colorIds: [color.id],
+      colorCodes: [color.code.toUpperCase()]
+    }),
+    uploadedImages: [],
+    imageInputIds: [inputId],
+    activeImageInputId: inputId,
+    nextImageInputIndex: 1,
+    existingImages: makeExistingImageDrafts(product),
+    primaryTarget: primary?.id ? `existing:${primary.id}` : "",
+    sheetText: "",
+    importNotices: [],
+    collapsed: true,
+    imageBoardExpanded: false
+  };
+}
+
+function makeInitialFamilyDrafts(product: Product | undefined, options: ProductStudioOptions, rootDraft: ProductStudioDraft) {
+  const existingFamily = (product?.familyProducts || [])
+    .filter((item) => item.id && item.id !== product?.id)
+    .map((item, index) => makeFamilyDraftFromProduct(item, options, index))
+    .filter((item): item is StudioFamilyDraft => Boolean(item));
+
+  if (existingFamily.length > 0) {
+    return existingFamily;
+  }
+
+  return rootDraft.colorIds
+    .slice(1)
+    .map((colorId, index) => {
+      const color = options.colors.find((item) => item.id === colorId);
+      return color ? makeFamilyDraftForColor(rootDraft, color, index) : null;
+    })
+    .filter((item): item is StudioFamilyDraft => Boolean(item));
 }
 
 function noticeTone(level: StudioNotice["level"]) {
@@ -219,6 +382,9 @@ async function collectDroppedFiles(dataTransfer: DataTransfer) {
 export function ProductStudio({ mode, product, options, action, submitLabel }: ProductStudioProps) {
   const pathname = usePathname();
   const [draft, setDraft] = useState<ProductStudioDraft>(() => productToStudioDraft(product, options));
+  const [familyDrafts, setFamilyDrafts] = useState<StudioFamilyDraft[]>(() => makeInitialFamilyDrafts(product, options, productToStudioDraft(product, options)));
+  const [removedFamilyProducts, setRemovedFamilyProducts] = useState<RemovedFamilyProduct[]>([]);
+  const [rootCollapsed, setRootCollapsed] = useState(false);
   const [sheetText, setSheetText] = useState("");
   const [importNotices, setImportNotices] = useState<StudioNotice[]>([]);
   const [saveError, setSaveError] = useState<StudioNotice | null>(null);
@@ -250,7 +416,29 @@ export function ProductStudio({ mode, product, options, action, submitLabel }: P
     () => validateProductStudioDraft(draft, options, activeUploadedImages.length, activeExistingImages.length),
     [activeExistingImages.length, activeUploadedImages.length, draft, options]
   );
-  const allNotices = [...validationNotices, ...importNotices, ...(saveError ? [saveError] : [])];
+  const familyValidationNotices = useMemo(
+    () =>
+      familyDrafts.flatMap((family) => {
+        const activeUploads = family.uploadedImages.filter((image) => !image.delete).length;
+        const activeExisting = family.existingImages.filter((image) => !image.delete).length;
+        return validateProductStudioDraft(family.draft, options, activeUploads, activeExisting).map((notice) => ({
+          ...notice,
+          message: `${family.colorCode}: ${notice.message}`
+        }));
+      }),
+    [familyDrafts, options]
+  );
+  const familyImportNotices = useMemo(
+    () =>
+      familyDrafts.flatMap((family) =>
+        family.importNotices.map((notice) => ({
+          ...notice,
+          message: `${family.colorCode}: ${notice.message}`
+        }))
+      ),
+    [familyDrafts]
+  );
+  const allNotices = [...validationNotices, ...familyValidationNotices, ...familyImportNotices, ...importNotices, ...(saveError ? [saveError] : [])];
   const errorCount = allNotices.filter((notice) => notice.level === "error").length;
   const coverPreview = activeUploadedImages.find((image) => image.role === "cover")?.previewUrl || activeExistingImages.find((image) => image.role === "cover")?.url || product?.image || "";
   const hoverPreview = activeUploadedImages.find((image) => image.role === "hover")?.previewUrl || activeExistingImages.find((image) => image.role === "hover")?.url || "";
@@ -278,8 +466,45 @@ export function ProductStudio({ mode, product, options, action, submitLabel }: P
     setDraft((current) => mergeStudioDraft(current, patch));
   }
 
+  function addMissingFamilyDrafts(current: StudioFamilyDraft[], baseDraft: ProductStudioDraft) {
+    const next = [...current];
+
+    baseDraft.colorIds.slice(1).forEach((colorId, index) => {
+      if (next.some((family) => family.colorId === colorId)) {
+        return;
+      }
+
+      const color = options.colors.find((item) => item.id === colorId);
+
+      if (color) {
+        next.push(makeFamilyDraftForColor(baseDraft, color, next.length + index));
+      }
+    });
+
+    return next;
+  }
+
+  function updateFamily(clientId: string, patch: Partial<StudioFamilyDraft>) {
+    setSaveError(null);
+    setFamilyDrafts((current) => current.map((family) => (family.clientId === clientId ? { ...family, ...patch } : family)));
+  }
+
+  function updateFamilyDraft(clientId: string, patch: Partial<ProductStudioDraft>) {
+    setSaveError(null);
+    setFamilyDrafts((current) => current.map((family) => (family.clientId === clientId ? { ...family, draft: mergeStudioDraft(family.draft, patch) } : family)));
+  }
+
+  function lockFamilyColor(family: StudioFamilyDraft, nextDraft: ProductStudioDraft) {
+    return {
+      ...nextDraft,
+      colorIds: [family.colorId],
+      colorCodes: [family.colorCode],
+      variants: nextDraft.variants.map((variant) => ({ ...variant, color: family.colorCode }))
+    };
+  }
+
   function validateBeforeSubmit(event: FormEvent<HTMLFormElement>) {
-    const firstError = validationNotices.find((notice) => notice.level === "error");
+    const firstError = allNotices.find((notice) => notice.level === "error");
 
     if (!firstError) {
       setSaveError(null);
@@ -297,7 +522,9 @@ export function ProductStudio({ mode, product, options, action, submitLabel }: P
     const format = inferImportFormat(fileName);
     const result = parseProductStudioSheet(text, format === "pdf" ? "text" : format, options);
     const baseDraft = mode === "edit" ? productToStudioDraft(product, options) : EMPTY_PRODUCT_STUDIO_DRAFT;
-    setDraft(mergeStudioDraft(baseDraft, result.draft));
+    const nextDraft = mergeStudioDraft(baseDraft, result.draft);
+    setDraft(nextDraft);
+    setFamilyDrafts((current) => addMissingFamilyDrafts(current, nextDraft));
     setImportNotices(result.notices.length > 0 ? result.notices : [{ level: "info", message: "Ficha importada al borrador Studio." }]);
   }
 
@@ -353,6 +580,76 @@ export function ProductStudio({ mode, product, options, action, submitLabel }: P
     const text = await file.text();
     setSheetText(text);
     applyImport(text, file.name);
+  }
+
+  function applyFamilyImport(clientId: string, text: string, fileName = "ficha.txt") {
+    const family = familyDrafts.find((item) => item.clientId === clientId);
+
+    if (!family) {
+      return;
+    }
+
+    const format = inferImportFormat(fileName);
+    const result = parseProductStudioSheet(text, format === "pdf" ? "text" : format, options);
+    setFamilyDrafts((current) =>
+      current.map((item) => {
+        if (item.clientId !== clientId) {
+          return item;
+        }
+
+        const nextDraft = lockFamilyColor(item, mergeStudioDraft(item.draft, result.draft));
+        return {
+          ...item,
+          draft: nextDraft,
+          sheetText: text,
+          importNotices: result.notices.length > 0 ? result.notices : [{ level: "info", message: "Ficha importada al borrador Studio." }]
+        };
+      })
+    );
+  }
+
+  async function handleFamilyPasteToStudio(clientId: string) {
+    const family = familyDrafts.find((item) => item.clientId === clientId);
+    const currentText = family?.sheetText.trim() || "";
+
+    if (currentText) {
+      applyFamilyImport(clientId, currentText);
+      return;
+    }
+
+    try {
+      const clipboardText = await navigator.clipboard.readText();
+      applyFamilyImport(clientId, clipboardText);
+    } catch {
+      updateFamily(clientId, { importNotices: [{ level: "warning", message: "No pude leer el portapapeles. Pegalo en el cuadro y apreta Pegar al Studio." }] });
+    }
+  }
+
+  async function handleFamilySheetFile(clientId: string, event: ChangeEvent<HTMLInputElement>) {
+    const file = event.currentTarget.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    const format = inferImportFormat(file.name);
+
+    if (format === "pdf") {
+      const formData = new FormData();
+      formData.set("sheet_file", file);
+      startPdfTransition(async () => {
+        const result = await extractProductSheetPdfText(formData);
+        if (result.error) {
+          updateFamily(clientId, { importNotices: [{ level: "error", message: result.error }] });
+          return;
+        }
+        applyFamilyImport(clientId, result.text, file.name);
+      });
+      return;
+    }
+
+    const text = await file.text();
+    applyFamilyImport(clientId, text, file.name);
   }
 
   function filterNewImageFiles(files: File[]) {
@@ -487,6 +784,228 @@ export function ProductStudio({ mode, product, options, action, submitLabel }: P
     return true;
   }
 
+  function filterNewFamilyImageFiles(clientId: string, files: File[]) {
+    const family = familyDrafts.find((item) => item.clientId === clientId);
+    const currentKeys = new Set((family?.uploadedImages || []).filter((image) => !image.delete).map(uploadImageIdentity));
+    const batchKeys = new Set<string>();
+    const nextFiles: File[] = [];
+
+    files.forEach((file) => {
+      const key = fileIdentity(file);
+
+      if (currentKeys.has(key) || batchKeys.has(key)) {
+        return;
+      }
+
+      batchKeys.add(key);
+      nextFiles.push(file);
+    });
+
+    const duplicateCount = files.length - nextFiles.length;
+    if (duplicateCount > 0) {
+      setImportNotices((current) => [{ level: "warning", message: `${family?.colorCode || "Color"}: se ignoraron ${duplicateCount} imagenes repetidas.` }, ...current]);
+    }
+
+    return nextFiles;
+  }
+
+  function addFamilyImageFiles(clientId: string, inputId: string, files: File[]) {
+    const family = familyDrafts.find((item) => item.clientId === clientId);
+
+    if (!family || files.length === 0) {
+      return false;
+    }
+
+    const invalidType = files.find((file) => !isAllowedImageFile(file));
+    if (invalidType) {
+      setSaveError({ level: "error", message: `No se cargo ${invalidType.name}: solo se aceptan JPG, PNG o WEBP.` });
+      return false;
+    }
+
+    const oversized = files.find((file) => file.size > MAX_IMAGE_BYTES);
+    if (oversized) {
+      setSaveError({
+        level: "error",
+        message: `No se cargo ${oversized.name}: pesa ${formatMegabytes(oversized.size)} y el limite por imagen es 5 MB.`
+      });
+      return false;
+    }
+
+    const currentBatchSize = family.uploadedImages.filter((image) => !image.delete).reduce((total, image) => {
+      const input = document.getElementById(image.inputId) as HTMLInputElement | null;
+      const file = Array.from(input?.files || []).find((item, index) => index === image.fileIndex && item.name === image.fileName);
+      return total + (file?.size || 0);
+    }, 0);
+    const nextBatchSize = files.reduce((total, file) => total + file.size, currentBatchSize);
+
+    if (nextBatchSize > MAX_IMAGE_BATCH_BYTES) {
+      setSaveError({
+        level: "error",
+        message: `El lote de imagenes suma ${formatMegabytes(nextBatchSize)}. Subi menos fotos por guardado o comprimilas antes de guardar.`
+      });
+      return false;
+    }
+
+    const activeCount = family.uploadedImages.filter((image) => !image.delete).length + family.existingImages.filter((image) => !image.delete).length;
+    const hasCover = family.uploadedImages.some((image) => !image.delete && image.role === "cover") || family.existingImages.some((image) => !image.delete && image.role === "cover");
+    const batchId = `${inputId}-${family.nextImageInputIndex}`;
+    const images = files.map<UploadImageDraft>((file, index) => {
+      const parsed = parseProductImageName(file.name);
+      const fallbackPosition = activeCount + index + 1;
+      const fallbackViewNumber = String(fallbackPosition).padStart(2, "0");
+      const role = parsed.viewNumber ? parsed.role : parsed.role !== "gallery" ? parsed.role : !hasCover && index === 0 ? "cover" : "gallery";
+      return {
+        clientId: `${clientId}-${batchId}-${index}`,
+        inputId,
+        fileIndex: index,
+        fileName: file.name,
+        previewUrl: URL.createObjectURL(file),
+        fileSize: file.size,
+        lastModified: file.lastModified,
+        role,
+        viewNumber: parsed.viewNumber || fallbackViewNumber,
+        colorCode: parsed.colorCode || family.colorCode,
+        deviceVariant: parsed.deviceVariant,
+        sortOrder: String(parsed.viewNumber ? parsed.sortOrder : fallbackPosition * 10),
+        delete: false,
+        warnings: parsed.warnings.map((warning) => (warning.startsWith("No se detecto numero") ? "Sin numero: se ordeno por carga." : warning))
+      };
+    });
+    const nextInputId = `studio-family-${family.colorId}-${family.nextImageInputIndex}-image-input`;
+
+    setFamilyDrafts((current) =>
+      current.map((item) =>
+        item.clientId === clientId
+          ? {
+              ...item,
+              uploadedImages: [...item.uploadedImages, ...images],
+              imageInputIds: [...item.imageInputIds, nextInputId],
+              activeImageInputId: nextInputId,
+              nextImageInputIndex: item.nextImageInputIndex + 1,
+              primaryTarget: item.primaryTarget || (images.find((image) => image.role === "cover") ? `new:${images.find((image) => image.role === "cover")?.clientId}` : item.primaryTarget)
+            }
+          : item
+      )
+    );
+
+    setSaveError(null);
+    return true;
+  }
+
+  function handleFamilyImages(clientId: string, inputId: string, event: ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.currentTarget.files || []);
+    const nextFiles = filterNewFamilyImageFiles(clientId, files);
+
+    if (nextFiles.length !== files.length) {
+      setInputFiles(inputId, nextFiles);
+    }
+
+    const added = addFamilyImageFiles(clientId, inputId, nextFiles);
+
+    if (!added) {
+      event.currentTarget.value = "";
+    }
+  }
+
+  function updateFamilyUploadedImage(clientId: string, imageClientId: string, patch: ImageControlsPatch) {
+    setFamilyDrafts((current) =>
+      current.map((family) =>
+        family.clientId === clientId
+          ? {
+              ...family,
+              uploadedImages: family.uploadedImages.map((image) => (image.clientId === imageClientId ? { ...image, ...patch } : image))
+            }
+          : family
+      )
+    );
+  }
+
+  function removeFamilyUploadedImage(clientId: string, imageClientId: string) {
+    const family = familyDrafts.find((item) => item.clientId === clientId);
+    const image = family?.uploadedImages.find((item) => item.clientId === imageClientId);
+
+    if (image) {
+      URL.revokeObjectURL(image.previewUrl);
+    }
+
+    setFamilyDrafts((current) =>
+      current.map((item) =>
+        item.clientId === clientId
+          ? {
+              ...item,
+              uploadedImages: item.uploadedImages.map((currentImage) => (currentImage.clientId === imageClientId ? { ...currentImage, delete: true } : currentImage)),
+              primaryTarget: item.primaryTarget === `new:${imageClientId}` ? "" : item.primaryTarget
+            }
+          : item
+      )
+    );
+  }
+
+  function moveFamilyUploadedImage(clientId: string, imageClientId: string, direction: -1 | 1) {
+    setFamilyDrafts((current) =>
+      current.map((family) => {
+        if (family.clientId !== clientId) {
+          return family;
+        }
+
+        const active = sortByStudioOrder(family.uploadedImages.filter((image) => !image.delete));
+        const currentIndex = active.findIndex((image) => image.clientId === imageClientId);
+        const targetIndex = currentIndex + direction;
+
+        if (currentIndex < 0 || targetIndex < 0 || targetIndex >= active.length) {
+          return family;
+        }
+
+        const reordered = [...active];
+        [reordered[currentIndex], reordered[targetIndex]] = [reordered[targetIndex], reordered[currentIndex]];
+        const orderMap = new Map(reordered.map((image, index) => [image.clientId, String((index + 1) * 10)]));
+        return {
+          ...family,
+          uploadedImages: family.uploadedImages.map((image) => (orderMap.has(image.clientId) ? { ...image, sortOrder: orderMap.get(image.clientId) || image.sortOrder } : image))
+        };
+      })
+    );
+  }
+
+  function updateFamilyExistingImage(clientId: string, imageId: string, patch: ImageControlsPatch | Partial<ExistingImageDraft>) {
+    setFamilyDrafts((current) =>
+      current.map((family) =>
+        family.clientId === clientId
+          ? {
+              ...family,
+              existingImages: family.existingImages.map((image) => (image.id === imageId ? { ...image, ...patch } : image))
+            }
+          : family
+      )
+    );
+  }
+
+  function moveFamilyExistingImage(clientId: string, imageId: string, direction: -1 | 1) {
+    setFamilyDrafts((current) =>
+      current.map((family) => {
+        if (family.clientId !== clientId) {
+          return family;
+        }
+
+        const active = sortByStudioOrder(family.existingImages.filter((image) => !image.delete));
+        const currentIndex = active.findIndex((image) => image.id === imageId);
+        const targetIndex = currentIndex + direction;
+
+        if (currentIndex < 0 || targetIndex < 0 || targetIndex >= active.length) {
+          return family;
+        }
+
+        const reordered = [...active];
+        [reordered[currentIndex], reordered[targetIndex]] = [reordered[targetIndex], reordered[currentIndex]];
+        const orderMap = new Map(reordered.map((image, index) => [image.id, String((index + 1) * 10)]));
+        return {
+          ...family,
+          existingImages: family.existingImages.map((image) => (orderMap.has(image.id) ? { ...image, sortOrder: orderMap.get(image.id) || image.sortOrder } : image))
+        };
+      })
+    );
+  }
+
   async function handleImageDrop(event: DragEvent<HTMLElement>) {
     event.preventDefault();
     event.stopPropagation();
@@ -527,10 +1046,44 @@ export function ProductStudio({ mode, product, options, action, submitLabel }: P
 
   function toggleColor(id: string, code: string) {
     const selected = draft.colorIds.includes(id);
-    updateDraft({
-      colorIds: selected ? draft.colorIds.filter((item) => item !== id) : [...draft.colorIds, id],
-      colorCodes: selected ? draft.colorCodes.filter((item) => item !== code) : Array.from(new Set([...draft.colorCodes, code]))
+    const color = options.colors.find((item) => item.id === id);
+
+    if (selected) {
+      const nextColorIds = draft.colorIds.filter((item) => item !== id);
+      const nextColorCodes = draft.colorCodes.filter((item) => item !== code);
+      const nextChildColorIds = new Set(nextColorIds.slice(1));
+      const removedFamilies = familyDrafts.filter((family) => !nextChildColorIds.has(family.colorId) && family.productId);
+
+      if (removedFamilies.length > 0) {
+        setRemovedFamilyProducts((current) => {
+          const byProductId = new Map(current.map((item) => [item.productId, item]));
+          removedFamilies.forEach((family) => {
+            if (family.productId) {
+              byProductId.set(family.productId, { productId: family.productId, colorId: family.colorId });
+            }
+          });
+          return Array.from(byProductId.values());
+        });
+      }
+
+      setDraft(mergeStudioDraft(draft, { colorIds: nextColorIds, colorCodes: nextColorCodes }));
+      setFamilyDrafts((current) => current.filter((family) => nextChildColorIds.has(family.colorId)));
+      setSaveError(null);
+      return;
+    }
+
+    const nextDraft = mergeStudioDraft(draft, {
+      colorIds: [...draft.colorIds, id],
+      colorCodes: Array.from(new Set([...draft.colorCodes, code]))
     });
+    setDraft(nextDraft);
+    setRemovedFamilyProducts((current) => current.filter((item) => item.colorId !== id));
+
+    if (draft.colorIds.length > 0 && color) {
+      setFamilyDrafts((current) => addMissingFamilyDrafts(current, nextDraft));
+    }
+
+    setSaveError(null);
   }
 
   function toggleSize(id: string, code: string) {
@@ -629,9 +1182,79 @@ export function ProductStudio({ mode, product, options, action, submitLabel }: P
           {image.delete ? <input type="hidden" name="delete_image_ids" value={image.id} /> : null}
         </span>
       ))}
+      {removedFamilyProducts.map((item) => (
+        <input key={item.productId} type="hidden" name="family_removed_product_ids" value={item.productId} />
+      ))}
+      <input type="hidden" name="family_child_count" value={familyDrafts.length} />
+      {familyDrafts.map((family, familyIndex) => {
+        const prefix = `family_child_${familyIndex}_`;
+        const orderedUploads = [...family.uploadedImages].sort((a, b) => {
+          const inputDiff = family.imageInputIds.indexOf(a.inputId) - family.imageInputIds.indexOf(b.inputId);
+          return inputDiff !== 0 ? inputDiff : a.fileIndex - b.fileIndex;
+        });
+        const activeOrderedUploads = sortByStudioOrder(family.uploadedImages.filter((image) => !image.delete));
+        const primaryNewIndex = family.primaryTarget.startsWith("new:") ? orderedUploads.findIndex((image) => image.clientId === family.primaryTarget.replace("new:", "") && !image.delete) : -1;
+
+        return (
+          <span key={`${family.clientId}-hidden`}>
+            {family.productId ? <input type="hidden" name={`${prefix}id`} value={family.productId} /> : null}
+            <input type="hidden" name={`${prefix}family_color_id`} value={family.colorId} />
+            <input type="hidden" name={`${prefix}garment_type_id`} value={family.draft.garmentTypeId} />
+            <input type="hidden" name={`${prefix}name`} value={family.draft.name} />
+            <input type="hidden" name={`${prefix}category_id`} value={family.draft.categoryId} />
+            <input type="hidden" name={`${prefix}gender`} value={family.draft.gender} />
+            <input type="hidden" name={`${prefix}price`} value={family.draft.price} />
+            <input type="hidden" name={`${prefix}compare_at_price`} value={family.draft.compareAtPrice} />
+            <input type="hidden" name={`${prefix}status`} value={family.draft.status} />
+            <input type="hidden" name={`${prefix}model_code`} value={family.draft.modelCode} />
+            <input type="hidden" name={`${prefix}slug`} value={family.draft.slug} />
+            <input type="hidden" name={`${prefix}collection_id`} value={family.draft.collectionId} />
+            <input type="hidden" name={`${prefix}sort_order`} value={family.draft.sortOrder} />
+            <input type="hidden" name={`${prefix}description_short`} value={family.draft.descriptionShort} />
+            <input type="hidden" name={`${prefix}description_long`} value={family.draft.descriptionLong} />
+            <input type="hidden" name={`${prefix}whatsapp_message`} value={family.draft.whatsappMessage} />
+            <input type="hidden" name={`${prefix}variants`} value={variantsToText(family.draft.variants)} />
+            {family.draft.featured ? <input type="hidden" name={`${prefix}featured`} value="on" /> : null}
+            <input type="hidden" name={`${prefix}color_ids`} value={family.colorId} />
+            {family.draft.sizeIds.map((id) => (
+              <input key={`${family.clientId}-${id}`} type="hidden" name={`${prefix}size_ids`} value={id} />
+            ))}
+            <input type="hidden" name={`${prefix}primary_image_id`} value={family.primaryTarget.startsWith("existing:") ? family.primaryTarget.replace("existing:", "") : ""} />
+            <input type="hidden" name={`${prefix}primary_new_image_index`} value={primaryNewIndex >= 0 ? String(primaryNewIndex) : ""} />
+            {orderedUploads.map((image, imageIndex) => (
+              <span key={`${family.clientId}-${image.clientId}-${imageIndex}-metadata`}>
+                <input type="hidden" name={`${prefix}image_skip`} value={image.delete ? "true" : "false"} />
+                <input type="hidden" name={`${prefix}image_role`} value={image.role} />
+                <input type="hidden" name={`${prefix}image_view_number`} value={image.viewNumber} />
+                <input type="hidden" name={`${prefix}image_color_code`} value={image.colorCode} />
+                <input type="hidden" name={`${prefix}image_device_variant`} value={image.deviceVariant} />
+                <input type="hidden" name={`${prefix}image_original_name`} value={image.fileName} />
+                <input type="hidden" name={`${prefix}image_sort_order`} value={image.sortOrder} />
+              </span>
+            ))}
+            {family.existingImages.map((image) => (
+              <span key={`${family.clientId}-${image.id}-metadata`}>
+                <input type="hidden" name={`${prefix}existing_image_ids`} value={image.id} />
+                <input type="hidden" name={`${prefix}existing_image_role`} value={image.role} />
+                <input type="hidden" name={`${prefix}existing_image_view_number`} value={image.viewNumber} />
+                <input type="hidden" name={`${prefix}existing_image_color_code`} value={image.colorCode} />
+                <input type="hidden" name={`${prefix}existing_image_device_variant`} value={image.deviceVariant} />
+                <input type="hidden" name={`${prefix}existing_image_sort_order`} value={image.sortOrder} />
+                {image.delete ? <input type="hidden" name={`${prefix}delete_image_ids`} value={image.id} /> : null}
+              </span>
+            ))}
+            <span className="sr-only">
+              {family.imageInputIds.map((inputId) => (
+                <input key={inputId} id={inputId} name={`${prefix}images`} type="file" multiple accept="image/jpeg,image/png,image/webp" onChange={(event) => handleFamilyImages(family.clientId, inputId, event)} />
+              ))}
+            </span>
+            <input type="hidden" name={`${prefix}uploaded_image_count`} value={activeOrderedUploads.length} />
+          </span>
+        );
+      })}
 
       <section className="overflow-hidden border border-roxgold/24 bg-charcoal">
-        <div className="grid gap-4 border-b border-bone/10 p-4 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
+        <div className="grid gap-4 border-b border-bone/10 p-4 lg:grid-cols-[minmax(0,1fr)_360px_auto] lg:items-end">
           <div className="min-w-0">
             <p className="text-[10px] font-bold uppercase tracking-rox text-roxgold">Product Studio</p>
             <h2 className="headline mt-1 text-3xl leading-none text-bone md:text-4xl">{mode === "create" ? "CREAR PRODUCTO" : draft.modelCode || "EDITAR PRODUCTO"}</h2>
@@ -651,8 +1274,24 @@ export function ProductStudio({ mode, product, options, action, submitLabel }: P
               <p className="mt-1 text-sm font-black uppercase text-roxgold">{draft.status}</p>
             </div>
           </div>
+          <button
+            type="button"
+            onClick={() => setRootCollapsed((current) => !current)}
+            className="inline-flex min-h-9 items-center justify-center gap-2 border border-bone/14 px-3 text-[10px] font-bold uppercase tracking-rox text-bone/74 transition hover:border-roxgold hover:text-roxgold"
+            title={rootCollapsed ? "Expandir madre" : "Minimizar madre"}
+          >
+            {rootCollapsed ? <Maximize2 size={14} /> : <Minimize2 size={14} />}
+            {rootCollapsed ? "Expandir" : "Minimizar"}
+          </button>
         </div>
 
+        {rootCollapsed ? (
+          <div className="grid gap-2 px-4 py-3 md:grid-cols-[1fr_auto_auto] md:items-center">
+            <p className="truncate text-xs font-bold text-bone/72">{draft.name || draft.modelCode || "Producto madre"}</p>
+            <p className="text-[10px] font-bold uppercase tracking-rox text-bone/52">{totalImages} imagenes</p>
+            <p className="text-[10px] font-bold uppercase tracking-rox text-roxgold">{completionScore}% completo</p>
+          </div>
+        ) : (
         <div className="grid gap-4 p-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.85fr)]">
           <main className="grid min-w-0 gap-4">
             <section className={`${panelClass} p-3`}>
@@ -884,27 +1523,6 @@ export function ProductStudio({ mode, product, options, action, submitLabel }: P
               </div>
             </section>
 
-            <section className={`${panelClass} p-4`}>
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-rox text-roxgold">Productos hermanos</p>
-                  <p className="mt-2 text-xs leading-5 text-bone/58">Preparado para trabajar remeras lisas por color con codigo propio, sin cambiar Supabase todavia.</p>
-                </div>
-                <span className="border border-bone/12 px-3 py-2 text-[10px] font-bold uppercase tracking-rox text-bone/54">Manual</span>
-              </div>
-              <div className="mt-3 grid gap-2 md:grid-cols-3">
-                {(selectedColorOptions.length > 0 ? selectedColorOptions : [{ id: "empty", code: "COLOR", name: "Elegir color", hex: "#111111" }]).map((color) => (
-                  <div key={color.id} className="border border-bone/10 p-3">
-                    <div className="flex items-center gap-2">
-                      <span className="h-4 w-4 border border-bone/24" style={{ backgroundColor: color.hex || "#111111" }} />
-                      <p className="text-[10px] font-bold uppercase tracking-rox text-bone">{color.code}</p>
-                    </div>
-                    <p className="mt-2 break-all text-xs font-bold text-bone/72">{draft.modelCode ? `${draft.modelCode}-${color.code}` : `CODIGO-${color.code}`}</p>
-                    <p className="mt-1 text-[10px] uppercase tracking-rox text-bone/42">producto separado</p>
-                  </div>
-                ))}
-              </div>
-            </section>
           </main>
 
           <aside className="grid gap-4 self-start xl:sticky xl:top-4">
@@ -1142,7 +1760,443 @@ export function ProductStudio({ mode, product, options, action, submitLabel }: P
             </button>
           </aside>
         </div>
+        )}
       </section>
+      {familyDrafts.length > 0 ? (
+        <div className="grid gap-4">
+          {familyDrafts.map((family) => {
+            const activeFamilyUploadedImages = sortByStudioOrder(family.uploadedImages.filter((image) => !image.delete));
+            const activeFamilyExistingImages = sortByStudioOrder(family.existingImages.filter((image) => !image.delete));
+            const familyBoardHasImages = family.existingImages.length > 0 || activeFamilyUploadedImages.length > 0;
+            const familyCoverPreview = activeFamilyUploadedImages.find((image) => image.role === "cover")?.previewUrl || activeFamilyExistingImages.find((image) => image.role === "cover")?.url || "";
+            const familyHoverPreview = activeFamilyUploadedImages.find((image) => image.role === "hover")?.previewUrl || activeFamilyExistingImages.find((image) => image.role === "hover")?.url || "";
+            const familySizeOptions = options.sizes.filter((size) => family.draft.sizeIds.includes(size.id));
+            const familyCompletionItems = [
+              family.draft.modelCode,
+              family.draft.name,
+              family.draft.slug,
+              family.draft.garmentTypeId,
+              family.draft.price,
+              family.draft.categoryId,
+              family.draft.sizeIds.length > 0,
+              activeFamilyExistingImages.length + activeFamilyUploadedImages.length > 0,
+              family.draft.descriptionShort,
+              family.draft.variants.length > 0
+            ];
+            const familyCompletionScore = Math.round((familyCompletionItems.filter(Boolean).length / familyCompletionItems.length) * 100);
+
+            return (
+              <section key={family.clientId} className="overflow-hidden border border-bone/12 bg-charcoal">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-bone/10 p-3">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className="h-8 w-8 shrink-0 border border-bone/24 ring-1 ring-bone/20" style={{ backgroundColor: family.colorHex || "#111111" }} />
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-bold uppercase tracking-rox text-roxgold">Producto hermano · {family.colorCode}</p>
+                      <h3 className="headline mt-1 truncate text-2xl leading-none text-bone">{family.draft.modelCode || family.draft.name || family.colorName}</h3>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => updateFamily(family.clientId, { collapsed: !family.collapsed })}
+                    className="inline-flex min-h-9 items-center gap-2 border border-bone/14 px-3 text-[10px] font-bold uppercase tracking-rox text-bone/74 transition hover:border-roxgold hover:text-roxgold"
+                    title={family.collapsed ? "Expandir ficha" : "Minimizar ficha"}
+                  >
+                    {family.collapsed ? <Maximize2 size={14} /> : <Minimize2 size={14} />}
+                    {family.collapsed ? "Expandir" : "Minimizar"}
+                  </button>
+                </div>
+
+                {family.collapsed ? (
+                  <div className="grid gap-2 px-4 py-3 md:grid-cols-[1fr_auto_auto] md:items-center">
+                    <p className="truncate text-xs font-bold text-bone/72">{family.draft.name || family.colorName}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-rox text-bone/52">{activeFamilyExistingImages.length + activeFamilyUploadedImages.length} imagenes</p>
+                    <p className="text-[10px] font-bold uppercase tracking-rox text-roxgold">{familyCompletionScore}% completo</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-4 p-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.85fr)]">
+                    <main className="grid min-w-0 gap-4">
+                      <section className={`${panelClass} p-3`}>
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <div className="flex items-center gap-2 text-roxgold">
+                            <ClipboardPaste size={16} />
+                            <p className="text-[10px] font-bold uppercase tracking-rox">Ficha tecnica</p>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleFamilyPasteToStudio(family.clientId)}
+                              className="min-h-8 border border-roxgold bg-roxgold px-3 text-[10px] font-bold uppercase tracking-rox text-charcoal transition hover:border-bone"
+                            >
+                              Pegar al Studio
+                            </button>
+                            <label className="grid min-h-8 cursor-pointer place-items-center border border-bone/14 px-3 text-[10px] font-bold uppercase tracking-rox text-bone/74 transition hover:border-roxgold hover:text-bone">
+                              <span className="inline-flex items-center gap-2">
+                                <FileText size={14} /> {pdfPending ? "Leyendo PDF" : "Subir ficha"}
+                              </span>
+                              <input type="file" accept=".txt,.md,.markdown,.json,.csv,.pdf,text/plain,text/markdown,application/json,text/csv,application/pdf" className="sr-only" onChange={(event) => handleFamilySheetFile(family.clientId, event)} />
+                            </label>
+                          </div>
+                        </div>
+                        <textarea
+                          value={family.sheetText}
+                          onChange={(event) => updateFamily(family.clientId, { sheetText: event.target.value })}
+                          rows={3}
+                          placeholder={`Pega aca la ficha de ${family.colorName}. El color queda bloqueado en ${family.colorCode}.`}
+                          className={`${textareaClass} mt-2 max-h-28 min-h-20 w-full resize-y font-mono text-[11px] leading-5`}
+                        />
+                        {family.importNotices.length > 0 ? (
+                          <div className="mt-2 grid gap-1 md:grid-cols-2">
+                            {family.importNotices.map((notice, index) => (
+                              <p key={`${family.clientId}-${notice.message}-${index}`} className={`border px-3 py-2 text-[10px] font-bold uppercase tracking-rox ${noticeTone(notice.level)}`}>
+                                {notice.message}
+                              </p>
+                            ))}
+                          </div>
+                        ) : null}
+                        {family.draft.expectedImages.length > 0 ? (
+                          <div className="mt-2 grid gap-1 border border-bone/10 p-2 sm:grid-cols-2">
+                            {family.draft.expectedImages.slice(0, 6).map((image) => (
+                              <p key={`${family.clientId}-${image.fileName}-${image.role}`} className="truncate text-[10px] text-bone/64">
+                                <span className="text-roxgold">{getImageRoleLabel(image.role)}</span> {image.fileName}
+                              </p>
+                            ))}
+                          </div>
+                        ) : null}
+                      </section>
+
+                      <section className={`${panelClass} p-4`}>
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <div className="flex min-w-0 items-center gap-2 text-roxgold">
+                            <ImageIcon size={17} />
+                            <p className="text-[10px] font-bold uppercase tracking-rox">Tablero de imagenes</p>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="border border-bone/10 px-3 py-2 text-[10px] font-bold uppercase tracking-rox text-bone/56">Color fijo {family.colorCode}</span>
+                            <button
+                              type="button"
+                              onClick={() => updateFamily(family.clientId, { imageBoardExpanded: !family.imageBoardExpanded })}
+                              className="inline-flex min-h-9 items-center gap-2 border border-bone/14 px-3 text-[10px] font-bold uppercase tracking-rox text-bone/74 transition hover:border-roxgold hover:text-roxgold"
+                            >
+                              {family.imageBoardExpanded ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+                              {family.imageBoardExpanded ? "Cerrar" : "Ampliar"}
+                            </button>
+                            <label htmlFor={family.activeImageInputId} className="inline-flex min-h-9 cursor-pointer items-center gap-2 border border-roxgold/60 px-3 text-[10px] font-bold uppercase tracking-rox text-bone transition hover:bg-roxgold hover:text-charcoal">
+                              <UploadCloud size={14} /> Cargar imagenes
+                            </label>
+                          </div>
+                        </div>
+
+                        {!familyBoardHasImages ? (
+                          <label htmlFor={family.activeImageInputId} className="mt-4 grid min-h-[260px] cursor-pointer place-items-center border border-dashed border-bone/24 bg-charcoal/70 p-6 text-center transition hover:border-roxgold/70">
+                            <span className="grid justify-items-center gap-3">
+                              <UploadCloud size={30} className="text-bone/44" />
+                              <span className="text-sm font-black text-bone">Cargar imagenes de {family.colorName}</span>
+                              <span className="max-w-md text-xs leading-5 text-bone/54">Las fotos quedan guardadas solo para este color hermano.</span>
+                            </span>
+                          </label>
+                        ) : (
+                          <div className={`mt-4 grid gap-3 border border-dashed border-transparent p-2 md:p-3 ${family.imageBoardExpanded ? "grid-cols-[repeat(auto-fit,minmax(210px,1fr))]" : "max-h-[520px] grid-cols-[repeat(auto-fit,minmax(185px,1fr))] overflow-y-hidden hover:overflow-y-auto"}`}>
+                            {sortByStudioOrder(family.existingImages).map((image) => {
+                              const activeIndex = activeFamilyExistingImages.findIndex((item) => item.id === image.id);
+                              const isPrimary = family.primaryTarget === `existing:${image.id}`;
+
+                              return (
+                                <div key={image.id} className={`grid gap-2 border p-2 ${image.delete ? "border-roxred/45 bg-roxred/10" : isPrimary ? "border-roxgold/55 bg-charcoal" : "border-bone/12 bg-charcoal"}`}>
+                                  <div className="relative aspect-[4/3] overflow-hidden border border-bone/10 bg-bone/95">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src={image.url} alt={image.label} className="h-full w-full object-contain p-1" />
+                                    <span className="absolute left-2 top-2 border border-bone/20 bg-ink/82 px-2 py-1 text-[10px] font-black uppercase tracking-rox text-bone">{image.viewNumber || "??"}</span>
+                                    <span className={`absolute right-2 top-2 border px-2 py-1 text-[9px] font-bold uppercase tracking-rox ${isPrimary ? "border-roxgold/70 bg-roxgold text-charcoal" : "border-bone/20 bg-ink/82 text-bone/70"}`}>
+                                      {isPrimary ? "Portada" : getImageRoleLabel(image.role)}
+                                    </span>
+                                  </div>
+                                  <p className="truncate text-[11px] font-bold text-bone/72">{image.label}</p>
+                                  <ImageControls role={image.role} viewNumber={image.viewNumber} colorCode={image.colorCode} deviceVariant={image.deviceVariant} sortOrder={image.sortOrder} onChange={(patch) => updateFamilyExistingImage(family.clientId, image.id, patch)} />
+                                  <div className="flex items-center justify-between gap-2">
+                                    <div className="flex gap-1">
+                                      <button type="button" title="Subir orden" aria-label="Subir orden" disabled={image.delete || activeIndex <= 0} onClick={() => moveFamilyExistingImage(family.clientId, image.id, -1)} className={iconButtonClass}>
+                                        <ArrowUp size={14} />
+                                      </button>
+                                      <button type="button" title="Bajar orden" aria-label="Bajar orden" disabled={image.delete || activeIndex < 0 || activeIndex >= activeFamilyExistingImages.length - 1} onClick={() => moveFamilyExistingImage(family.clientId, image.id, 1)} className={iconButtonClass}>
+                                        <ArrowDown size={14} />
+                                      </button>
+                                    </div>
+                                    <div className="flex gap-1">
+                                      <button type="button" title="Usar como portada" aria-label="Usar como portada" disabled={image.delete} onClick={() => updateFamily(family.clientId, { primaryTarget: `existing:${image.id}` })} className={`${iconButtonClass} ${isPrimary ? "border-roxgold bg-roxgold text-charcoal" : ""}`}>
+                                        <CheckCircle2 size={14} />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        title={image.delete ? "Deshacer borrar" : "Borrar imagen"}
+                                        aria-label={image.delete ? "Deshacer borrar" : "Borrar imagen"}
+                                        onClick={() => {
+                                          updateFamilyExistingImage(family.clientId, image.id, { delete: !image.delete });
+                                          updateFamily(family.clientId, { primaryTarget: family.primaryTarget === `existing:${image.id}` ? "" : family.primaryTarget });
+                                        }}
+                                        className={`${iconButtonClass} ${image.delete ? "border-roxgold/50 text-roxgold" : "hover:border-roxred hover:text-roxred"}`}
+                                      >
+                                        {image.delete ? <RotateCcw size={14} /> : <Trash2 size={14} />}
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+
+                            {activeFamilyUploadedImages.map((image, imageIndex) => {
+                              const isPrimary = family.primaryTarget === `new:${image.clientId}`;
+
+                              return (
+                                <div key={`${image.clientId}-${imageIndex}`} className={`grid gap-2 border p-2 ${isPrimary ? "border-roxgold/60 bg-charcoal" : "border-roxgold/22 bg-charcoal"}`}>
+                                  <div className="relative aspect-[4/3] overflow-hidden border border-bone/10 bg-bone/95">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src={image.previewUrl} alt={image.fileName} className="h-full w-full object-contain p-1" />
+                                    <span className="absolute left-2 top-2 border border-bone/20 bg-ink/82 px-2 py-1 text-[10px] font-black uppercase tracking-rox text-bone">{image.viewNumber || "??"}</span>
+                                    <span className={`absolute right-2 top-2 border px-2 py-1 text-[9px] font-bold uppercase tracking-rox ${isPrimary ? "border-roxgold/70 bg-roxgold text-charcoal" : "border-bone/20 bg-ink/82 text-bone/70"}`}>
+                                      {isPrimary ? "Portada" : getImageRoleLabel(image.role)}
+                                    </span>
+                                  </div>
+                                  <p className="truncate text-[11px] font-bold text-bone/72">{image.fileName}</p>
+                                  <ImageControls role={image.role} viewNumber={image.viewNumber} colorCode={image.colorCode} deviceVariant={image.deviceVariant} sortOrder={image.sortOrder} onChange={(patch) => updateFamilyUploadedImage(family.clientId, image.clientId, patch)} />
+                                  <div className="flex items-center justify-between gap-2">
+                                    <div className="flex gap-1">
+                                      <button type="button" title="Subir orden" aria-label="Subir orden" disabled={imageIndex === 0} onClick={() => moveFamilyUploadedImage(family.clientId, image.clientId, -1)} className={iconButtonClass}>
+                                        <ArrowUp size={14} />
+                                      </button>
+                                      <button type="button" title="Bajar orden" aria-label="Bajar orden" disabled={imageIndex >= activeFamilyUploadedImages.length - 1} onClick={() => moveFamilyUploadedImage(family.clientId, image.clientId, 1)} className={iconButtonClass}>
+                                        <ArrowDown size={14} />
+                                      </button>
+                                    </div>
+                                    <div className="flex gap-1">
+                                      <button type="button" title="Usar como portada" aria-label="Usar como portada" onClick={() => updateFamily(family.clientId, { primaryTarget: `new:${image.clientId}` })} className={`${iconButtonClass} ${isPrimary ? "border-roxgold bg-roxgold text-charcoal" : ""}`}>
+                                        <CheckCircle2 size={14} />
+                                      </button>
+                                      <button type="button" title="Quitar imagen" aria-label="Quitar imagen" onClick={() => removeFamilyUploadedImage(family.clientId, image.clientId)} className={`${iconButtonClass} hover:border-roxred hover:text-roxred`}>
+                                        <Trash2 size={14} />
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </section>
+                    </main>
+
+                    <aside className="grid gap-4 self-start xl:sticky xl:top-4">
+                      <section className={`${panelClass} p-4`}>
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-2 text-roxgold">
+                            <CheckCircle2 size={16} />
+                            <p className="text-[10px] font-bold uppercase tracking-rox">Datos del producto</p>
+                          </div>
+                          <span className="rounded-full border border-roxgold/35 px-3 py-1 text-[10px] font-bold text-roxgold">{familyCompletionScore}% completo</span>
+                        </div>
+
+                        <div className="mt-4 grid gap-3">
+                          <label className="grid gap-2">
+                            {fieldLabel("Nombre del producto")}
+                            <input required value={family.draft.name} onChange={(event) => updateFamilyDraft(family.clientId, { name: event.target.value })} className={inputClass} />
+                          </label>
+
+                          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-2">
+                            <label className="grid gap-2">
+                              {fieldLabel("Categoria")}
+                              <select
+                                required
+                                value={family.draft.categoryId}
+                                onChange={(event) => {
+                                  const option = options.categories.find((item) => item.id === event.target.value);
+                                  const garment = findGarmentForCategory(option);
+                                  updateFamilyDraft(family.clientId, {
+                                    categoryId: event.target.value,
+                                    categoryCode: option?.code || "",
+                                    garmentTypeId: garment?.id || "",
+                                    garmentTypeCode: garment?.code || ""
+                                  });
+                                }}
+                                className={selectClass}
+                              >
+                                <option value="">Seleccionar</option>
+                                {options.categories.map((item) => (
+                                  <option key={item.id} value={item.id}>
+                                    {item.name}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                            <label className="grid gap-2">
+                              {fieldLabel("Genero")}
+                              <select value={family.draft.gender} onChange={(event) => updateFamilyDraft(family.clientId, { gender: event.target.value as ProductStudioDraft["gender"] })} className={selectClass}>
+                                <option value="unisex">Unisex</option>
+                                <option value="hombre">Hombre</option>
+                                <option value="mujer">Mujer</option>
+                              </select>
+                            </label>
+                          </div>
+
+                          <label className="grid gap-2">
+                            {fieldLabel("Precio")}
+                            <input type="number" min={1} step={1} required value={family.draft.price} onChange={(event) => updateFamilyDraft(family.clientId, { price: event.target.value })} className={inputClass} />
+                          </label>
+
+                          <div className="grid grid-cols-4 gap-2">
+                            {PRICE_SHORTCUTS.map((price) => (
+                              <button key={price} type="button" onClick={() => updateFamilyDraft(family.clientId, { price })} className="min-h-8 border border-bone/12 px-2 text-[10px] text-bone/68 transition hover:border-roxgold hover:text-roxgold">
+                                {formatPrice(Number(price))}
+                              </button>
+                            ))}
+                          </div>
+
+                          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-2">
+                            <label className="grid gap-2">
+                              {fieldLabel("Precio anterior")}
+                              <input type="number" min={0} step={1} value={family.draft.compareAtPrice} onChange={(event) => updateFamilyDraft(family.clientId, { compareAtPrice: event.target.value })} className={inputClass} />
+                            </label>
+                            <label className="grid gap-2">
+                              {fieldLabel("Estado")}
+                              <select value={family.draft.status} onChange={(event) => updateFamilyDraft(family.clientId, { status: event.target.value as ProductStudioDraft["status"] })} className={selectClass}>
+                                <option value="draft">Borrador</option>
+                                <option value="published">Publicado</option>
+                                <option value="sold_out">Agotado</option>
+                              </select>
+                            </label>
+                          </div>
+
+                          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-2">
+                            <label className="grid gap-2">
+                              {fieldLabel("Codigo modelo")}
+                              <input required value={family.draft.modelCode} onChange={(event) => updateFamilyDraft(family.clientId, { modelCode: event.target.value.toUpperCase() })} className={inputClass} />
+                            </label>
+                            <label className="grid gap-2">
+                              {fieldLabel("Slug")}
+                              <input required value={family.draft.slug} onChange={(event) => updateFamilyDraft(family.clientId, { slug: event.target.value })} className={inputClass} />
+                            </label>
+                          </div>
+
+                          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-2">
+                            <label className="grid gap-2">
+                              {fieldLabel("Drop / coleccion")}
+                              <select
+                                value={family.draft.collectionId}
+                                onChange={(event) => {
+                                  const option = options.collections.find((item) => item.id === event.target.value);
+                                  updateFamilyDraft(family.clientId, { collectionId: event.target.value, collectionCode: option?.code || "" });
+                                }}
+                                className={selectClass}
+                              >
+                                <option value="">Sin drop</option>
+                                {options.collections.map((item) => (
+                                  <option key={item.id} value={item.id}>
+                                    {item.name}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                            <label className="grid gap-2">
+                              {fieldLabel("Orden visual")}
+                              <input type="number" step={1} value={family.draft.sortOrder} onChange={(event) => updateFamilyDraft(family.clientId, { sortOrder: event.target.value })} className={inputClass} />
+                            </label>
+                          </div>
+
+                          <div className="grid gap-2">
+                            {fieldLabel("Color bloqueado")}
+                            <div className="flex min-h-9 items-center gap-2 border border-roxgold bg-roxgold/10 px-2 text-roxgold">
+                              <span className="h-5 w-5 shrink-0 border border-bone/24 ring-1 ring-bone/20" style={{ backgroundColor: family.colorHex || "#111111" }} />
+                              <span className="min-w-0">
+                                <span className="block text-[10px] font-black uppercase tracking-rox">{family.colorCode}</span>
+                                <span className="block truncate text-[10px] normal-case tracking-normal text-bone/56">{family.colorName}</span>
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="grid gap-2">
+                            {fieldLabel("Talles")}
+                            <div className="grid grid-cols-4 gap-2">
+                              {options.sizes.map((size) => {
+                                const selected = family.draft.sizeIds.includes(size.id);
+                                return (
+                                  <button
+                                    key={size.id}
+                                    type="button"
+                                    onClick={() =>
+                                      updateFamilyDraft(family.clientId, {
+                                        sizeIds: selected ? family.draft.sizeIds.filter((item) => item !== size.id) : [...family.draft.sizeIds, size.id],
+                                        sizeCodes: selected ? family.draft.sizeCodes.filter((item) => item !== size.code) : Array.from(new Set([...family.draft.sizeCodes, size.code]))
+                                      })
+                                    }
+                                    className={`min-h-8 border px-2 text-[10px] font-bold uppercase tracking-rox transition ${selected ? "border-roxgold text-roxgold" : "border-bone/12 text-bone/56 hover:border-roxgold/60"}`}
+                                  >
+                                    {size.name}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          <label className="grid gap-2">
+                            {fieldLabel("Descripcion corta")}
+                            <textarea rows={2} value={family.draft.descriptionShort} onChange={(event) => updateFamilyDraft(family.clientId, { descriptionShort: event.target.value })} className={textareaClass} />
+                          </label>
+                          <label className="grid gap-2">
+                            {fieldLabel("Descripcion larga")}
+                            <textarea rows={4} value={family.draft.descriptionLong} onChange={(event) => updateFamilyDraft(family.clientId, { descriptionLong: event.target.value })} className={textareaClass} />
+                          </label>
+                          <label className="grid gap-2">
+                            {fieldLabel("Mensaje WhatsApp")}
+                            <textarea rows={2} value={family.draft.whatsappMessage} onChange={(event) => updateFamilyDraft(family.clientId, { whatsappMessage: event.target.value })} className={textareaClass} />
+                          </label>
+                          <label className="grid gap-2">
+                            {fieldLabel("Variantes: SKU | Talle | Color | Stock")}
+                            <textarea rows={4} value={variantsToText(family.draft.variants)} onChange={(event) => updateFamilyDraft(family.clientId, { variants: textToVariants(event.target.value) })} className={`${textareaClass} font-mono text-[11px] leading-5`} />
+                          </label>
+
+                          <div className="grid gap-1 border border-bone/10 p-2">
+                            <label className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-rox text-bone/72">
+                              <input type="checkbox" checked={family.draft.featured} onChange={(event) => updateFamilyDraft(family.clientId, { featured: event.target.checked })} />
+                              Destacado en home
+                            </label>
+                            <p className="text-[9px] uppercase tracking-rox text-bone/45">Normalmente destacas la madre; esto queda editable por si lo necesitas.</p>
+                          </div>
+                        </div>
+                      </section>
+
+                      <section className={`${panelClass} p-4`}>
+                        <div className="flex items-center gap-2 text-roxgold">
+                          <ImageIcon size={16} />
+                          <p className="text-[10px] font-bold uppercase tracking-rox">Preview</p>
+                        </div>
+                        <div className="mt-3 overflow-hidden border border-bone/12 bg-bone">
+                          <div className="relative aspect-[3/4]">
+                            {familyCoverPreview ? (
+                              <>
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={familyCoverPreview} alt={family.draft.name} className="h-full w-full object-contain p-2" />
+                                {familyHoverPreview ? <div className="absolute bottom-2 right-2 border border-roxgold/50 bg-ink/80 px-2 py-1 text-[9px] font-bold uppercase tracking-rox text-roxgold">Hover OK</div> : null}
+                              </>
+                            ) : (
+                              <div className="grid h-full place-items-center bg-charcoal text-xs uppercase tracking-rox text-bone/44">Sin portada</div>
+                            )}
+                          </div>
+                        </div>
+                        <p className="mt-3 text-[10px] font-bold uppercase tracking-rox text-roxgold">{family.draft.modelCode || "RXW"}</p>
+                        <h3 className="headline mt-1 text-2xl leading-none text-bone">{family.draft.name || "Producto ROXWANA"}</h3>
+                        <p className="mt-2 text-xs font-black uppercase tracking-rox text-bone">{family.draft.price ? formatPrice(Number(family.draft.price)) : "$0"}</p>
+                        <p className="mt-2 text-xs leading-5 text-bone/58">{family.draft.descriptionShort || "Descripcion corta pendiente."}</p>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <span className="border border-bone/12 px-2 py-1 text-[9px] uppercase tracking-rox text-bone/54">{familySizeOptions.map((size) => size.code).join(" ") || "Sin talles"}</span>
+                          <span className="border border-bone/12 px-2 py-1 text-[9px] uppercase tracking-rox text-bone/54">{family.colorCode}</span>
+                        </div>
+                      </section>
+                    </aside>
+                  </div>
+                )}
+              </section>
+            );
+          })}
+        </div>
+      ) : null}
     </form>
   );
 }

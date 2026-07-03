@@ -15,8 +15,12 @@ const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const PRODUCT_STATUSES: ProductStatus[] = ["draft", "published", "sold_out"];
 
-function value(formData: FormData, key: string) {
-  const item = formData.get(key);
+function prefixedKey(prefix: string, key: string) {
+  return `${prefix}${key}`;
+}
+
+function value(formData: FormData, key: string, prefix = "") {
+  const item = formData.get(prefixedKey(prefix, key));
   return typeof item === "string" ? item.trim() : "";
 }
 
@@ -34,32 +38,32 @@ function appendErrorParam(path: string, message: string) {
   return `${path}${separator}error=${encodeURIComponent(message)}`;
 }
 
-function nullableValue(formData: FormData, key: string) {
-  const item = value(formData, key);
+function nullableValue(formData: FormData, key: string, prefix = "") {
+  const item = value(formData, key, prefix);
   return item.length > 0 ? item : null;
 }
 
-function values(formData: FormData, key: string) {
-  return formData.getAll(key).filter((item): item is string => typeof item === "string" && item.trim().length > 0);
+function values(formData: FormData, key: string, prefix = "") {
+  return formData.getAll(prefixedKey(prefix, key)).filter((item): item is string => typeof item === "string" && item.trim().length > 0);
 }
 
-function valueAt(formData: FormData, key: string, index: number) {
-  const item = formData.getAll(key)[index];
+function valueAt(formData: FormData, key: string, index: number, prefix = "") {
+  const item = formData.getAll(prefixedKey(prefix, key))[index];
   return typeof item === "string" ? item.trim() : "";
 }
 
-function positiveNumber(formData: FormData, key: string) {
-  const parsed = Number(value(formData, key));
+function positiveNumber(formData: FormData, key: string, prefix = "") {
+  const parsed = Number(value(formData, key, prefix));
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
 }
 
-function integerValue(formData: FormData, key: string) {
-  const parsed = Number(value(formData, key));
+function integerValue(formData: FormData, key: string, prefix = "") {
+  const parsed = Number(value(formData, key, prefix));
   return Number.isInteger(parsed) ? parsed : 0;
 }
 
-function integerAt(formData: FormData, key: string, index: number, fallback: number) {
-  const parsed = Number(valueAt(formData, key, index));
+function integerAt(formData: FormData, key: string, index: number, fallback: number, prefix = "") {
+  const parsed = Number(valueAt(formData, key, index, prefix));
   return Number.isInteger(parsed) ? parsed : fallback;
 }
 
@@ -120,48 +124,50 @@ function getMutationErrorMessage(error: { message?: string; code?: string } | nu
   return message ? `${fallback} Detalle: ${message}` : fallback;
 }
 
-function getStudioImageMetadata(formData: FormData, index: number, fileName: string) {
-  const parsed = parseProductImageName(fileName, valueAt(formData, "image_role", index));
-  const role = normalizeImageRole(valueAt(formData, "image_role", index)) || parsed.role;
-  const deviceVariant = normalizeDeviceVariant(valueAt(formData, "image_device_variant", index)) || parsed.deviceVariant;
-  const colorCode = valueAt(formData, "image_color_code", index).toUpperCase() || parsed.colorCode;
-  const viewNumber = valueAt(formData, "image_view_number", index) || parsed.viewNumber;
+function getStudioImageMetadata(formData: FormData, index: number, fileName: string, prefix = "") {
+  const parsed = parseProductImageName(fileName, valueAt(formData, "image_role", index, prefix));
+  const role = normalizeImageRole(valueAt(formData, "image_role", index, prefix)) || parsed.role;
+  const deviceVariant = normalizeDeviceVariant(valueAt(formData, "image_device_variant", index, prefix)) || parsed.deviceVariant;
+  const colorCode = valueAt(formData, "image_color_code", index, prefix).toUpperCase() || parsed.colorCode;
+  const viewNumber = valueAt(formData, "image_view_number", index, prefix) || parsed.viewNumber;
 
   return {
     image_role: role,
     view_number: viewNumber,
     color_code: colorCode,
     device_variant: deviceVariant,
-    original_filename: valueAt(formData, "image_original_name", index) || fileName,
-    sort_order: integerAt(formData, "image_sort_order", index, parsed.sortOrder)
+    original_filename: valueAt(formData, "image_original_name", index, prefix) || fileName,
+    sort_order: integerAt(formData, "image_sort_order", index, parsed.sortOrder, prefix)
   };
 }
 
-function validateProductForm(formData: FormData) {
-  const status = assertChoice<ProductStatus>(value(formData, "status"), PRODUCT_STATUSES, "draft");
-  const price = positiveNumber(formData, "price");
-  const compareAtPrice = positiveNumber(formData, "compare_at_price");
-  const categoryId = nullableValue(formData, "category_id");
+function validateProductForm(formData: FormData, prefix = "") {
+  const status = assertChoice<ProductStatus>(value(formData, "status", prefix), PRODUCT_STATUSES, "draft");
+  const price = positiveNumber(formData, "price", prefix);
+  const compareAtPrice = positiveNumber(formData, "compare_at_price", prefix);
+  const categoryId = nullableValue(formData, "category_id", prefix);
+  const colorIds = values(formData, "color_ids", prefix);
   const payload: Database["public"]["Tables"]["products"]["Insert"] = {
-    model_code: value(formData, "model_code").toUpperCase(),
-    name: value(formData, "name"),
-    slug: safeSegment(value(formData, "slug"), "producto"),
-    garment_type_id: value(formData, "garment_type_id"),
-    gender: assertChoice<ProductGender>(value(formData, "gender"), ["hombre", "mujer", "unisex"], "unisex"),
-    description: nullableValue(formData, "description_long") || nullableValue(formData, "description") || nullableValue(formData, "description_short"),
-    description_short: nullableValue(formData, "description_short"),
-    description_long: nullableValue(formData, "description_long") || nullableValue(formData, "description"),
+    model_code: value(formData, "model_code", prefix).toUpperCase(),
+    name: value(formData, "name", prefix),
+    slug: safeSegment(value(formData, "slug", prefix), "producto"),
+    garment_type_id: value(formData, "garment_type_id", prefix),
+    parent_product_id: nullableValue(formData, "parent_product_id", prefix),
+    family_color_id: nullableValue(formData, "family_color_id", prefix) || colorIds[0] || null,
+    gender: assertChoice<ProductGender>(value(formData, "gender", prefix), ["hombre", "mujer", "unisex"], "unisex"),
+    description: nullableValue(formData, "description_long", prefix) || nullableValue(formData, "description", prefix) || nullableValue(formData, "description_short", prefix),
+    description_short: nullableValue(formData, "description_short", prefix),
+    description_long: nullableValue(formData, "description_long", prefix) || nullableValue(formData, "description", prefix),
     status,
-    featured: formData.get("featured") === "on",
+    featured: formData.get(prefixedKey(prefix, "featured")) === "on",
     price,
     compare_at_price: compareAtPrice > 0 ? compareAtPrice : null,
     category_id: categoryId,
-    collection_id: nullableValue(formData, "collection_id"),
-    sort_order: integerValue(formData, "sort_order"),
-    whatsapp_message: nullableValue(formData, "whatsapp_message")
+    collection_id: nullableValue(formData, "collection_id", prefix),
+    sort_order: integerValue(formData, "sort_order", prefix),
+    whatsapp_message: nullableValue(formData, "whatsapp_message", prefix)
   };
-  const colorIds = values(formData, "color_ids");
-  const sizeIds = values(formData, "size_ids");
+  const sizeIds = values(formData, "size_ids", prefix);
 
   if (!payload.model_code || !payload.name || !payload.slug || !payload.garment_type_id || price <= 0) {
     throw new Error("Faltan campos obligatorios del producto.");
@@ -175,11 +181,11 @@ function validateProductForm(formData: FormData) {
     throw new Error("Los productos publicados o agotados necesitan al menos un color y un talle.");
   }
 
-  return { payload, colorIds, sizeIds, variants: parseVariants(formData) };
+  return { payload, colorIds, sizeIds, variants: parseVariants(formData, prefix) };
 }
 
-function parseVariants(formData: FormData) {
-  return value(formData, "variants")
+function parseVariants(formData: FormData, prefix = "") {
+  return value(formData, "variants", prefix)
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter(Boolean)
@@ -240,8 +246,8 @@ async function insertProductImage(supabase: SupabaseClient<Database>, payload: D
   }
 }
 
-async function uploadImages(supabase: SupabaseClient<Database>, productId: string, slug: string, productName: string, formData: FormData) {
-  const files = formData.getAll("images").filter((item): item is File => item instanceof File && item.size > 0);
+async function uploadImages(supabase: SupabaseClient<Database>, productId: string, slug: string, productName: string, formData: FormData, prefix = "") {
+  const files = formData.getAll(prefixedKey(prefix, "images")).filter((item): item is File => item instanceof File && item.size > 0);
 
   if (files.length === 0) {
     return;
@@ -249,16 +255,16 @@ async function uploadImages(supabase: SupabaseClient<Database>, productId: strin
 
   const { data: existing } = await supabase.from("product_images").select("id").eq("product_id", productId).limit(1);
   const hasExistingImages = Boolean(existing?.length);
-  const primaryNewImageIndex = integerValue(formData, "primary_new_image_index");
+  const primaryNewImageIndex = integerValue(formData, "primary_new_image_index", prefix);
 
-  if (primaryNewImageIndex >= 0 && value(formData, "primary_new_image_index")) {
+  if (primaryNewImageIndex >= 0 && value(formData, "primary_new_image_index", prefix)) {
     await supabase.from("product_images").update({ is_primary: false }).eq("product_id", productId);
   }
 
   for (let index = 0; index < files.length; index += 1) {
     const file = files[index];
 
-    if (valueAt(formData, "image_skip", index) === "true") {
+    if (valueAt(formData, "image_skip", index, prefix) === "true") {
       continue;
     }
 
@@ -282,8 +288,8 @@ async function uploadImages(supabase: SupabaseClient<Database>, productId: strin
     }
 
     const { data } = supabase.storage.from(IMAGE_BUCKET).getPublicUrl(path);
-    const metadata = getStudioImageMetadata(formData, index, file.name);
-    const forcePrimary = value(formData, "primary_new_image_index") ? index === primaryNewImageIndex : false;
+    const metadata = getStudioImageMetadata(formData, index, file.name, prefix);
+    const forcePrimary = value(formData, "primary_new_image_index", prefix) ? index === primaryNewImageIndex : false;
     const isPrimary = forcePrimary || (!hasExistingImages && (metadata.image_role === "cover" || index === 0));
 
     await insertProductImage(supabase, {
@@ -329,8 +335,8 @@ async function deleteImages(supabase: SupabaseClient<Database>, imageIds: string
   await supabase.from("product_images").delete().in("id", imageIds);
 }
 
-async function updateExistingImageMetadata(supabase: SupabaseClient<Database>, productId: string, formData: FormData, deletedImageIds: string[]) {
-  const imageIds = values(formData, "existing_image_ids");
+async function updateExistingImageMetadata(supabase: SupabaseClient<Database>, productId: string, formData: FormData, deletedImageIds: string[], prefix = "") {
+  const imageIds = values(formData, "existing_image_ids", prefix);
 
   for (let index = 0; index < imageIds.length; index += 1) {
     const imageId = imageIds[index];
@@ -339,14 +345,14 @@ async function updateExistingImageMetadata(supabase: SupabaseClient<Database>, p
       continue;
     }
 
-    const role = normalizeImageRole(valueAt(formData, "existing_image_role", index)) || "gallery";
-    const deviceVariant = normalizeDeviceVariant(valueAt(formData, "existing_image_device_variant", index)) || "base";
+    const role = normalizeImageRole(valueAt(formData, "existing_image_role", index, prefix)) || "gallery";
+    const deviceVariant = normalizeDeviceVariant(valueAt(formData, "existing_image_device_variant", index, prefix)) || "base";
     const payload: Database["public"]["Tables"]["product_images"]["Update"] = {
       image_role: role as StudioImageRole,
-      view_number: valueAt(formData, "existing_image_view_number", index) || null,
-      color_code: valueAt(formData, "existing_image_color_code", index).toUpperCase() || null,
+      view_number: valueAt(formData, "existing_image_view_number", index, prefix) || null,
+      color_code: valueAt(formData, "existing_image_color_code", index, prefix).toUpperCase() || null,
       device_variant: deviceVariant as StudioDeviceVariant,
-      sort_order: integerAt(formData, "existing_image_sort_order", index, index)
+      sort_order: integerAt(formData, "existing_image_sort_order", index, index, prefix)
     };
 
     const { error } = await supabase.from("product_images").update(payload).eq("id", imageId).eq("product_id", productId);
@@ -404,23 +410,88 @@ async function createProductMutationClient() {
   return supabase;
 }
 
+function getFamilyChildPrefixes(formData: FormData) {
+  const count = Math.max(0, integerValue(formData, "family_child_count"));
+  return Array.from({ length: count }, (_, index) => `family_child_${index}_`);
+}
+
+function prepareRootProduct(formData: FormData) {
+  const product = validateProductForm(formData);
+  product.payload.parent_product_id = null;
+  product.payload.family_color_id = product.colorIds[0] || null;
+  return product;
+}
+
+function prepareFamilyChildProduct(formData: FormData, prefix: string, parentProductId: string) {
+  const product = validateProductForm(formData, prefix);
+  const familyColorId = product.payload.family_color_id || product.colorIds[0] || null;
+  product.payload.parent_product_id = parentProductId;
+  product.payload.family_color_id = familyColorId;
+  product.colorIds = familyColorId ? [familyColorId] : product.colorIds.slice(0, 1);
+  return product;
+}
+
+async function syncProductDetails(
+  supabase: SupabaseClient<Database>,
+  productId: string,
+  product: ReturnType<typeof validateProductForm>,
+  formData: FormData,
+  prefix = ""
+) {
+  const deleteImageIds = values(formData, "delete_image_ids", prefix);
+
+  if (deleteImageIds.length > 0) {
+    await deleteImages(supabase, deleteImageIds);
+  }
+
+  await updateExistingImageMetadata(supabase, productId, formData, deleteImageIds, prefix);
+  await replaceRelations(supabase, productId, product.colorIds, product.sizeIds);
+  await replaceVariants(supabase, productId, product.variants);
+  await uploadImages(supabase, productId, product.payload.slug, product.payload.name, formData, prefix);
+  await syncPrimaryImage(supabase, productId, value(formData, "primary_image_id", prefix) || null);
+}
+
+async function deleteChildProduct(supabase: SupabaseClient<Database>, parentProductId: string, childProductId: string) {
+  const { data: child } = await supabase.from("products").select("id, slug").eq("id", childProductId).eq("parent_product_id", parentProductId).maybeSingle();
+
+  if (!child) {
+    return;
+  }
+
+  const { data: images } = await supabase.from("product_images").select("id").eq("product_id", child.id);
+  await deleteImages(supabase, (images || []).map((image) => image.id));
+  await supabase.from("products").delete().eq("id", child.id).eq("parent_product_id", parentProductId);
+  revalidateProductSurfaces(child.slug);
+}
+
 export async function createProductAction(formData: FormData) {
   let destination = "/admin/productos";
 
   try {
     const supabase = await createProductMutationClient();
 
-    const { payload, colorIds, sizeIds, variants } = validateProductForm(formData);
+    const rootProduct = prepareRootProduct(formData);
+    const { payload } = rootProduct;
     const { data, error } = await supabase.from("products").insert(payload).select("id, slug").single();
 
     if (error || !data) {
       throw new Error(getMutationErrorMessage(error, "No se pudo crear el producto."));
     }
 
-    await replaceRelations(supabase, data.id, colorIds, sizeIds);
-    await replaceVariants(supabase, data.id, variants);
-    await uploadImages(supabase, data.id, payload.slug, payload.name, formData);
-    await syncPrimaryImage(supabase, data.id, value(formData, "primary_image_id") || null);
+    await syncProductDetails(supabase, data.id, rootProduct, formData);
+
+    for (const prefix of getFamilyChildPrefixes(formData)) {
+      const childProduct = prepareFamilyChildProduct(formData, prefix, data.id);
+      const childInsert = await supabase.from("products").insert(childProduct.payload).select("id, slug").single();
+
+      if (childInsert.error || !childInsert.data) {
+        throw new Error(getMutationErrorMessage(childInsert.error, "No se pudo crear un producto hermano."));
+      }
+
+      await syncProductDetails(supabase, childInsert.data.id, childProduct, formData, prefix);
+      revalidateProductSurfaces(childInsert.data.slug);
+    }
+
     revalidateProductSurfaces(data.slug);
   } catch (error) {
     if (isRedirectError(error)) {
@@ -439,19 +510,12 @@ export async function updateProductAction(formData: FormData) {
 
   try {
     const supabase = await createProductMutationClient();
-    const { payload, colorIds, sizeIds, variants } = validateProductForm(formData);
+    const rootProduct = prepareRootProduct(formData);
+    const { payload } = rootProduct;
 
     if (!id) {
       throw new Error("Falta el producto a editar.");
     }
-
-    const deleteImageIds = values(formData, "delete_image_ids");
-
-    if (deleteImageIds.length > 0) {
-      await deleteImages(supabase, deleteImageIds);
-    }
-
-    await updateExistingImageMetadata(supabase, id, formData, deleteImageIds);
 
     const { error } = await supabase.from("products").update(payload).eq("id", id);
 
@@ -459,10 +523,52 @@ export async function updateProductAction(formData: FormData) {
       throw new Error(getMutationErrorMessage(error, "No se pudo actualizar el producto."));
     }
 
-    await replaceRelations(supabase, id, colorIds, sizeIds);
-    await replaceVariants(supabase, id, variants);
-    await uploadImages(supabase, id, payload.slug, payload.name, formData);
-    await syncPrimaryImage(supabase, id, value(formData, "primary_image_id") || null);
+    await syncProductDetails(supabase, id, rootProduct, formData);
+
+    for (const prefix of getFamilyChildPrefixes(formData)) {
+      const childProduct = prepareFamilyChildProduct(formData, prefix, id);
+      const childId = value(formData, "id", prefix);
+      const existingChild = childId
+        ? { id: childId, slug: childProduct.payload.slug }
+        : childProduct.payload.family_color_id
+          ? (
+              await supabase
+                .from("products")
+                .select("id, slug")
+                .eq("parent_product_id", id)
+                .eq("family_color_id", childProduct.payload.family_color_id)
+                .maybeSingle()
+            ).data
+          : null;
+
+      let targetChild = existingChild;
+
+      if (targetChild?.id) {
+        const update = await supabase.from("products").update(childProduct.payload).eq("id", targetChild.id).select("id, slug").single();
+
+        if (update.error || !update.data) {
+          throw new Error(getMutationErrorMessage(update.error, "No se pudo actualizar un producto hermano."));
+        }
+
+        targetChild = update.data;
+      } else {
+        const insert = await supabase.from("products").insert(childProduct.payload).select("id, slug").single();
+
+        if (insert.error || !insert.data) {
+          throw new Error(getMutationErrorMessage(insert.error, "No se pudo crear un producto hermano."));
+        }
+
+        targetChild = insert.data;
+      }
+
+      await syncProductDetails(supabase, targetChild.id, childProduct, formData, prefix);
+      revalidateProductSurfaces(targetChild.slug);
+    }
+
+    for (const removedChildId of values(formData, "family_removed_product_ids")) {
+      await deleteChildProduct(supabase, id, removedChildId);
+    }
+
     revalidateProductSurfaces(payload.slug);
   } catch (error) {
     if (isRedirectError(error)) {
@@ -542,6 +648,8 @@ export async function duplicateProductAction(formData: FormData) {
       name: `${product.name} copia`,
       slug: `${product.slug}-copy-${suffix}`,
       garment_type_id: product.garment_type_id,
+      parent_product_id: null,
+      family_color_id: product.family_color_id || null,
       gender: product.gender,
       description: product.description,
       description_short: product.description_short,

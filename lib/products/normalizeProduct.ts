@@ -15,6 +15,8 @@ export type ProductRecord = {
   name: string;
   slug: string;
   garment_type_id: string;
+  parent_product_id: string | null;
+  family_color_id: string | null;
   gender: Product["gender"];
   description: string | null;
   description_short: string | null;
@@ -129,6 +131,8 @@ export function normalizeProduct(record: ProductRecord): Product {
     garmentType: garmentCode,
     garmentTypeId: record.garment_type_id,
     garmentLabel: garment?.name || garmentCode,
+    parentProductId: record.parent_product_id,
+    familyColorId: record.family_color_id,
     gender: record.gender,
     status: record.status,
     featured: record.featured,
