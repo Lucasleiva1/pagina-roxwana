@@ -422,11 +422,12 @@ function prepareRootProduct(formData: FormData) {
   return product;
 }
 
-function prepareFamilyChildProduct(formData: FormData, prefix: string, parentProductId: string) {
+function prepareFamilyChildProduct(formData: FormData, prefix: string, parentProductId: string, parentStatus: ProductStatus) {
   const product = validateProductForm(formData, prefix);
   const familyColorId = product.payload.family_color_id || product.colorIds[0] || null;
   product.payload.parent_product_id = parentProductId;
   product.payload.family_color_id = familyColorId;
+  product.payload.status = parentStatus === "draft" ? product.payload.status : parentStatus;
   product.colorIds = familyColorId ? [familyColorId] : product.colorIds.slice(0, 1);
   return product;
 }
@@ -481,7 +482,7 @@ export async function createProductAction(formData: FormData) {
     await syncProductDetails(supabase, data.id, rootProduct, formData);
 
     for (const prefix of getFamilyChildPrefixes(formData)) {
-      const childProduct = prepareFamilyChildProduct(formData, prefix, data.id);
+      const childProduct = prepareFamilyChildProduct(formData, prefix, data.id, rootProduct.payload.status);
       const childInsert = await supabase.from("products").insert(childProduct.payload).select("id, slug").single();
 
       if (childInsert.error || !childInsert.data) {
@@ -526,7 +527,7 @@ export async function updateProductAction(formData: FormData) {
     await syncProductDetails(supabase, id, rootProduct, formData);
 
     for (const prefix of getFamilyChildPrefixes(formData)) {
-      const childProduct = prepareFamilyChildProduct(formData, prefix, id);
+      const childProduct = prepareFamilyChildProduct(formData, prefix, id, rootProduct.payload.status);
       const childId = value(formData, "id", prefix);
       const existingChild = childId
         ? { id: childId, slug: childProduct.payload.slug }

@@ -467,6 +467,10 @@ export function ProductStudio({ mode, product, options, action, submitLabel }: P
   function updateDraft(patch: Partial<ProductStudioDraft>) {
     setSaveError(null);
     setDraft((current) => mergeStudioDraft(current, patch));
+
+    if (patch.status) {
+      setFamilyDrafts((current) => current.map((family) => ({ ...family, draft: mergeStudioDraft(family.draft, { status: patch.status }) })));
+    }
   }
 
   function addMissingFamilyDrafts(current: StudioFamilyDraft[], baseDraft: ProductStudioDraft) {
