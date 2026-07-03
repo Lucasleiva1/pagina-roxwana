@@ -76,6 +76,7 @@ type StudioFamilyDraft = {
   importNotices: StudioNotice[];
   collapsed: boolean;
   imageBoardExpanded: boolean;
+  isDraggingImages: boolean;
 };
 
 type RemovedFamilyProduct = {
@@ -209,7 +210,8 @@ function makeFamilyDraftForColor(base: ProductStudioDraft, color: ProductStudioO
     sheetText: "",
     importNotices: [],
     collapsed: true,
-    imageBoardExpanded: false
+    imageBoardExpanded: false,
+    isDraggingImages: false
   };
 }
 
@@ -243,7 +245,8 @@ function makeFamilyDraftFromProduct(product: Product, options: ProductStudioOpti
     sheetText: "",
     importNotices: [],
     collapsed: true,
-    imageBoardExpanded: false
+    imageBoardExpanded: false,
+    isDraggingImages: false
   };
 }
 
@@ -1086,6 +1089,49 @@ export function ProductStudio({ mode, product, options, action, submitLabel }: P
     setSaveError(null);
   }
 
+  async function handleFamilyImageDrop(clientId: string, event: DragEvent<HTMLElement>) {
+    event.preventDefault();
+    event.stopPropagation();
+    const family = familyDrafts.find((item) => item.clientId === clientId);
+    updateFamily(clientId, { isDraggingImages: false });
+
+    if (!family) {
+      return;
+    }
+
+    const droppedFiles = await collectDroppedFiles(event.dataTransfer);
+    const imageFiles = droppedFiles.filter(isAllowedImageFile);
+
+    if (imageFiles.length === 0) {
+      setSaveError({ level: "error", message: `${family.colorCode}: no encontre imagenes JPG, PNG o WEBP en lo que arrastraste.` });
+      return;
+    }
+
+    const nextFiles = filterNewFamilyImageFiles(clientId, imageFiles);
+
+    if (nextFiles.length === 0) {
+      return;
+    }
+
+    const inputId = family.activeImageInputId;
+    if (!setInputFiles(inputId, nextFiles)) {
+      setSaveError({ level: "error", message: `${family.colorCode}: no pude conectar las imagenes al formulario. Proba otra vez o usa el boton Cargar imagenes.` });
+      return;
+    }
+
+    const added = addFamilyImageFiles(clientId, inputId, nextFiles);
+    if (!added) {
+      setInputFiles(inputId, []);
+      return;
+    }
+
+    const skippedCount = droppedFiles.length - imageFiles.length;
+
+    if (skippedCount > 0) {
+      setImportNotices((current) => [{ level: "warning", message: `${family.colorCode}: se ignoraron ${skippedCount} archivos que no eran imagenes.` }, ...current]);
+    }
+  }
+
   function toggleSize(id: string, code: string) {
     const selected = draft.sizeIds.includes(id);
     updateDraft({
@@ -1243,11 +1289,6 @@ export function ProductStudio({ mode, product, options, action, submitLabel }: P
                 {image.delete ? <input type="hidden" name={`${prefix}delete_image_ids`} value={image.id} /> : null}
               </span>
             ))}
-            <span className="sr-only">
-              {family.imageInputIds.map((inputId) => (
-                <input key={inputId} id={inputId} name={`${prefix}images`} type="file" multiple accept="image/jpeg,image/png,image/webp" onChange={(event) => handleFamilyImages(family.clientId, inputId, event)} />
-              ))}
-            </span>
             <input type="hidden" name={`${prefix}uploaded_image_count`} value={activeOrderedUploads.length} />
           </span>
         );
@@ -1764,7 +1805,8 @@ export function ProductStudio({ mode, product, options, action, submitLabel }: P
       </section>
       {familyDrafts.length > 0 ? (
         <div className="grid gap-4">
-          {familyDrafts.map((family) => {
+          {familyDrafts.map((family, familyIndex) => {
+            const prefix = `family_child_${familyIndex}_`;
             const activeFamilyUploadedImages = sortByStudioOrder(family.uploadedImages.filter((image) => !image.delete));
             const activeFamilyExistingImages = sortByStudioOrder(family.existingImages.filter((image) => !image.delete));
             const familyBoardHasImages = family.existingImages.length > 0 || activeFamilyUploadedImages.length > 0;
@@ -1804,6 +1846,12 @@ export function ProductStudio({ mode, product, options, action, submitLabel }: P
                     {family.collapsed ? <Maximize2 size={14} /> : <Minimize2 size={14} />}
                     {family.collapsed ? "Expandir" : "Minimizar"}
                   </button>
+                </div>
+
+                <div className="sr-only">
+                  {family.imageInputIds.map((inputId) => (
+                    <input key={inputId} id={inputId} name={`${prefix}images`} type="file" multiple accept="image/jpeg,image/png,image/webp" onChange={(event) => handleFamilyImages(family.clientId, inputId, event)} />
+                  ))}
                 </div>
 
                 {family.collapsed ? (
@@ -1864,7 +1912,20 @@ export function ProductStudio({ mode, product, options, action, submitLabel }: P
                         ) : null}
                       </section>
 
-                      <section className={`${panelClass} p-4`}>
+                      <section
+                        className={`${panelClass} p-4 ${family.isDraggingImages ? "border-roxgold/70" : ""}`}
+                        onDragEnter={(event) => {
+                          event.preventDefault();
+                          updateFamily(family.clientId, { isDraggingImages: true });
+                        }}
+                        onDragOver={(event) => {
+                          event.preventDefault();
+                          event.dataTransfer.dropEffect = "copy";
+                          updateFamily(family.clientId, { isDraggingImages: true });
+                        }}
+                        onDragLeave={() => updateFamily(family.clientId, { isDraggingImages: false })}
+                        onDrop={(event) => handleFamilyImageDrop(family.clientId, event)}
+                      >
                         <div className="flex flex-wrap items-center justify-between gap-3">
                           <div className="flex min-w-0 items-center gap-2 text-roxgold">
                             <ImageIcon size={17} />
@@ -1887,15 +1948,24 @@ export function ProductStudio({ mode, product, options, action, submitLabel }: P
                         </div>
 
                         {!familyBoardHasImages ? (
-                          <label htmlFor={family.activeImageInputId} className="mt-4 grid min-h-[260px] cursor-pointer place-items-center border border-dashed border-bone/24 bg-charcoal/70 p-6 text-center transition hover:border-roxgold/70">
+                          <label
+                            htmlFor={family.activeImageInputId}
+                            className={`mt-4 grid min-h-[260px] cursor-pointer place-items-center border border-dashed p-6 text-center transition ${
+                              family.isDraggingImages ? "border-roxgold bg-roxgold/10" : "border-bone/24 bg-charcoal/70 hover:border-roxgold/70"
+                            }`}
+                          >
                             <span className="grid justify-items-center gap-3">
                               <UploadCloud size={30} className="text-bone/44" />
                               <span className="text-sm font-black text-bone">Cargar imagenes de {family.colorName}</span>
-                              <span className="max-w-md text-xs leading-5 text-bone/54">Las fotos quedan guardadas solo para este color hermano.</span>
+                              <span className="max-w-md text-xs leading-5 text-bone/54">Arrastra aca las imagenes o usa Cargar imagenes. Las fotos quedan guardadas solo para este color hermano.</span>
                             </span>
                           </label>
                         ) : (
-                          <div className={`mt-4 grid gap-3 border border-dashed border-transparent p-2 md:p-3 ${family.imageBoardExpanded ? "grid-cols-[repeat(auto-fit,minmax(210px,1fr))]" : "max-h-[520px] grid-cols-[repeat(auto-fit,minmax(185px,1fr))] overflow-y-hidden hover:overflow-y-auto"}`}>
+                          <div
+                            className={`mt-4 grid gap-3 border border-dashed p-2 md:p-3 ${family.imageBoardExpanded ? "grid-cols-[repeat(auto-fit,minmax(210px,1fr))]" : "max-h-[520px] grid-cols-[repeat(auto-fit,minmax(185px,1fr))] overflow-y-hidden hover:overflow-y-auto"} ${
+                              family.isDraggingImages ? "border-roxgold bg-roxgold/10" : "border-transparent"
+                            }`}
+                          >
                             {sortByStudioOrder(family.existingImages).map((image) => {
                               const activeIndex = activeFamilyExistingImages.findIndex((item) => item.id === image.id);
                               const isPrimary = family.primaryTarget === `existing:${image.id}`;
