@@ -77,7 +77,7 @@ export function AdminProductRow({ product }: { product: Product }) {
               <Link href={`/admin/productos/${productId}`} className={actionButtonClass("primary")}>
                 Studio
               </Link>
-              <Link href={`/admin/productos/${productId}/simple`} className={actionButtonClass()}>
+              <Link href={`/admin/productos/${productId}`} className={actionButtonClass()}>
                 <Edit3 size={13} className="mr-1.5" /> Editar
               </Link>
               {productId ? (
